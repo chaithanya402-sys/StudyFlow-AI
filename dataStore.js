@@ -487,6 +487,227 @@
       return this.data.auditLog || [];
     }
 
+    // ==================== GROUP PROJECTS & CAPSTONE HUB ====================
+    getGroupProjects() {
+      return this.data.groupProjects || [];
+    }
+
+    getAuthHeaders() {
+      const token = localStorage.getItem('spp_auth_token') || '';
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      return headers;
+    }
+
+    async fetchGroupProjects() {
+      try {
+        const res = await fetch('/api/projects', { headers: this.getAuthHeaders() });
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && Array.isArray(json.projects)) {
+            this.data.groupProjects = json.projects.map(p => ({
+              id: p.id,
+              title: p.title,
+              subject: p.subject,
+              category: p.domain,
+              domain: p.domain,
+              problemStatement: p.problem_statement,
+              objectives: p.objectives,
+              description: p.description,
+              tech: p.tech_stack,
+              techStack: (p.tech_stack || '').split(',').map(s => s.trim()).filter(Boolean),
+              deliverables: p.deliverables,
+              startDate: p.start_date,
+              endDate: p.target_date,
+              targetDate: p.target_date,
+              proposalDocUrl: p.proposal_doc_url,
+              teamName: p.team_name,
+              leader: p.leader_name,
+              leaderId: p.leader_id,
+              leaderName: p.leader_name,
+              createdBy: p.created_by,
+              mentor: p.mentor_name,
+              mentorId: p.mentor_id,
+              mentorName: p.mentor_name,
+              mentorStatus: p.mentor_status,
+              approverId: p.approver_id,
+              approverName: p.approver_name,
+              status: p.status,
+              approvalStatus: p.approval_status,
+              facultyFeedback: p.faculty_feedback,
+              rejectionReason: p.rejection_reason,
+              progress: p.progress_pct || 0,
+              currentMilestone: p.current_milestone,
+              githubUrl: p.github_url,
+              finalGrade: p.final_grade,
+              evaluationNotes: p.final_evaluation_notes,
+              members: p.members || [],
+              memberNames: (p.members || []).map(m => m.student_name),
+              updatesCount: p.updates_count || 0,
+              createdAt: p.created_at
+            }));
+            this.notify();
+            return this.data.groupProjects;
+          }
+        }
+      } catch (err) {
+        console.warn('[DataStore] Failed to fetch group projects:', err);
+      }
+      return this.data.groupProjects || [];
+    }
+
+    async getProjectDetails(id) {
+      try {
+        const res = await fetch(`/api/projects/${id}`, { headers: this.getAuthHeaders() });
+        const json = await res.json();
+        return json;
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    }
+
+    async createGroupProject(projectData) {
+      try {
+        const res = await fetch('/api/projects', {
+          method: 'POST',
+          headers: this.getAuthHeaders(),
+          body: JSON.stringify(projectData)
+        });
+        const json = await res.json();
+        if (json.success) {
+          await this.fetchGroupProjects();
+          this.addAudit(`New group project proposal created: "${projectData.title}".`);
+        }
+        return json;
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    }
+
+    async updateGroupProject(id, updateData) {
+      try {
+        const res = await fetch(`/api/projects/${id}`, {
+          method: 'PUT',
+          headers: this.getAuthHeaders(),
+          body: JSON.stringify(updateData)
+        });
+        const json = await res.json();
+        if (json.success) {
+          await this.fetchGroupProjects();
+        }
+        return json;
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    }
+
+    async approveGroupProject(id, feedback) {
+      try {
+        const res = await fetch(`/api/projects/${id}/approve`, {
+          method: 'POST',
+          headers: this.getAuthHeaders(),
+          body: JSON.stringify({ feedback })
+        });
+        const json = await res.json();
+        if (json.success) {
+          await this.fetchGroupProjects();
+          this.addAudit(`Subject faculty approved project ID: ${id}`);
+        }
+        return json;
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    }
+
+    async rejectGroupProject(id, reason) {
+      try {
+        const res = await fetch(`/api/projects/${id}/reject`, {
+          method: 'POST',
+          headers: this.getAuthHeaders(),
+          body: JSON.stringify({ reason })
+        });
+        const json = await res.json();
+        if (json.success) {
+          await this.fetchGroupProjects();
+          this.addAudit(`Subject faculty rejected project ID: ${id}`);
+        }
+        return json;
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    }
+
+    async requestChangesGroupProject(id, feedback) {
+      try {
+        const res = await fetch(`/api/projects/${id}/request-changes`, {
+          method: 'POST',
+          headers: this.getAuthHeaders(),
+          body: JSON.stringify({ feedback })
+        });
+        const json = await res.json();
+        if (json.success) {
+          await this.fetchGroupProjects();
+          this.addAudit(`Revisions requested for project ID: ${id}`);
+        }
+        return json;
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    }
+
+    async submitProjectUpdate(id, updateData) {
+      try {
+        const res = await fetch(`/api/projects/${id}/updates`, {
+          method: 'POST',
+          headers: this.getAuthHeaders(),
+          body: JSON.stringify(updateData)
+        });
+        const json = await res.json();
+        if (json.success) {
+          await this.fetchGroupProjects();
+          this.addAudit(`Team submitted development update for project ID: ${id}`);
+        }
+        return json;
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    }
+
+    async submitFacultyProjectFeedback(id, feedback, updateId = null) {
+      try {
+        const res = await fetch(`/api/projects/${id}/feedback`, {
+          method: 'POST',
+          headers: this.getAuthHeaders(),
+          body: JSON.stringify({ feedback, update_id: updateId })
+        });
+        const json = await res.json();
+        if (json.success) {
+          await this.fetchGroupProjects();
+        }
+        return json;
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    }
+
+    async gradeGroupProject(id, finalGrade, evaluationNotes = '') {
+      try {
+        const res = await fetch(`/api/projects/${id}/grade`, {
+          method: 'POST',
+          headers: this.getAuthHeaders(),
+          body: JSON.stringify({ final_grade: finalGrade, evaluation_notes: evaluationNotes })
+        });
+        const json = await res.json();
+        if (json.success) {
+          await this.fetchGroupProjects();
+          this.addAudit(`Faculty completed evaluation for project ID: ${id} (Grade: ${finalGrade})`);
+        }
+        return json;
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    }
+
     // Role-specific live KPI calculations
     getStats(role) {
       const r = role || this.getActiveRole();

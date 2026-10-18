@@ -1777,7 +1777,7 @@
             <h2 class="welcome-heading">Group Projects & Capstone Hub</h2>
             <p class="welcome-subtext">Collaborate with peers on department capstone projects, lab implementations, and code repositories.</p>
           </div>
-          <button class="btn-primary" onclick="window.showToast?.('Project creation modal opened.', 'info')">
+          <button class="btn-primary" id="btn-open-create-group-project" onclick="openCreateGroupProjectModal()">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
             <span>New Group Project</span>
           </button>
@@ -4430,6 +4430,471 @@
       <div class="modal-footer" style="display: flex; justify-content: flex-end; align-items: center; gap: 12px; padding: 14px 20px; border-top: 1px solid #E2E8F0;">
         <button type="button" class="btn-outline btn-sm" onclick="closeSubmissionDetailsModal()" style="font-size: 13px; padding: 8px 16px;">Cancel</button>
         <button type="button" class="btn-submit-modal-action" id="btn-sub-detail-update-action" onclick="handleUpdateSubmissionAction()">Update Submission</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       MODAL: CREATE GROUP PROJECT & CAPSTONE PROPOSAL
+       ======================================================== -->
+  <div class="modal-overlay" id="modal-create-group-project" style="display: none;">
+    <div class="modal-box" style="max-width: 760px; width: 94%; max-height: 90vh; overflow-y: auto; border-radius: 16px;">
+      <div class="modal-header">
+        <div>
+          <div style="font-size: 11px; font-weight: 700; color: #2563EB; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 3px;">Capstone & Collaborative Research</div>
+          <h3 class="modal-title" style="margin: 0; font-size: 18px; color: #0F172A;">New Group Project Proposal</h3>
+        </div>
+        <button class="modal-close-btn" onclick="closeCreateGroupProjectModal()" type="button">✕</button>
+      </div>
+
+      <form id="form-create-group-project" class="modal-form" onsubmit="handleSaveGroupProjectProposal(event)">
+        <div class="modal-body" style="padding: 16px 20px;">
+          <!-- Validation alert box -->
+          <div id="gp-form-error" style="display: none; background: #FEF2F2; border: 1px solid #FCA5A5; color: #B91C1C; padding: 10px 14px; border-radius: 8px; font-size: 12.5px; margin-bottom: 16px;"></div>
+
+          <!-- Section 1: Project Details -->
+          <div style="margin-bottom: 18px;">
+            <div style="font-size: 13px; font-weight: 700; color: #1E293B; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+              <span style="background: #EFF6FF; color: #2563EB; width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 11px;">1</span>
+              <span>Project Overview & Scope</span>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label class="form-label">Project Title *</label>
+              <input type="text" class="form-input" id="gp-title" placeholder="e.g. Distributed Real-Time Fault-Tolerant Streaming Analytics" required>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+              <div class="form-group">
+                <label class="form-label">Subject / Department Course *</label>
+                <select class="form-select" id="gp-subject" required onchange="handleProjectSubjectChange()">
+                  <option value="">Select Department Subject...</option>
+                </select>
+                <div id="gp-subject-approver-hint" style="font-size: 11px; color: #64748B; margin-top: 4px;">Subject determines the authorized reviewing faculty.</div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Domain / Category *</label>
+                <select class="form-select" id="gp-domain" required>
+                  <option value="Artificial Intelligence & Machine Learning">Artificial Intelligence & Machine Learning</option>
+                  <option value="Distributed Systems & Cloud Computing">Distributed Systems & Cloud Computing</option>
+                  <option value="Full-Stack Web & Mobile Architectures">Full-Stack Web & Mobile Architectures</option>
+                  <option value="Cybersecurity & Cryptographic Systems">Cybersecurity & Cryptographic Systems</option>
+                  <option value="Database Systems & Big Data Engineering">Database Systems & Big Data Engineering</option>
+                  <option value="Internet of Things & Embedded Systems">Internet of Things & Embedded Systems</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label class="form-label">Problem Statement *</label>
+              <textarea class="form-textarea" id="gp-problem-statement" rows="2" placeholder="Clearly outline the engineering or societal problem being solved..." required></textarea>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label class="form-label">Project Objectives *</label>
+              <textarea class="form-textarea" id="gp-objectives" rows="2" placeholder="List 3-5 concrete measurable technical goals..." required></textarea>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label class="form-label">Proposed Solution & Technical Architecture *</label>
+              <textarea class="form-textarea" id="gp-description" rows="3" placeholder="Describe the system architecture, algorithms, and modules..." required></textarea>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+              <div class="form-group">
+                <label class="form-label">Technologies & Tools *</label>
+                <input type="text" class="form-input" id="gp-tech-stack" placeholder="e.g. Python, PyTorch, React, Node.js, SQLite" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Expected Deliverables *</label>
+                <input type="text" class="form-input" id="gp-deliverables" placeholder="e.g. Working Prototype, Technical Report, GitHub Repo" required>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+              <div class="form-group">
+                <label class="form-label">Project Start Date</label>
+                <input type="date" class="form-input" id="gp-start-date">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Target Completion Date</label>
+                <input type="date" class="form-input" id="gp-target-date">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Proposal Document / PDF (Optional)</label>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="file" id="gp-proposal-file" accept=".pdf,.doc,.docx" style="display: none;" onchange="handleProposalFileUpload(event)">
+                <button type="button" class="btn-outline btn-sm" onclick="document.getElementById('gp-proposal-file').click()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                  <span id="gp-upload-btn-label">Upload Proposal PDF</span>
+                </button>
+                <input type="text" class="form-input" id="gp-proposal-doc-url" placeholder="Or enter document / repository URL" style="flex: 1;">
+              </div>
+              <div id="gp-file-upload-status" style="font-size: 11px; color: #059669; margin-top: 4px; display: none;"></div>
+            </div>
+          </div>
+
+          <!-- Section 2: Team Details -->
+          <div style="margin-bottom: 18px; padding-top: 14px; border-top: 1px solid #E2E8F0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <div style="font-size: 13px; font-weight: 700; color: #1E293B; display: flex; align-items: center; gap: 6px;">
+                <span style="background: #EFF6FF; color: #2563EB; width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 11px;">2</span>
+                <span>Team Composition (2 to 5 Students)</span>
+              </div>
+              <span id="gp-team-counter-badge" class="badge-status blue" style="font-size: 11px;">1 of 5 Members</span>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label class="form-label">Team Name *</label>
+              <input type="text" class="form-input" id="gp-team-name" placeholder="e.g. Team Algorithmic Vanguard" required>
+            </div>
+
+            <!-- Student Member Search & Selector -->
+            <div class="form-group" style="margin-bottom: 12px; position: relative;">
+              <label class="form-label">Add Student Team Member (Min 2, Max 5 distinct members)</label>
+              <div style="display: flex; gap: 8px;">
+                <input type="text" class="form-input" id="gp-member-search" placeholder="Type student name, roll number, or institutional email..." autocomplete="off" oninput="handleMemberSearchInput(this.value)">
+              </div>
+              <div id="gp-member-suggestions" style="display: none; position: absolute; z-index: 100; left: 0; right: 0; top: 100%; background: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-height: 200px; overflow-y: auto; margin-top: 4px;"></div>
+            </div>
+
+            <!-- Confirmed Team Members List -->
+            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 12px;">
+              <div style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px;">Confirmed Team Roster</div>
+              <div id="gp-members-list" style="display: flex; flex-direction: column; gap: 8px;">
+                <!-- Dynamically rendered -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3: Faculty Mentor Details -->
+          <div style="margin-bottom: 10px; padding-top: 14px; border-top: 1px solid #E2E8F0;">
+            <div style="font-size: 13px; font-weight: 700; color: #1E293B; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+              <span style="background: #EFF6FF; color: #2563EB; width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 11px;">3</span>
+              <span>Proposed Faculty Mentor</span>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label class="form-label">Select Proposed Mentor (Optional)</label>
+              <select class="form-select" id="gp-mentor">
+                <option value="">No proposed mentor (Department assigned)</option>
+              </select>
+            </div>
+
+            <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; padding: 10px 12px; font-size: 11.5px; color: #166534; line-height: 1.45;">
+              <strong>Supervision Policy:</strong> A proposed mentor provides technical guidance. Final proposal review and syllabus approval authority is strictly governed by the assigned <em>Subject Faculty</em>.
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer" style="display: flex; justify-content: flex-end; align-items: center; gap: 12px; padding: 14px 20px; border-top: 1px solid #E2E8F0;">
+          <button type="button" class="btn-outline btn-sm" onclick="closeCreateGroupProjectModal()" style="font-size: 13px; padding: 8px 16px;">Cancel</button>
+          <button type="button" class="btn-secondary btn-sm" id="btn-save-draft-group-project" onclick="handleSaveGroupProjectDraft()" style="font-size: 13px; padding: 8px 16px;">Save as Draft</button>
+          <button type="submit" class="btn-primary" id="btn-submit-group-project" style="font-size: 13px; padding: 8px 20px;">
+            <span id="gp-submit-btn-text">Submit Proposal for Approval</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       MODAL: PROJECT WORKSPACE & MILESTONE TRACKING
+       ======================================================== -->
+  <div class="modal-overlay" id="modal-project-details" style="display: none;">
+    <div class="modal-box" style="max-width: 800px; width: 94%; max-height: 90vh; overflow-y: auto; border-radius: 16px;">
+      <div class="modal-header" style="align-items: flex-start; padding-bottom: 12px;">
+        <div style="flex: 1; min-width: 0;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+            <span class="badge-status blue" id="pd-domain-badge">Domain</span>
+            <span class="badge-status" id="pd-status-badge">Status</span>
+          </div>
+          <h3 class="modal-title" id="pd-project-title" style="margin: 0; font-size: 18px; color: #0F172A; line-height: 1.3;">Project Title</h3>
+          <div style="font-size: 12px; color: #64748B; margin-top: 4px;" id="pd-meta-subtitle">Subject: Machine Learning &bull; Team: Vanguard</div>
+        </div>
+        <button class="modal-close-btn" onclick="closeProjectDetailsModal()" type="button">✕</button>
+      </div>
+
+      <div class="modal-body" style="padding: 16px 20px;">
+        <!-- Status / Feedback Notice Banner -->
+        <div id="pd-feedback-banner" style="margin-bottom: 16px; display: none; padding: 12px 16px; border-radius: 10px;"></div>
+
+        <!-- Milestones Progress Tracker -->
+        <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div>
+              <span style="font-size: 12px; font-weight: 700; color: #1E293B;">Development Milestones</span>
+              <div style="font-size: 11px; color: #64748B;" id="pd-current-milestone-text">Stage: 1. Problem definition and requirements</div>
+            </div>
+            <strong style="font-size: 16px; color: #0D9488;" id="pd-progress-pct-text">0%</strong>
+          </div>
+          <div style="height: 8px; background: #E2E8F0; border-radius: 4px; overflow: hidden; margin-bottom: 12px;">
+            <div id="pd-progress-bar" style="width: 0%; height: 100%; background: #0D9488; transition: width 0.3s ease;"></div>
+          </div>
+
+          <!-- Milestones Steps -->
+          <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; text-align: center; font-size: 10px; color: #64748B;">
+            <div id="pd-mstep-1" style="padding: 4px; border-radius: 4px; background: #F1F5F9;">1. Req.</div>
+            <div id="pd-mstep-2" style="padding: 4px; border-radius: 4px; background: #F1F5F9;">2. Lit.</div>
+            <div id="pd-mstep-3" style="padding: 4px; border-radius: 4px; background: #F1F5F9;">3. Design</div>
+            <div id="pd-mstep-4" style="padding: 4px; border-radius: 4px; background: #F1F5F9;">4. Dev.</div>
+            <div id="pd-mstep-5" style="padding: 4px; border-radius: 4px; background: #F1F5F9;">5. Test</div>
+            <div id="pd-mstep-6" style="padding: 4px; border-radius: 4px; background: #F1F5F9;">6. Final</div>
+          </div>
+        </div>
+
+        <!-- Details Grid -->
+        <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; margin-bottom: 16px;">
+          <!-- Left: Scope & Deliverables -->
+          <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 14px;">
+            <div style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; margin-bottom: 6px;">Problem Statement</div>
+            <p id="pd-problem-statement" style="font-size: 12.5px; color: #334155; line-height: 1.45; margin: 0 0 12px 0;"></p>
+
+            <div style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; margin-bottom: 6px;">Objectives & Approach</div>
+            <p id="pd-objectives" style="font-size: 12.5px; color: #334155; line-height: 1.45; margin: 0 0 12px 0;"></p>
+
+            <div style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; margin-bottom: 6px;">Tech Stack</div>
+            <div id="pd-tech-chips" style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 12px;"></div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid #E2E8F0;">
+              <span id="pd-dates-info" style="font-size: 11px; color: #64748B;">Dates: --</span>
+              <div id="pd-links-container" style="display: flex; gap: 6px;"></div>
+            </div>
+          </div>
+
+          <!-- Right: Team & Supervisors -->
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 12px;">
+              <div style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; margin-bottom: 8px;">Supervision & Evaluation</div>
+              <div style="font-size: 12px; color: #1E293B; margin-bottom: 4px;">
+                <strong>Subject Approver:</strong> <span id="pd-approver-name">Pending</span>
+              </div>
+              <div style="font-size: 12px; color: #1E293B; margin-bottom: 4px;">
+                <strong>Faculty Mentor:</strong> <span id="pd-mentor-name">Not Assigned</span>
+              </div>
+              <div id="pd-final-grade-box" style="display: none; margin-top: 8px; padding: 6px 10px; background: #ECFDF5; border-radius: 6px; font-size: 12px; color: #047857;">
+                <strong>Final Evaluation:</strong> <span id="pd-final-grade-text"></span>
+              </div>
+            </div>
+
+            <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 12px; flex: 1;">
+              <div style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; margin-bottom: 8px;">Confirmed Student Team</div>
+              <div id="pd-team-roster" style="display: flex; flex-direction: column; gap: 6px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Development Updates & Reports Section -->
+        <div style="padding-top: 14px; border-top: 1px solid #E2E8F0;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div>
+              <h4 style="margin: 0; font-size: 14px; color: #0F172A;">Development Progress Updates</h4>
+              <span style="font-size: 11.5px; color: #64748B;">Audit trail of milestone reports, tasks completed, and faculty guidance</span>
+            </div>
+            <button type="button" class="btn-primary btn-sm" id="btn-open-submit-update" onclick="openSubmitProjectUpdateModal()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <span>Submit Progress Update</span>
+            </button>
+          </div>
+
+          <div id="pd-updates-timeline" style="display: flex; flex-direction: column; gap: 10px;">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-top: 1px solid #E2E8F0;">
+        <div id="pd-action-left"></div>
+        <button type="button" class="btn-outline btn-sm" onclick="closeProjectDetailsModal()" style="font-size: 13px; padding: 8px 16px;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       MODAL: SUBMIT DEVELOPMENT PROGRESS UPDATE
+       ======================================================== -->
+  <div class="modal-overlay" id="modal-submit-project-update" style="display: none;">
+    <div class="modal-box" style="max-width: 620px; width: 92%; max-height: 90vh; overflow-y: auto; border-radius: 16px;">
+      <div class="modal-header">
+        <div>
+          <div style="font-size: 11px; font-weight: 700; color: #0D9488; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 3px;">Project Development</div>
+          <h3 class="modal-title" style="margin: 0; font-size: 17px; color: #0F172A;">Submit Milestone Progress Report</h3>
+        </div>
+        <button class="modal-close-btn" onclick="closeSubmitProjectUpdateModal()" type="button">✕</button>
+      </div>
+
+      <form id="form-submit-project-update" class="modal-form" onsubmit="handleSaveProjectUpdate(event)">
+        <input type="hidden" id="prup-project-id">
+        <div class="modal-body" style="padding: 16px 20px;">
+          <div id="prup-error" style="display: none; background: #FEF2F2; border: 1px solid #FCA5A5; color: #B91C1C; padding: 10px 14px; border-radius: 8px; font-size: 12.5px; margin-bottom: 14px;"></div>
+
+          <div style="display: grid; grid-template-columns: 1.3fr 1fr; gap: 12px; margin-bottom: 12px;">
+            <div class="form-group">
+              <label class="form-label">Current Milestone Stage *</label>
+              <select class="form-select" id="prup-stage" required>
+                <option value="1. Problem definition and requirements">1. Problem definition and requirements</option>
+                <option value="2. Literature review and planning">2. Literature review and planning</option>
+                <option value="3. System design and architecture">3. System design and architecture</option>
+                <option value="4. Implementation and development">4. Implementation and development</option>
+                <option value="5. Testing and evaluation">5. Testing and evaluation</option>
+                <option value="6. Final report and demonstration">6. Final report and demonstration</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Progress Percentage (0 - 100%) *</label>
+              <input type="number" class="form-input" id="prup-progress" min="0" max="100" placeholder="e.g. 50" required>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label">Progress Summary *</label>
+            <textarea class="form-textarea" id="prup-summary" rows="2" placeholder="Summarize key technical progress achieved during this development sprint..." required></textarea>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+            <div class="form-group">
+              <label class="form-label">Tasks Completed</label>
+              <textarea class="form-textarea" id="prup-tasks-completed" rows="2" placeholder="List items finished..."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Tasks Remaining</label>
+              <textarea class="form-textarea" id="prup-tasks-remaining" rows="2" placeholder="List pending items..."></textarea>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+            <div class="form-group">
+              <label class="form-label">Challenges or Blockers</label>
+              <textarea class="form-textarea" id="prup-challenges" rows="2" placeholder="Any technical hurdles encountered..."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Next Steps</label>
+              <textarea class="form-textarea" id="prup-next-steps" rows="2" placeholder="Immediate roadmap for next milestone..."></textarea>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+              <label class="form-label">GitHub Repository URL</label>
+              <input type="url" class="form-input" id="prup-github-url" placeholder="https://github.com/org/repo">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Document / Screenshot Link</label>
+              <input type="text" class="form-input" id="prup-attachments-url" placeholder="URL or uploaded asset">
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer" style="display: flex; justify-content: flex-end; align-items: center; gap: 12px; padding: 14px 20px; border-top: 1px solid #E2E8F0;">
+          <button type="button" class="btn-outline btn-sm" onclick="closeSubmitProjectUpdateModal()" style="font-size: 13px; padding: 8px 16px;">Cancel</button>
+          <button type="submit" class="btn-primary" id="btn-save-project-update" style="font-size: 13px; padding: 8px 20px;">Record Development Update</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       MODAL: FACULTY PROJECT REVIEW & SUPERVISION
+       ======================================================== -->
+  <div class="modal-overlay" id="modal-faculty-project-review" style="display: none;">
+    <div class="modal-box" style="max-width: 780px; width: 94%; max-height: 90vh; overflow-y: auto; border-radius: 16px;">
+      <div class="modal-header">
+        <div>
+          <div style="font-size: 11px; font-weight: 700; color: #2563EB; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 3px;">Faculty Project Supervision</div>
+          <h3 class="modal-title" id="fpr-title" style="margin: 0; font-size: 18px; color: #0F172A;">Review Project Proposal</h3>
+        </div>
+        <button class="modal-close-btn" onclick="closeFacultyProjectReviewModal()" type="button">✕</button>
+      </div>
+
+      <div class="modal-body" style="padding: 16px 20px;">
+        <input type="hidden" id="fpr-project-id">
+        <div id="fpr-alert-error" style="display: none; background: #FEF2F2; border: 1px solid #FCA5A5; color: #B91C1C; padding: 10px 14px; border-radius: 8px; font-size: 12.5px; margin-bottom: 14px;"></div>
+
+        <!-- Project Summary Card -->
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 14px; margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+            <div>
+              <span class="badge-status blue" id="fpr-subject-badge">Subject</span>
+              <span class="badge-status" id="fpr-status-badge">Status</span>
+            </div>
+            <div style="font-size: 12px; color: #64748B;" id="fpr-team-lead">Lead: --</div>
+          </div>
+          <h4 id="fpr-summary-title" style="margin: 0 0 6px 0; font-size: 15px; color: #0F172A;"></h4>
+          <p id="fpr-summary-desc" style="font-size: 12.5px; color: #475569; margin: 0 0 10px 0; line-height: 1.45;"></p>
+          <div style="font-size: 11.5px; color: #334155; margin-bottom: 6px;">
+            <strong>Confirmed Members:</strong> <span id="fpr-members-text">--</span>
+          </div>
+          <div style="font-size: 11.5px; color: #334155; margin-bottom: 8px;">
+            <strong>Tech Stack:</strong> <span id="fpr-tech-text">--</span>
+          </div>
+          <div id="fpr-proposal-doc-row" style="display: none; padding-top: 6px;">
+            <a id="fpr-doc-link" href="#" target="_blank" class="sub-file-badge">📄 View Proposal Document</a>
+          </div>
+        </div>
+
+        <!-- Proposal Evaluation Section (Visible if pending/changes requested) -->
+        <div id="fpr-proposal-actions-section" style="margin-bottom: 16px;">
+          <div style="font-size: 13px; font-weight: 700; color: #1E293B; margin-bottom: 8px;">Subject Faculty Evaluation & Decision</div>
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label">Review Feedback / Decision Notes *</label>
+            <textarea class="form-textarea" id="fpr-feedback-text" rows="3" placeholder="Provide actionable feedback, required revisions, or approval remarks..."></textarea>
+          </div>
+
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button type="button" class="btn-primary" style="background: #059669; border-color: #059669;" onclick="handleFacultyApproveProposal()">
+              ✓ Approve Project
+            </button>
+            <button type="button" class="btn-outline" style="color: #D97706; border-color: #FCD34D; background: #FFFBEB;" onclick="handleFacultyRequestChanges()">
+              ✎ Request Revisions
+            </button>
+            <button type="button" class="btn-outline" style="color: #DC2626; border-color: #FCA5A5; background: #FEF2F2;" onclick="handleFacultyRejectProposal()">
+              ✕ Reject Proposal
+            </button>
+          </div>
+        </div>
+
+        <!-- Active Supervision Section (Visible if Approved / In Progress) -->
+        <div id="fpr-supervision-section" style="display: none; padding-top: 14px; border-top: 1px solid #E2E8F0;">
+          <div style="font-size: 13px; font-weight: 700; color: #1E293B; margin-bottom: 10px;">Supervision Guidance & Progress Review</div>
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label">Add Progress Guidance Notes to Team</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="text" class="form-input" id="fpr-guidance-input" placeholder="Provide supervisory guidance for current development stage..." style="flex: 1;">
+              <button type="button" class="btn-primary btn-sm" onclick="handleFacultySubmitGuidance()">Send Guidance</button>
+            </div>
+          </div>
+
+          <!-- Final Grading Card -->
+          <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 10px; padding: 14px; margin-top: 14px;">
+            <div style="font-size: 12.5px; font-weight: 700; color: #166534; margin-bottom: 8px;">Final Project Evaluation & Completion</div>
+            <div style="display: grid; grid-template-columns: 140px 1fr auto; gap: 10px; align-items: flex-end;">
+              <div>
+                <label class="form-label" style="font-size: 11.5px;">Final Grade *</label>
+                <select class="form-select" id="fpr-final-grade" style="padding: 6px 10px; font-size: 12px;">
+                  <option value="A+ (95-100)">A+ (95-100)</option>
+                  <option value="A (85-94)">A (85-94)</option>
+                  <option value="B+ (75-84)">B+ (75-84)</option>
+                  <option value="B (65-74)">B (65-74)</option>
+                  <option value="C (50-64)">C (50-64)</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label" style="font-size: 11.5px;">Evaluation Remarks</label>
+                <input type="text" class="form-input" id="fpr-grade-notes" placeholder="e.g. Outstanding implementation and demonstration." style="padding: 6px 10px; font-size: 12px;">
+              </div>
+              <button type="button" class="btn-primary btn-sm" style="background: #059669; border-color: #059669; height: 34px;" onclick="handleFacultyGradeProject()">
+                Complete & Grade
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display: flex; justify-content: flex-end; align-items: center; padding: 12px 20px; border-top: 1px solid #E2E8F0;">
+        <button type="button" class="btn-outline btn-sm" onclick="closeFacultyProjectReviewModal()" style="font-size: 13px; padding: 8px 16px;">Close</button>
       </div>
     </div>
   </div>

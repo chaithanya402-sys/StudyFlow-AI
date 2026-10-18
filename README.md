@@ -1,56 +1,116 @@
-# Student Placement Prediction System (Machine Learning & AI Platform)
+# StudyFlow AI — Next-Gen Academic & Placement Intelligence Platform
 
-A full-stack, machine-learning-powered student placement predictive analytics dashboard developed for CSE-AIML semester projects, training and placement cells (T&P), and students.
-
----
-
-## 🌟 Key Features & Screens Implemented (from Design Mockups)
-
-1. **Main Dashboard** (`media_1791295177196.png`):
-   - **5 Summary Metric Cards**:
-     - Total Students: `1,248` (+12% from last week)
-     - Placed Students: `892` (+6% from last week)
-     - Placement Rate: `71.5%` (+4.2% from last week)
-     - Active Predictions: `156` (+3 from last week)
-     - Not Placed: `356` (-2% from last week)
-   - **Recent Predictions Table**: Displays Student Name, Branch, CGPA, Placement Probability (%), Predicted Status (`Placed` / `Not Placed`), Date, and Actions.
-   - **Quick Access Cards**: Upload Dataset, Make Prediction, View Analytics, and Download Report.
-   - **Recent Activity**: Model training performance log (`Random Forest Classifier - 98.7% accuracy`).
-   - **Left Sidebar**: Complete navigation matching the new design hierarchy with Quota donut progress (`892/1000 Dataset Records Used`) and user profile (`John Doe`, `john@college.edu`).
-
-2. **AI Prediction Explanation** (`media_1791295186730.jpg` - Screen 2):
-   - Prediction Result: `✔ PLACED (84% Probability)`
-   - "Why this prediction?" summary box explaining driving attributes.
-   - Key Factor Progress Bars: CGPA (8.6), Internship Experience (Yes), Communication Skills (6/10), Technical Skills (8/10), Aptitude Score (7/10).
-   - Targeted Actionable Recommendations.
-
-3. **Skill Gap Analysis** (`media_1791295186730.jpg` - Screen 3):
-   - 78% Placement Readiness ring gauge.
-   - Skill breakdown bars: Technical Skills (80%), Communication (60%), Aptitude (70%), Projects (90%), Internship (100%).
-   - Recommended Actions checklist.
-
-4. **What-If Prediction Simulator** (`media_1791295186730.jpg` - Screen 4):
-   - Interactive profile simulator: enter new CGPA, Aptitude, and Technical Skills.
-   - Real-time simulation engine calculating revised placement probability and outcome.
-
-5. **Resume Analyzer** (`media_1791295186730.jpg` - Screen 5):
-   - Drag-and-drop resume upload zone.
-   - 78% Resume Match score with Skills Found vs Required Skills benchmark.
-   - Targeted resume enhancement recommendations.
-
-6. **Batch Prediction** (`media_1791295186730.jpg` - Screen 6):
-   - Bulk CSV file upload for college cohorts.
-   - Donut breakdown chart (500 Students: 342 Placed 68%, 158 Not Placed 32%).
-   - One-click Report Export.
-
-7. **AI Assistant Drawer Overlay** (Photos 1 & 4):
-   - Floating modal with conversational prompt suggestions: `Build a Prediction`, `Explore Insights`, and `Optimize Performance`.
+> An end-to-end, full-stack academic intelligence, mentorship, collaborative project management, and machine-learning placement prediction platform for universities, faculty, T&P officers, and students.
 
 ---
 
-## 🚀 How to Run
-- Run locally with Python:
-  ```bash
-  python -m http.server 3000
-  ```
-- Open [**http://localhost:3000**](http://localhost:3000) in your browser.
+## 🌟 Overview & Key Modules
+
+StudyFlow AI combines modern web engineering, SQLite persistence, and supervised machine learning to provide a seamless academic and career lifecycle experience across three distinct institutional roles:
+
+### 1. 🎓 Student Experience & Predictive Analytics
+- **Supervised Placement Prediction**: Real-time ML model assessing placement readiness, salary band predictions, and actionable skill gaps.
+- **Academic Marksheet Extractor & Verifier**: Automated marksheet upload, OCR/tabular extraction preview, CGPA calculation, and official verification against SQLite academic records.
+- **Profile Simulator & What-If Engine**: Interactive sliders for CGPA, aptitude scores, and technical competencies to simulate potential placement outcome shifts.
+- **Resume & Skill-Gap Analysis**: Benchmark resume credentials against top hiring company requirements.
+- **Collaborative Group Projects Hub**: Form multi-student teams (2–5 members), submit project proposals mapped to subject faculty, track milestones, and submit project deliverables.
+- **Assignment Submissions & Campus Drives**: View faculty assignments, submit coursework with file attachments, and apply for verified T&P campus placement drives.
+
+### 2. 👨‍🏫 Faculty Mentoring & Academic Governance
+- **Subject-Matched Project Approvals**: Specialized queue matching student project proposals with the designated subject faculty.
+- **Structured Proposal Iteration**: One-click actions to Approve, Request Changes (with mandatory revision notes), or Resubmit.
+- **Continuous Project Supervision**: Review milestone progress updates, review GitHub/demo links, provide structured feedback, and award final evaluations.
+- **Coursework Management**: Post assignments with deadlines and score criteria, review submissions, and provide marks and personalized student feedback.
+- **Mentorship Tasks**: Assign personalized guidance tasks directly to mentored students.
+
+### 3. 🏢 Training & Placement (T&P) Officer Portal
+- **Campus Placement Drives**: Create and publish recruitment drives with minimum CGPA criteria, package details, and application deadlines.
+- **Cohort Analytics & Batch Prediction**: Run batch predictions on entire student cohorts with visual placement distribution charts.
+- **Application Management**: Review eligible applicant pools and export placement readiness reports.
+
+---
+
+## 🛠️ Architecture & Tech Stack
+
+- **Backend**: Node.js, Express 5, Better-SQLite3
+- **Security & Authentication**: SQLite-backed session tokens, bcrypt password hashing, role-based endpoint authorization
+- **Database**: Embedded SQLite (`data/studyflow.db`) with relational integrity, foreign key constraints, and automatic schema bootstrap
+- **Machine Learning**: Supervised Ridge Regression (Target A: Exam Performance) & Logistic Classification (Target B: Placement Probability)
+- **Frontend**: Vanilla ES6+ JavaScript, CSS3 Glassmorphism design system, responsive layouts, dynamic modal dialogs, and SVG visual charts
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- [Node.js](https://nodejs.org/) (v18 or higher recommended)
+- `npm`
+
+### Installation
+
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/chaithanya402-sys/StudyFlow-AI.git
+   cd StudyFlow-AI
+   ```
+
+2. **Install Dependencies**:
+   ```bash
+   npm install
+   ```
+
+3. **Start the Application**:
+   ```bash
+   npm start
+   ```
+
+4. **Access the Application**:
+   - **Landing Page**: [http://localhost:3000/landing.html](http://localhost:3000/landing.html)
+   - **Main App Dashboard**: [http://localhost:3000/](http://localhost:3000/)
+   - **Authentication Portal**: [http://localhost:3000/login.html](http://localhost:3000/login.html)
+
+---
+
+## 🧪 Automated Testing & Verification
+
+Run the comprehensive end-to-end integration test suite:
+
+```bash
+npm test
+```
+
+This verifies:
+- Database health & schema migrations
+- Student, Faculty, and T&P Officer authentication & session management
+- Multi-tenant account isolation and security boundaries
+- Faculty task assignment & student submission workflows
+- Supervised ML prediction calculations & SQLite audit logging
+- Marksheet OCR extraction, validation, and CGPA recalculation
+- Collaborative Group Projects proposal approval, revision requests, member isolation, and grading workflows
+
+---
+
+## 📂 Project Structure
+
+```
+StudyFlow-AI/
+├── app.js                 # Frontend application router, state management & UI renderers
+├── dataStore.js           # Client-side data access layer & API bridge
+├── db.js                  # SQLite database connection & schema bootstrap
+├── server.js              # Express REST API server, authentication & business logic
+├── mlEngine.js            # Supervised Machine Learning prediction engine
+├── test_workflows.js      # Comprehensive automated verification test suite
+├── landing.html           # Public platform landing page
+├── login.html             # Multi-role authentication portal
+├── index.html             # Main responsive dashboard container
+├── styles.css             # Glassmorphic UI design system tokens & components
+├── supabaseClient.js      # Auth & session security adapter
+├── data/
+│   └── studyflow.db       # Embedded SQLite database
+└── uploads/               # File attachments & marksheet document storage
+```
+
+---
+
+## 📄 License
+ISC License. Built for CSE-AIML academic research, institutional governance, and career acceleration.

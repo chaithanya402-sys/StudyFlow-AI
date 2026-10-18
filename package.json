@@ -1,7 +1,7 @@
 {
-  "name": "student-placement-prediction",
+  "name": "studyflow-ai",
   "version": "1.0.0",
-  "description": "Student Placement Prediction Platform with Role-Based Dashboards & Supervised ML",
+  "description": "StudyFlow AI - Next-Gen Academic & Placement Intelligence Platform with Role-Based Dashboards, Collaborative Group Projects & ML Prediction",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -10,11 +10,14 @@
     "serve:py": "python server.py"
   },
   "keywords": [
+    "studyflow-ai",
     "student-placement-prediction",
+    "collaborative-group-projects",
     "machine-learning",
+    "academic-intelligence",
     "dashboard"
   ],
-  "author": "",
+  "author": "chaithanya402-sys",
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^3.0.3",
