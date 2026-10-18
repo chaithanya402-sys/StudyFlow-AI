@@ -1,0 +1,64 @@
+{
+  "metadata": {
+    "task": "Final Examination Score Prediction (Regression)",
+    "generated_at": "2026-10-18 UTC",
+    "dataset": "Historical Engineering Continuous Assessment & Final Exam Benchmark (N=2,000)",
+    "total_samples": 2000,
+    "train_samples": 1600,
+    "test_samples": 400,
+    "features": [
+      "internals",
+      "quiz",
+      "cgpa",
+      "assignments",
+      "attendance"
+    ],
+    "target": "final_exam_score",
+    "champion_model_key": "ridge_regression",
+    "champion_model_name": "Ridge Regularized Linear Regressor"
+  },
+  "champion_metrics": {
+    "mae": 2.523,
+    "rmse": 3.188,
+    "r2_score": 0.8946
+  },
+  "feature_importance_pct": {
+    "internals": 33.3,
+    "quiz": 25.1,
+    "cgpa": 17.7,
+    "assignments": 11.5,
+    "attendance": 12.3
+  },
+  "models": {
+    "ridge_regression": {
+      "name": "Ridge Regularized Linear Regressor",
+      "cv_rmse": 3.264,
+      "test_metrics": {
+        "mae": 2.523,
+        "rmse": 3.188,
+        "r2_score": 0.8946
+      },
+      "model_path": "C:\\Users\\palla\\Downloads\\StudyFlow AI\\data\\models\\ridge_regression_exam.joblib"
+    },
+    "random_forest": {
+      "name": "Random Forest Regressor",
+      "cv_rmse": 3.506,
+      "test_metrics": {
+        "mae": 2.708,
+        "rmse": 3.435,
+        "r2_score": 0.8777
+      },
+      "model_path": "C:\\Users\\palla\\Downloads\\StudyFlow AI\\data\\models\\random_forest_exam.joblib"
+    },
+    "gradient_boosting": {
+      "name": "Gradient Boosting Regressor",
+      "cv_rmse": 3.426,
+      "test_metrics": {
+        "mae": 2.717,
+        "rmse": 3.372,
+        "r2_score": 0.8821
+      },
+      "model_path": "C:\\Users\\palla\\Downloads\\StudyFlow AI\\data\\models\\gradient_boosting_exam.joblib"
+    }
+  }
+}

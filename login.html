@@ -8,22 +8,21 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   
-  <!-- Supabase Official JS SDK via CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- Application Supabase Auth Client -->
+  <!-- Application SQLite Auth Client -->
   <script src="supabaseClient.js"></script>
 
   <style>
     :root {
-      --primary-navy: #172B4D;
+      --primary-green: #16803C;
+      --dark-green: #123B22;
       --primary-blue: #2563EB;
       --primary-blue-hover: #1D4ED8;
       --primary-blue-light: #EFF6FF;
       --teal-accent: #0D9488;
       --border-subtle: #E2E8F0;
       --text-muted: #64748B;
-      --text-dark: #172B4D;
-      --success-green: #16A34A;
+      --text-dark: #17231A;
+      --success-green: #15803D;
       --error-red: #DC2626;
       --warning-amber: #D97706;
     }
@@ -68,7 +67,7 @@
     /* Left Side Showcase */
     .auth-showcase-panel {
       position: relative;
-      background: linear-gradient(145deg, #172B4D 0%, #1E3A8A 55%, #0F172A 100%);
+      background: linear-gradient(145deg, #123B22 0%, #16803C 45%, #0F172A 100%);
       background-size: cover;
       background-position: center;
       padding: 48px 40px;
@@ -720,7 +719,7 @@
       </div>
 
       <div style="font-size: 11px; color: rgba(255, 255, 255, 0.65);">
-        🔒 Supabase Auth • Row Level Security (RLS) • Role Enforcement
+        🔒 SQLite Database • Node.js Backend • Role Enforcement
       </div>
     </div>
 
@@ -731,15 +730,20 @@
           <span>←</span>
           <span>Back to Home</span>
         </a>
-        <button type="button" class="btn-config-gear" onclick="openSupabaseModal()" title="Configure Supabase Cloud Settings">
-          <span class="status-dot offline" id="cloud-status-dot"></span>
-          <span id="cloud-status-text">Supabase Config</span>
+        <button type="button" class="btn-config-gear" onclick="openSupabaseModal()" title="View SQLite Database Status">
+          <span class="status-dot online" id="cloud-status-dot"></span>
+          <span id="cloud-status-text">SQLite Active</span>
         </button>
       </div>
 
       <div class="auth-brand-logo">
-        <span style="font-size: 22px;">🎓</span>
-        <span style="font-weight: 800; font-size: 15px; color: #0F172A;">Student Placement Prediction</span>
+        <div style="width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, #16803C 0%, #123B22 100%); color: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(22,128,60,0.25);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+            <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+          </svg>
+        </div>
+        <span style="font-weight: 800; font-size: 16px; color: #17231A;">StudyFlow <span style="color: #16803C;">AI</span></span>
       </div>
 
       <!-- Mode Switcher Tabs: Sign In / Create Account -->
@@ -781,21 +785,13 @@
           </button>
         </div>
 
-        <!-- Quick Demo Login Helpers -->
-        <div class="demo-chips-box">
-          <span class="demo-chips-label">Quick 1-Click Demo:</span>
-          <button type="button" class="btn-demo-chip" onclick="quickFillDemo('student')">👨‍🎓 Aditya (Student)</button>
-          <button type="button" class="btn-demo-chip" onclick="quickFillDemo('faculty')">👨‍🏫 Dr. Rajesh (Faculty)</button>
-          <button type="button" class="btn-demo-chip" onclick="quickFillDemo('officer')">🏛️ Prof. Nair (Officer)</button>
-        </div>
-
         <!-- Sign In Form -->
         <form class="auth-form" id="login-form" onsubmit="handleLoginSubmit(event)">
           <div class="input-group">
             <label class="input-label" for="login-email">College Email or Roll Number</label>
             <div class="input-field-wrap">
               <span class="input-field-icon">✉</span>
-              <input type="email" id="login-email" class="auth-input" placeholder="aditya.verma@college.edu" value="aditya.verma@college.edu" required>
+              <input type="email" id="login-email" class="auth-input" placeholder="student@college.edu" required>
             </div>
           </div>
 
@@ -803,7 +799,7 @@
             <label class="input-label" for="login-password">Password</label>
             <div class="input-field-wrap">
               <span class="input-field-icon">🔒</span>
-              <input type="password" id="login-password" class="auth-input" placeholder="••••••••••••" value="student123" required>
+              <input type="password" id="login-password" class="auth-input" placeholder="••••••••••••" required>
               <button type="button" class="toggle-pwd-btn" onclick="togglePasswordVisibility('login-password')" aria-label="Toggle password">👁</button>
             </div>
           </div>
@@ -830,11 +826,6 @@
           <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
           <span>University Google Workspace / SSO</span>
         </button>
-
-        <div class="guest-access-link">
-          <span>Prefer to explore as guest? </span>
-          <a href="index.html#/dashboard">Launch Live Dashboard &rarr;</a>
-        </div>
       </div>
 
       <!-- ==========================================
@@ -958,7 +949,7 @@
   </div>
 
   <!-- ==========================================
-       SUPABASE CONFIGURATION MODAL
+       SQLITE DATABASE STATUS MODAL
        ========================================== -->
   <div class="modal-overlay" id="modal-supabase-config" onclick="if(event.target === this) closeSupabaseModal()">
     <div class="modal-card">
@@ -966,22 +957,18 @@
         <div style="display: flex; align-items: center; gap: 8px;">
           <span style="font-size: 22px;">⚡</span>
           <div>
-            <h3 style="font-size: 17px; font-weight: 800; color: #0F172A;">Supabase Cloud Integration</h3>
-            <p style="font-size: 11.5px; color: #64748B;">Connect your Supabase project for real authentication & database RLS policies</p>
+            <h3 style="font-size: 17px; font-weight: 800; color: #0F172A;">SQLite Database Architecture</h3>
+            <p style="font-size: 11.5px; color: #64748B;">Persistent single source of truth managed by Node.js &amp; Express</p>
           </div>
         </div>
         <button type="button" onclick="closeSupabaseModal()" style="border: none; background: none; font-size: 18px; cursor: pointer; color: #64748B;">✕</button>
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 14px;">
-        <div class="input-group">
-          <label class="input-label">Project URL</label>
-          <input type="text" id="input-supabase-url" class="auth-input" placeholder="https://your-project-id.supabase.co">
-        </div>
-
-        <div class="input-group">
-          <label class="input-label">Anon / Public API Key</label>
-          <input type="password" id="input-supabase-key" class="auth-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+        <div style="padding: 12px 14px; background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; font-size: 12px; color: #166534; line-height: 1.5;">
+          <strong>Database Engine:</strong> SQLite 3 (WAL Mode, Foreign Key Enforcement Enabled)<br>
+          <strong>File Location:</strong> <code>data/studyflow.db</code><br>
+          <strong>Authentication:</strong> Bcrypt password hashing + token-based server session verification.
         </div>
 
         <div class="input-group">
@@ -990,13 +977,9 @@
           <span style="font-size: 11px; color: #64748B;">Used to verify authorized faculty and T&amp;P officer registrations.</span>
         </div>
 
-        <div style="padding: 10px 12px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; font-size: 11.5px; color: #475569;">
-          <strong>Database Policies Note:</strong> Execute the database migrations from <code>supabase_schema.sql</code> in your Supabase SQL Editor to activate tables, Row Level Security, and automated faculty protection triggers.
-        </div>
-
         <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px;">
-          <button type="button" class="btn-demo-chip" style="padding: 8px 14px; font-size: 12px;" onclick="testSupabaseConnection()">⚡ Test Connection</button>
-          <button type="button" class="btn-submit-login" style="margin-top: 0; padding: 0 16px; height: 38px; font-size: 12.5px;" onclick="saveSupabaseConfig()">Save Credentials</button>
+          <button type="button" class="btn-demo-chip" style="padding: 8px 14px; font-size: 12px;" onclick="testSupabaseConnection()">⚡ Test SQLite Connection</button>
+          <button type="button" class="btn-submit-login" style="margin-top: 0; padding: 0 16px; height: 38px; font-size: 12.5px;" onclick="saveSupabaseConfig()">Save Settings</button>
         </div>
       </div>
     </div>
@@ -1008,22 +991,10 @@
     let currentSignInRole = 'student';
     let currentRegisterRole = 'student';
 
-    const roleCreds = {
-      student: {
-        email: 'aditya.verma@college.edu',
-        password: 'student123',
-        redirect: 'index.html#/student/overview'
-      },
-      faculty: {
-        email: 'dr.rajesh.mentor@college.edu',
-        password: 'mentor2026',
-        redirect: 'index.html#/faculty/overview'
-      },
-      officer: {
-        email: 'placement.cell@college.edu',
-        password: 'placement2026',
-        redirect: 'index.html#/officer/overview'
-      }
+    const rolePlaceholders = {
+      student: 'student@college.edu',
+      faculty: 'dr.rajesh.mentor@college.edu',
+      officer: 'placement.cell@college.edu'
     };
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -1048,13 +1019,8 @@
     function updateCloudStatusIndicator() {
       const dot = document.getElementById('cloud-status-dot');
       const text = document.getElementById('cloud-status-text');
-      if (window.SupabaseAuth && window.SupabaseAuth.isConfigured()) {
-        if (dot) dot.className = 'status-dot online';
-        if (text) text.textContent = 'Supabase Cloud Active';
-      } else {
-        if (dot) dot.className = 'status-dot offline';
-        if (text) text.textContent = 'Demo Mode (Strict Auth)';
-      }
+      if (dot) dot.className = 'status-dot online';
+      if (text) text.textContent = 'SQLite Active';
     }
 
     function switchAuthMode(mode) {
@@ -1091,11 +1057,8 @@
       });
 
       const emailInput = document.getElementById('login-email');
-      const passInput = document.getElementById('login-password');
-
-      if (roleCreds[role]) {
-        emailInput.value = roleCreds[role].email;
-        passInput.value = roleCreds[role].password;
+      if (emailInput && rolePlaceholders[role]) {
+        emailInput.placeholder = rolePlaceholders[role];
       }
     }
 
@@ -1126,10 +1089,7 @@
       }
     }
 
-    function quickFillDemo(role) {
-      setSignInRole(role);
-      showAlert(`Loaded ${role.toUpperCase()} credentials. Click Sign In to verify.`, 'info');
-    }
+
 
     function togglePasswordVisibility(fieldId) {
       const field = document.getElementById(fieldId);
@@ -1192,11 +1152,20 @@
         showAlert(`✓ Authentication verified! Welcome back, ${result.name || email}. Redirecting to ${result.role.toUpperCase()} dashboard...`, 'success');
 
         setTimeout(() => {
-          let targetUrl = 'index.html#/student/overview';
+          let targetUrl = 'index.html#/student/dashboard';
           if (result.role === 'faculty') {
             targetUrl = 'index.html#/faculty/overview';
           } else if (result.role === 'officer') {
             targetUrl = 'index.html#/officer/overview';
+          } else if (result.role === 'student') {
+            const isComplete = result.profile &&
+              result.profile.cgpa !== null &&
+              result.profile.predictionStatus !== 'Pending Setup';
+            if (!isComplete) {
+              targetUrl = 'index.html#/student/profile?setup=true';
+            } else {
+              targetUrl = 'index.html#/student/dashboard';
+            }
           }
           window.location.href = targetUrl;
         }, 600);
@@ -1298,12 +1267,7 @@
     }
 
     function handleSSOLogin() {
-      showAlert('Connecting to University Google Workspace SSO...', 'info');
-      setTimeout(() => {
-        localStorage.setItem('spp_user_email', 'aditya.verma@college.edu');
-        localStorage.setItem('spp_user_role', currentSignInRole);
-        window.location.href = roleCreds[currentSignInRole].redirect;
-      }, 700);
+      showAlert('Institutional Google Workspace SSO is restricted to enrolled campus students and faculty.', 'info');
     }
 
     // ==========================================
@@ -1328,50 +1292,27 @@
     }
 
     async function testSupabaseConnection() {
-      const url = document.getElementById('input-supabase-url').value.trim();
-      const key = document.getElementById('input-supabase-key').value.trim();
-
-      if (!url || !key) {
-        alert('Please enter both Supabase URL and Anon Key to test.');
-        return;
-      }
-
       try {
-        if (!window.supabase || typeof window.supabase.createClient !== 'function') {
-          alert('Supabase SDK not loaded. Check internet connection to CDN.');
-          return;
-        }
-
-        const testClient = window.supabase.createClient(url, key);
-        const { data, error } = await testClient.auth.getSession();
-        if (error) {
-          alert('Connection test failed: ' + error.message);
+        const res = await fetch('/api/health');
+        const data = await res.json();
+        if (data.status === 'ok') {
+          alert(`✓ SQLite connection verified!\n\nService: ${data.service}\nDatabase: ${data.database} (${data.dbFile})\nTimestamp: ${data.timestamp}`);
         } else {
-          alert('✓ Supabase connection successful! Auth service is online and responsive.');
+          alert('Database service status check failed.');
         }
       } catch (err) {
-        alert('Error testing connection: ' + err.message);
+        alert('Server unreachable: ' + err.message);
       }
     }
 
     function saveSupabaseConfig() {
-      const url = document.getElementById('input-supabase-url').value.trim();
-      const key = document.getElementById('input-supabase-key').value.trim();
       const passcode = document.getElementById('input-faculty-passcode').value.trim();
-
       if (passcode) {
         localStorage.setItem('spp_faculty_passcode', passcode);
       }
-
-      window.SupabaseAuth.updateConfig(url, key);
       updateCloudStatusIndicator();
       closeSupabaseModal();
-
-      if (url && key) {
-        showAlert('✓ Supabase credentials saved and connected successfully!', 'success');
-      } else {
-        showAlert('Switched to Local / Demo Authentication mode with strict password validation.', 'info');
-      }
+      showAlert('✓ SQLite database active and synchronized with Node.js backend.', 'success');
     }
   </script>
 </body>

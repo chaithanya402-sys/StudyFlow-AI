@@ -1,0 +1,777 @@
+{
+  "metadata": {
+    "generated_at": "2026-10-17 13:10:19 UTC",
+    "dataset_source": "StudyFlow AI Campus Placement Benchmark Cohort (N = 2,000)",
+    "total_samples": 2000,
+    "train_samples": 1600,
+    "test_samples": 400,
+    "placed_ratio_pct": 65.2,
+    "unplaced_ratio_pct": 34.8,
+    "champion_model_key": "logistic_regression",
+    "champion_model_name": "Logistic Regression",
+    "total_runtime_seconds": 3.26
+  },
+  "models": {
+    "logistic_regression": {
+      "key": "logistic_regression",
+      "name": "Logistic Regression",
+      "family": "Generalized Linear Model",
+      "description": "StandardScaler + L2 Regularized Logistic Regression with L-BFGS optimization.",
+      "fit_time_ms": 3.93,
+      "cv_mean_f1": 0.95,
+      "cv_std_f1": 0.0134,
+      "test_metrics": {
+        "accuracy": 93.75,
+        "precision": 96.83,
+        "recall": 93.49,
+        "f1_score": 95.13,
+        "roc_auc": 0.9805,
+        "log_loss": 0.1722,
+        "specificity": 94.24
+      },
+      "confusion_matrix": {
+        "true_positive": 244,
+        "false_positive": 8,
+        "true_negative": 131,
+        "false_negative": 17,
+        "total_test_samples": 400
+      },
+      "feature_importance": {
+        "backlogs": {
+          "importance_pct": 44.89,
+          "coefficient": -3.1254,
+          "direction": "Negative"
+        },
+        "cgpa": {
+          "importance_pct": 18.79,
+          "coefficient": 1.3083,
+          "direction": "Positive"
+        },
+        "aptitude_score": {
+          "importance_pct": 8.81,
+          "coefficient": 0.6136,
+          "direction": "Positive"
+        },
+        "internships": {
+          "importance_pct": 7.54,
+          "coefficient": 0.5248,
+          "direction": "Positive"
+        },
+        "technical_score": {
+          "importance_pct": 6.96,
+          "coefficient": 0.4848,
+          "direction": "Positive"
+        },
+        "projects": {
+          "importance_pct": 6.28,
+          "coefficient": 0.4372,
+          "direction": "Positive"
+        },
+        "workshops_certifications": {
+          "importance_pct": 3.46,
+          "coefficient": 0.2412,
+          "direction": "Positive"
+        },
+        "communication_score": {
+          "importance_pct": 2.01,
+          "coefficient": 0.1401,
+          "direction": "Positive"
+        },
+        "ssc_percentage": {
+          "importance_pct": 0.64,
+          "coefficient": 0.0448,
+          "direction": "Positive"
+        },
+        "hsc_percentage": {
+          "importance_pct": 0.61,
+          "coefficient": 0.0427,
+          "direction": "Positive"
+        }
+      },
+      "roc_curve": [
+        {
+          "fpr": 0.0,
+          "tpr": 0.0,
+          "threshold": 1.0
+        },
+        {
+          "fpr": 0.0,
+          "tpr": 0.4521,
+          "threshold": 0.9971
+        },
+        {
+          "fpr": 0.0072,
+          "tpr": 0.6858,
+          "threshold": 0.9653
+        },
+        {
+          "fpr": 0.0144,
+          "tpr": 0.7893,
+          "threshold": 0.894
+        },
+        {
+          "fpr": 0.0216,
+          "tpr": 0.8621,
+          "threshold": 0.7792
+        },
+        {
+          "fpr": 0.0288,
+          "tpr": 0.8774,
+          "threshold": 0.7479
+        },
+        {
+          "fpr": 0.036,
+          "tpr": 0.9119,
+          "threshold": 0.6383
+        },
+        {
+          "fpr": 0.0432,
+          "tpr": 0.9195,
+          "threshold": 0.5904
+        },
+        {
+          "fpr": 0.0504,
+          "tpr": 0.9272,
+          "threshold": 0.5655
+        },
+        {
+          "fpr": 0.0576,
+          "tpr": 0.9387,
+          "threshold": 0.4948
+        },
+        {
+          "fpr": 0.1079,
+          "tpr": 0.9502,
+          "threshold": 0.3875
+        },
+        {
+          "fpr": 0.1223,
+          "tpr": 0.954,
+          "threshold": 0.3657
+        },
+        {
+          "fpr": 0.1439,
+          "tpr": 0.9579,
+          "threshold": 0.3531
+        },
+        {
+          "fpr": 0.1511,
+          "tpr": 0.9617,
+          "threshold": 0.3497
+        },
+        {
+          "fpr": 0.1583,
+          "tpr": 0.9693,
+          "threshold": 0.271
+        },
+        {
+          "fpr": 0.1655,
+          "tpr": 0.977,
+          "threshold": 0.2514
+        },
+        {
+          "fpr": 0.1871,
+          "tpr": 0.9808,
+          "threshold": 0.2198
+        },
+        {
+          "fpr": 0.2158,
+          "tpr": 0.9847,
+          "threshold": 0.1891
+        },
+        {
+          "fpr": 0.2446,
+          "tpr": 0.9885,
+          "threshold": 0.1433
+        },
+        {
+          "fpr": 0.3237,
+          "tpr": 0.9923,
+          "threshold": 0.0928
+        },
+        {
+          "fpr": 0.3309,
+          "tpr": 0.9962,
+          "threshold": 0.0889
+        },
+        {
+          "fpr": 0.3525,
+          "tpr": 1.0,
+          "threshold": 0.0715
+        },
+        {
+          "fpr": 1.0,
+          "tpr": 1.0,
+          "threshold": 0.0
+        }
+      ],
+      "saved_file": "logistic_regression_placement.joblib"
+    },
+    "random_forest": {
+      "key": "random_forest",
+      "name": "Random Forest Classifier",
+      "family": "Ensemble (Bagging & Decision Forests)",
+      "description": "150 Breiman decision trees with Gini impurity split criteria and bootstrap sampling.",
+      "fit_time_ms": 222.86,
+      "cv_mean_f1": 0.9454,
+      "cv_std_f1": 0.0092,
+      "test_metrics": {
+        "accuracy": 91.75,
+        "precision": 94.53,
+        "recall": 92.72,
+        "f1_score": 93.62,
+        "roc_auc": 0.978,
+        "log_loss": 0.1844,
+        "specificity": 89.93
+      },
+      "confusion_matrix": {
+        "true_positive": 242,
+        "false_positive": 14,
+        "true_negative": 125,
+        "false_negative": 19,
+        "total_test_samples": 400
+      },
+      "feature_importance": {
+        "backlogs": {
+          "importance_pct": 44.52,
+          "importance_raw": 0.4452,
+          "direction": "Positive"
+        },
+        "cgpa": {
+          "importance_pct": 24.7,
+          "importance_raw": 0.247,
+          "direction": "Positive"
+        },
+        "internships": {
+          "importance_pct": 8.09,
+          "importance_raw": 0.0809,
+          "direction": "Positive"
+        },
+        "aptitude_score": {
+          "importance_pct": 5.94,
+          "importance_raw": 0.0594,
+          "direction": "Positive"
+        },
+        "technical_score": {
+          "importance_pct": 5.0,
+          "importance_raw": 0.05,
+          "direction": "Positive"
+        },
+        "hsc_percentage": {
+          "importance_pct": 4.03,
+          "importance_raw": 0.0403,
+          "direction": "Positive"
+        },
+        "ssc_percentage": {
+          "importance_pct": 3.39,
+          "importance_raw": 0.0339,
+          "direction": "Positive"
+        },
+        "communication_score": {
+          "importance_pct": 2.06,
+          "importance_raw": 0.0206,
+          "direction": "Positive"
+        },
+        "projects": {
+          "importance_pct": 1.46,
+          "importance_raw": 0.0146,
+          "direction": "Positive"
+        },
+        "workshops_certifications": {
+          "importance_pct": 0.81,
+          "importance_raw": 0.0081,
+          "direction": "Positive"
+        }
+      },
+      "roc_curve": [
+        {
+          "fpr": 0.0,
+          "tpr": 0.0,
+          "threshold": 1.0
+        },
+        {
+          "fpr": 0.0,
+          "tpr": 0.0153,
+          "threshold": 0.9998
+        },
+        {
+          "fpr": 0.0,
+          "tpr": 0.046,
+          "threshold": 0.9997
+        },
+        {
+          "fpr": 0.0,
+          "tpr": 0.4483,
+          "threshold": 0.9847
+        },
+        {
+          "fpr": 0.0072,
+          "tpr": 0.5862,
+          "threshold": 0.9597
+        },
+        {
+          "fpr": 0.0144,
+          "tpr": 0.7433,
+          "threshold": 0.9083
+        },
+        {
+          "fpr": 0.0216,
+          "tpr": 0.8199,
+          "threshold": 0.8296
+        },
+        {
+          "fpr": 0.0288,
+          "tpr": 0.8582,
+          "threshold": 0.7785
+        },
+        {
+          "fpr": 0.036,
+          "tpr": 0.8851,
+          "threshold": 0.709
+        },
+        {
+          "fpr": 0.0432,
+          "tpr": 0.8927,
+          "threshold": 0.6687
+        },
+        {
+          "fpr": 0.0504,
+          "tpr": 0.9119,
+          "threshold": 0.5968
+        },
+        {
+          "fpr": 0.0576,
+          "tpr": 0.9157,
+          "threshold": 0.5785
+        },
+        {
+          "fpr": 0.0719,
+          "tpr": 0.9195,
+          "threshold": 0.5674
+        },
+        {
+          "fpr": 0.0791,
+          "tpr": 0.9234,
+          "threshold": 0.5501
+        },
+        {
+          "fpr": 0.0935,
+          "tpr": 0.9272,
+          "threshold": 0.5241
+        },
+        {
+          "fpr": 0.1007,
+          "tpr": 0.9387,
+          "threshold": 0.4478
+        },
+        {
+          "fpr": 0.1151,
+          "tpr": 0.954,
+          "threshold": 0.3961
+        },
+        {
+          "fpr": 0.1223,
+          "tpr": 0.9617,
+          "threshold": 0.374
+        },
+        {
+          "fpr": 0.1439,
+          "tpr": 0.9732,
+          "threshold": 0.3371
+        },
+        {
+          "fpr": 0.2158,
+          "tpr": 0.977,
+          "threshold": 0.2082
+        },
+        {
+          "fpr": 0.223,
+          "tpr": 0.9847,
+          "threshold": 0.2052
+        },
+        {
+          "fpr": 0.2374,
+          "tpr": 0.9885,
+          "threshold": 0.1939
+        },
+        {
+          "fpr": 0.295,
+          "tpr": 0.9923,
+          "threshold": 0.124
+        },
+        {
+          "fpr": 0.3165,
+          "tpr": 0.9962,
+          "threshold": 0.1061
+        },
+        {
+          "fpr": 0.3237,
+          "tpr": 1.0,
+          "threshold": 0.0926
+        },
+        {
+          "fpr": 1.0,
+          "tpr": 1.0,
+          "threshold": 0.0003
+        }
+      ],
+      "saved_file": "random_forest_placement.joblib"
+    },
+    "gradient_boosting": {
+      "key": "gradient_boosting",
+      "name": "Gradient Boosting Classifier",
+      "family": "Ensemble (Sequential Gradient Boosting)",
+      "description": "120 sequential weak learners minimizing binomial deviance with learning rate 0.08.",
+      "fit_time_ms": 336.59,
+      "cv_mean_f1": 0.9416,
+      "cv_std_f1": 0.0122,
+      "test_metrics": {
+        "accuracy": 92.5,
+        "precision": 94.59,
+        "recall": 93.87,
+        "f1_score": 94.23,
+        "roc_auc": 0.9785,
+        "log_loss": 0.1934,
+        "specificity": 89.93
+      },
+      "confusion_matrix": {
+        "true_positive": 245,
+        "false_positive": 14,
+        "true_negative": 125,
+        "false_negative": 16,
+        "total_test_samples": 400
+      },
+      "feature_importance": {
+        "backlogs": {
+          "importance_pct": 66.47,
+          "importance_raw": 0.6647,
+          "direction": "Positive"
+        },
+        "cgpa": {
+          "importance_pct": 15.36,
+          "importance_raw": 0.1536,
+          "direction": "Positive"
+        },
+        "technical_score": {
+          "importance_pct": 4.56,
+          "importance_raw": 0.0456,
+          "direction": "Positive"
+        },
+        "aptitude_score": {
+          "importance_pct": 3.18,
+          "importance_raw": 0.0318,
+          "direction": "Positive"
+        },
+        "ssc_percentage": {
+          "importance_pct": 3.14,
+          "importance_raw": 0.0314,
+          "direction": "Positive"
+        },
+        "hsc_percentage": {
+          "importance_pct": 2.69,
+          "importance_raw": 0.0269,
+          "direction": "Positive"
+        },
+        "internships": {
+          "importance_pct": 1.73,
+          "importance_raw": 0.0173,
+          "direction": "Positive"
+        },
+        "projects": {
+          "importance_pct": 1.24,
+          "importance_raw": 0.0124,
+          "direction": "Positive"
+        },
+        "communication_score": {
+          "importance_pct": 1.23,
+          "importance_raw": 0.0123,
+          "direction": "Positive"
+        },
+        "workshops_certifications": {
+          "importance_pct": 0.4,
+          "importance_raw": 0.004,
+          "direction": "Positive"
+        }
+      },
+      "roc_curve": [
+        {
+          "fpr": 0.0,
+          "tpr": 0.0,
+          "threshold": 1.0
+        },
+        {
+          "fpr": 0.0,
+          "tpr": 0.0536,
+          "threshold": 0.9971
+        },
+        {
+          "fpr": 0.0,
+          "tpr": 0.0958,
+          "threshold": 0.9969
+        },
+        {
+          "fpr": 0.0072,
+          "tpr": 0.6322,
+          "threshold": 0.984
+        },
+        {
+          "fpr": 0.0144,
+          "tpr": 0.7739,
+          "threshold": 0.9579
+        },
+        {
+          "fpr": 0.0288,
+          "tpr": 0.8544,
+          "threshold": 0.8948
+        },
+        {
+          "fpr": 0.036,
+          "tpr": 0.9004,
+          "threshold": 0.7697
+        },
+        {
+          "fpr": 0.0576,
+          "tpr": 0.9042,
+          "threshold": 0.7159
+        },
+        {
+          "fpr": 0.0647,
+          "tpr": 0.9195,
+          "threshold": 0.6679
+        },
+        {
+          "fpr": 0.0791,
+          "tpr": 0.9272,
+          "threshold": 0.639
+        },
+        {
+          "fpr": 0.0935,
+          "tpr": 0.9349,
+          "threshold": 0.59
+        },
+        {
+          "fpr": 0.1079,
+          "tpr": 0.9387,
+          "threshold": 0.4959
+        },
+        {
+          "fpr": 0.1439,
+          "tpr": 0.9502,
+          "threshold": 0.3321
+        },
+        {
+          "fpr": 0.1655,
+          "tpr": 0.954,
+          "threshold": 0.2572
+        },
+        {
+          "fpr": 0.1727,
+          "tpr": 0.9617,
+          "threshold": 0.2189
+        },
+        {
+          "fpr": 0.1942,
+          "tpr": 0.9655,
+          "threshold": 0.1639
+        },
+        {
+          "fpr": 0.2014,
+          "tpr": 0.977,
+          "threshold": 0.1316
+        },
+        {
+          "fpr": 0.2518,
+          "tpr": 0.9808,
+          "threshold": 0.0613
+        },
+        {
+          "fpr": 0.2662,
+          "tpr": 0.9885,
+          "threshold": 0.0517
+        },
+        {
+          "fpr": 0.3885,
+          "tpr": 0.9923,
+          "threshold": 0.0193
+        },
+        {
+          "fpr": 0.4676,
+          "tpr": 1.0,
+          "threshold": 0.0161
+        },
+        {
+          "fpr": 1.0,
+          "tpr": 1.0,
+          "threshold": 0.0
+        }
+      ],
+      "saved_file": "gradient_boosting_placement.joblib"
+    }
+  },
+  "consensus_feature_importance": {
+    "backlogs": {
+      "label": "Active Academic Backlogs",
+      "average_importance_pct": 51.96,
+      "logistic_regression_pct": 44.89,
+      "random_forest_pct": 44.52,
+      "gradient_boosting_pct": 66.47
+    },
+    "cgpa": {
+      "label": "College CGPA (scale 0-10)",
+      "average_importance_pct": 19.62,
+      "logistic_regression_pct": 18.79,
+      "random_forest_pct": 24.7,
+      "gradient_boosting_pct": 15.36
+    },
+    "aptitude_score": {
+      "label": "Aptitude Assessment Score",
+      "average_importance_pct": 5.98,
+      "logistic_regression_pct": 8.81,
+      "random_forest_pct": 5.94,
+      "gradient_boosting_pct": 3.18
+    },
+    "internships": {
+      "label": "Internships Completed",
+      "average_importance_pct": 5.79,
+      "logistic_regression_pct": 7.54,
+      "random_forest_pct": 8.09,
+      "gradient_boosting_pct": 1.73
+    },
+    "technical_score": {
+      "label": "Coding & Technical Rating",
+      "average_importance_pct": 5.51,
+      "logistic_regression_pct": 6.96,
+      "random_forest_pct": 5.0,
+      "gradient_boosting_pct": 4.56
+    },
+    "projects": {
+      "label": "Major Technical Projects",
+      "average_importance_pct": 2.99,
+      "logistic_regression_pct": 6.28,
+      "random_forest_pct": 1.46,
+      "gradient_boosting_pct": 1.24
+    },
+    "hsc_percentage": {
+      "label": "12th Standard Percentage",
+      "average_importance_pct": 2.44,
+      "logistic_regression_pct": 0.61,
+      "random_forest_pct": 4.03,
+      "gradient_boosting_pct": 2.69
+    },
+    "ssc_percentage": {
+      "label": "10th Standard Percentage",
+      "average_importance_pct": 2.39,
+      "logistic_regression_pct": 0.64,
+      "random_forest_pct": 3.39,
+      "gradient_boosting_pct": 3.14
+    },
+    "communication_score": {
+      "label": "Soft Skills & Communication",
+      "average_importance_pct": 1.77,
+      "logistic_regression_pct": 2.01,
+      "random_forest_pct": 2.06,
+      "gradient_boosting_pct": 1.23
+    },
+    "workshops_certifications": {
+      "label": "Certifications & Workshops",
+      "average_importance_pct": 1.56,
+      "logistic_regression_pct": 3.46,
+      "random_forest_pct": 0.81,
+      "gradient_boosting_pct": 0.4
+    }
+  },
+  "feature_statistics": {
+    "cgpa": {
+      "label": "College CGPA (scale 0-10)",
+      "min": 5.0,
+      "max": 9.9,
+      "mean": 7.46,
+      "median": 7.44,
+      "std": 1.0
+    },
+    "internships": {
+      "label": "Internships Completed",
+      "min": 0.0,
+      "max": 4.0,
+      "mean": 1.59,
+      "median": 2.0,
+      "std": 1.07
+    },
+    "projects": {
+      "label": "Major Technical Projects",
+      "min": 0.0,
+      "max": 5.0,
+      "mean": 3.74,
+      "median": 4.0,
+      "std": 1.13
+    },
+    "workshops_certifications": {
+      "label": "Certifications & Workshops",
+      "min": 0.0,
+      "max": 4.0,
+      "mean": 1.43,
+      "median": 1.0,
+      "std": 1.13
+    },
+    "aptitude_score": {
+      "label": "Aptitude Assessment Score",
+      "min": 35.0,
+      "max": 100.0,
+      "mean": 71.81,
+      "median": 72.0,
+      "std": 11.52
+    },
+    "technical_score": {
+      "label": "Coding & Technical Rating",
+      "min": 30.0,
+      "max": 100.0,
+      "mean": 72.68,
+      "median": 73.0,
+      "std": 12.93
+    },
+    "communication_score": {
+      "label": "Soft Skills & Communication",
+      "min": 30.0,
+      "max": 100.0,
+      "mean": 67.66,
+      "median": 67.0,
+      "std": 12.82
+    },
+    "backlogs": {
+      "label": "Active Academic Backlogs",
+      "min": 0.0,
+      "max": 4.0,
+      "mean": 0.92,
+      "median": 1.0,
+      "std": 1.07
+    },
+    "ssc_percentage": {
+      "label": "10th Standard Percentage",
+      "min": 45.0,
+      "max": 98.0,
+      "mean": 75.91,
+      "median": 75.99,
+      "std": 10.64
+    },
+    "hsc_percentage": {
+      "label": "12th Standard Percentage",
+      "min": 45.0,
+      "max": 98.0,
+      "mean": 75.44,
+      "median": 75.57,
+      "std": 10.44
+    }
+  },
+  "feature_columns": [
+    "cgpa",
+    "internships",
+    "projects",
+    "workshops_certifications",
+    "aptitude_score",
+    "technical_score",
+    "communication_score",
+    "backlogs",
+    "ssc_percentage",
+    "hsc_percentage"
+  ]
+}

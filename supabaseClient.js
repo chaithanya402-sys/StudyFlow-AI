@@ -1,105 +1,49 @@
 /**
- * Student Placement Prediction Platform — Supabase Auth & Role Client
- * Handles authenticated Sign In, Sign Up with Faculty Protection, and Session Management
+ * StudyFlow AI — SQLite Authentication & Role Client
+ * Replaces cloud Supabase with local SQLite-backed authentication and session security.
  */
 
 (function (window) {
   'use strict';
 
-  // Default configuration (can be updated dynamically via UI modal or localStorage)
-  const DEFAULT_SUPABASE_URL = localStorage.getItem('spp_supabase_url') || '';
-  const DEFAULT_SUPABASE_KEY = localStorage.getItem('spp_supabase_anon_key') || '';
-  const FACULTY_PASSCODES = ['FACULTY2026', 'CAMPUS-FACULTY-2026', 'TPO-ADMIN-2026'];
-
-  // Built-in verified demo accounts for strict password verification in offline/demo mode
-  const VERIFIED_DEMO_ACCOUNTS = {
-    'aditya.verma@college.edu': {
-      password: 'student123',
-      role: 'student',
-      name: 'Aditya Verma',
-      rollNo: '21CSE042',
-      department: 'CSE'
-    },
-    'dr.rajesh.mentor@college.edu': {
-      password: 'mentor2026',
-      role: 'faculty',
-      name: 'Dr. Rajesh Sharma',
-      rollNo: 'FAC-CSE-001',
-      department: 'CSE'
-    },
-    'placement.cell@college.edu': {
-      password: 'placement2026',
-      role: 'officer',
-      name: 'Prof. K. S. Nair',
-      rollNo: 'TPO-HEAD-01',
-      department: 'T&P Cell'
-    }
-  };
-
-  class SupabaseAuthService {
+  class SQLiteAuthService {
     constructor() {
-      this.url = DEFAULT_SUPABASE_URL;
-      this.anonKey = DEFAULT_SUPABASE_KEY;
-      this.client = null;
-      this.initialized = false;
-      this.initClient();
-    }
-
-    initClient() {
-      if (this.url && this.anonKey && window.supabase && typeof window.supabase.createClient === 'function') {
-        try {
-          this.client = window.supabase.createClient(this.url, this.anonKey);
-          this.initialized = true;
-          console.log('[SupabaseAuth] Connected to cloud Supabase instance:', this.url);
-        } catch (err) {
-          console.error('[SupabaseAuth] Failed to initialize Supabase client:', err);
-          this.client = null;
-          this.initialized = false;
-        }
-      } else {
-        this.client = null;
-        this.initialized = false;
-      }
+      this.tokenKey = 'spp_auth_token';
+      this.emailKey = 'spp_user_email';
+      this.roleKey = 'spp_user_role';
+      this.nameKey = 'spp_user_name';
+      this.initialized = true;
     }
 
     isConfigured() {
-      return Boolean(this.initialized && this.client);
+      return true; // SQLite is built-in and always available
     }
 
-    updateConfig(url, key) {
-      this.url = (url || '').trim();
-      this.anonKey = (key || '').trim();
-      if (this.url && this.anonKey) {
-        localStorage.setItem('spp_supabase_url', this.url);
-        localStorage.setItem('spp_supabase_anon_key', this.anonKey);
+    getToken() {
+      return localStorage.getItem(this.tokenKey) || '';
+    }
+
+    setToken(token) {
+      if (token) {
+        localStorage.setItem(this.tokenKey, token);
       } else {
-        localStorage.removeItem('spp_supabase_url');
-        localStorage.removeItem('spp_supabase_anon_key');
-      }
-      this.initClient();
-      return this.isConfigured();
-    }
-
-    // Local persistent accounts storage for offline verification
-    getLocalUsers() {
-      try {
-        const stored = localStorage.getItem('spp_local_auth_users');
-        return stored ? JSON.parse(stored) : {};
-      } catch (e) {
-        return {};
+        localStorage.removeItem(this.tokenKey);
       }
     }
 
-    saveLocalUser(email, userData) {
-      const users = this.getLocalUsers();
-      users[email.toLowerCase()] = userData;
-      localStorage.setItem('spp_local_auth_users', JSON.stringify(users));
+    getAuthHeaders() {
+      const headers = { 'Content-Type': 'application/json' };
+      const token = this.getToken();
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      return headers;
     }
 
     /**
-     * Authenticate User with Password Verification
-     * @param {string} email 
-     * @param {string} password 
+     * Authenticate User with SQLite Database
+     * @param {string} email
+     * @param {string} password
      * @param {string} roleHint Optional role hint
      */
     async signIn(email, password, roleHint = 'student') {
@@ -110,107 +54,58 @@
         return { success: false, error: 'Email and password are required.' };
       }
 
-      // 1. If Supabase is configured, verify via Supabase Auth
-      if (this.isConfigured()) {
-        try {
-          const { data, error } = await this.client.auth.signInWithPassword({
-            email: cleanEmail,
-            password: cleanPassword
-          });
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: cleanEmail, password: cleanPassword, roleHint })
+        });
 
-          if (error) {
-            return { success: false, error: error.message };
-          }
-
-          const user = data.user;
-          let role = user.user_metadata?.role || roleHint || 'student';
-          let profile = null;
-
-          // Fetch profile from database to get enforced role
-          try {
-            const { data: dbProfile } = await this.client
-              .from('profiles')
-              .select('*')
-              .eq('id', user.id)
-              .single();
-
-            if (dbProfile) {
-              profile = dbProfile;
-              role = dbProfile.role || role;
-            }
-          } catch (pErr) {
-            console.warn('[SupabaseAuth] Could not fetch profile table:', pErr);
-          }
-
-          // Persist authenticated session
-          localStorage.setItem('spp_user_email', cleanEmail);
-          localStorage.setItem('spp_user_role', role);
-          if (profile?.full_name || user.user_metadata?.full_name) {
-            localStorage.setItem('spp_user_name', profile?.full_name || user.user_metadata?.full_name);
-          }
-
+        const data = await response.json();
+        if (!response.ok || !data.success) {
           return {
-            success: true,
-            user,
-            role,
-            profile,
-            isCloud: true
+            success: false,
+            error: data.error || 'Authentication failed. Please verify your credentials.'
           };
-        } catch (err) {
-          return { success: false, error: err.message || 'Supabase authentication failed.' };
         }
-      }
 
-      // 2. Offline / Demo Mode: Strictly verify password
-      // Check built-in demo accounts
-      const demoUser = VERIFIED_DEMO_ACCOUNTS[cleanEmail];
-      if (demoUser) {
-        if (demoUser.password !== cleanPassword) {
-          return { success: false, error: 'Invalid password. Please check your credentials.' };
+        // Store session token and UI identification
+        this.setToken(data.token);
+        localStorage.setItem(this.emailKey, cleanEmail);
+        localStorage.setItem(this.roleKey, data.role || roleHint);
+        localStorage.setItem(this.nameKey, data.name || data.user?.fullName || cleanEmail);
+        if (data.user?.id || data.profile?.id) {
+          localStorage.setItem('spp_user_id', data.user?.id || data.profile?.id);
         }
-        localStorage.setItem('spp_user_email', cleanEmail);
-        localStorage.setItem('spp_user_role', demoUser.role);
-        localStorage.setItem('spp_user_name', demoUser.name);
+
+        // Tell DataStore to refresh from SQLite with new credentials
+        if (window.PlacementDataStore && typeof window.PlacementDataStore.syncWithServer === 'function') {
+          window.PlacementDataStore.syncWithServer();
+        }
+
         return {
           success: true,
-          user: { email: cleanEmail, id: 'demo_' + demoUser.role },
-          role: demoUser.role,
-          name: demoUser.name,
-          isCloud: false
+          token: data.token,
+          user: data.user,
+          role: data.role,
+          name: data.name,
+          profile: data.profile,
+          isCloud: false,
+          isSqlite: true
         };
-      }
-
-      // Check locally registered accounts
-      const localUsers = this.getLocalUsers();
-      const localAccount = localUsers[cleanEmail];
-      if (localAccount) {
-        if (localAccount.password !== cleanPassword) {
-          return { success: false, error: 'Invalid password. Please check your credentials.' };
-        }
-        localStorage.setItem('spp_user_email', cleanEmail);
-        localStorage.setItem('spp_user_role', localAccount.role || 'student');
-        localStorage.setItem('spp_user_name', localAccount.fullName || localAccount.name);
+      } catch (err) {
+        console.error('[SQLiteAuth] Login network error:', err);
         return {
-          success: true,
-          user: { email: cleanEmail, id: localAccount.id || 'loc_' + Date.now() },
-          role: localAccount.role || 'student',
-          name: localAccount.fullName || localAccount.name,
-          isCloud: false
+          success: false,
+          error: 'Could not connect to authentication server. Please ensure the server is running.'
         };
       }
-
-      // Email not found
-      return {
-        success: false,
-        error: 'No account registered with this email. Please switch to "Create Account" tab to register.'
-      };
     }
 
     /**
-     * Register New Account with Protected Faculty Role Validation
-     * @param {Object} params
+     * Register New Account in SQLite Database with Institutional Passcode Validation
      */
-    async signUp({ email, password, fullName, role = 'student', rollNo = '', department = 'CSE', facultyKey = '' }) {
+    async signUp({ email, password, fullName, role = 'student', rollNo = '', department = 'CSE', facultyKey = '', phone = '' }) {
       const cleanEmail = (email || '').trim().toLowerCase();
       const cleanPassword = (password || '').trim();
       const cleanRole = (role || 'student').toLowerCase();
@@ -224,152 +119,129 @@
         return { success: false, error: 'Password must be at least 6 characters long.' };
       }
 
-      // Security check: Protect faculty & officer registration
-      let authorizedRole = 'student';
-      if (cleanRole === 'faculty' || cleanRole === 'officer') {
-        if (!cleanKey) {
-          return {
-            success: false,
-            error: `Registration for ${cleanRole === 'faculty' ? 'Faculty Mentor' : 'T&P Officer'} is restricted. A valid Institutional Verification Passcode is required.`
-          };
-        }
-
-        const isPasscodeValid = FACULTY_PASSCODES.includes(cleanKey) ||
-          cleanKey === (localStorage.getItem('spp_faculty_passcode') || 'FACULTY2026');
-
-        if (!isPasscodeValid) {
-          return {
-            success: false,
-            error: 'Invalid Institutional Passcode. You cannot register as Faculty Mentor without valid authorization.'
-          };
-        }
-        authorizedRole = cleanRole;
-      }
-
-      // 1. If Supabase is connected, call Supabase signUp
-      if (this.isConfigured()) {
-        try {
-          const { data, error } = await this.client.auth.signUp({
+      try {
+        const response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
             email: cleanEmail,
             password: cleanPassword,
-            options: {
-              data: {
-                full_name: fullName,
-                role: authorizedRole,
-                roll_no: rollNo,
-                department: department,
-                faculty_key: cleanKey
-              }
-            }
-          });
+            fullName: fullName.trim(),
+            role: cleanRole,
+            rollNo: rollNo.trim(),
+            department: department.trim(),
+            facultyKey: cleanKey,
+            phone: phone.trim()
+          })
+        });
 
-          if (error) {
-            return { success: false, error: error.message };
-          }
-
-          // Return success response
+        const data = await response.json();
+        if (!response.ok || !data.success) {
           return {
-            success: true,
-            user: data.user,
-            role: authorizedRole,
-            isCloud: true,
-            message: data.session
-              ? 'Registration successful! Signing you in...'
-              : 'Registration successful! Please check your email to verify your account or sign in directly.'
+            success: false,
+            error: data.error || 'Registration failed.'
           };
-        } catch (err) {
-          return { success: false, error: err.message || 'Supabase registration failed.' };
         }
+
+        if (data.token) {
+          this.setToken(data.token);
+          localStorage.setItem(this.emailKey, cleanEmail);
+          localStorage.setItem(this.roleKey, data.role);
+          localStorage.setItem(this.nameKey, data.name);
+          if (data.user?.id) {
+            localStorage.setItem('spp_user_id', data.user.id);
+          }
+        }
+
+        return {
+          success: true,
+          user: data.user,
+          role: data.role,
+          name: data.name,
+          message: data.message || `Account created successfully as ${data.role.toUpperCase()} in SQLite database!`
+        };
+      } catch (err) {
+        console.error('[SQLiteAuth] Registration network error:', err);
+        return {
+          success: false,
+          error: 'Connection error while registering account.'
+        };
       }
-
-      // 2. Offline / Demo Mode: Check duplicates and store securely
-      const localUsers = this.getLocalUsers();
-      if (localUsers[cleanEmail] || VERIFIED_DEMO_ACCOUNTS[cleanEmail]) {
-        return { success: false, error: 'An account with this email address already exists. Please sign in.' };
-      }
-
-      const newAccount = {
-        id: 'usr_' + Date.now().toString(36),
-        email: cleanEmail,
-        password: cleanPassword,
-        fullName: fullName.trim(),
-        role: authorizedRole,
-        rollNo: rollNo.trim(),
-        department: department,
-        createdAt: new Date().toISOString()
-      };
-
-      this.saveLocalUser(cleanEmail, newAccount);
-
-      return {
-        success: true,
-        user: newAccount,
-        role: authorizedRole,
-        isCloud: false,
-        message: `Account created successfully as ${authorizedRole.toUpperCase()}! You can now sign in.`
-      };
     }
 
     /**
      * Sign Out
      */
     async signOut() {
-      if (this.isConfigured()) {
-        try {
-          await this.client.auth.signOut();
-        } catch (err) {
-          console.warn('[SupabaseAuth] Sign out error:', err);
+      try {
+        const token = this.getToken();
+        if (token) {
+          await fetch('/api/auth/logout', {
+            method: 'POST',
+            headers: this.getAuthHeaders()
+          });
         }
+      } catch (err) {
+        console.warn('[SQLiteAuth] Logout network error:', err);
       }
 
-      localStorage.removeItem('spp_user_email');
-      localStorage.removeItem('spp_user_role');
-      localStorage.removeItem('spp_user_name');
+      this.setToken('');
+      localStorage.removeItem(this.emailKey);
+      localStorage.removeItem(this.roleKey);
+      localStorage.removeItem(this.nameKey);
+      localStorage.removeItem('spp_user_id');
       window.location.href = 'login.html';
     }
 
     /**
-     * Get Current Active User & Profile
+     * Get Current Active User & Profile from SQLite
      */
     async getCurrentUser() {
-      const email = localStorage.getItem('spp_user_email') || 'aditya.verma@college.edu';
-      const role = localStorage.getItem('spp_user_role') || 'student';
-      const name = localStorage.getItem('spp_user_name') || 'Student User';
+      const email = localStorage.getItem(this.emailKey) || '';
+      const role = localStorage.getItem(this.roleKey) || 'student';
+      const name = localStorage.getItem(this.nameKey) || 'Student';
+      const token = this.getToken();
 
-      if (this.isConfigured()) {
+      if (token) {
         try {
-          const { data: { user } } = await this.client.auth.getUser();
-          if (user) {
-            const { data: profile } = await this.client
-              .from('profiles')
-              .select('*')
-              .eq('id', user.id)
-              .single();
-
-            return {
-              user,
-              role: profile?.role || user.user_metadata?.role || role,
-              name: profile?.full_name || user.user_metadata?.full_name || name,
-              email: user.email,
-              profile: profile || null
-            };
+          const res = await fetch('/api/auth/me', {
+            headers: this.getAuthHeaders()
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.success && data.user) {
+              return {
+                user: data.user,
+                role: data.role || data.user.role || role,
+                name: data.user.fullName || name,
+                email: data.user.email || email,
+                profile: data.profile || null
+              };
+            }
           }
         } catch (e) {
-          console.warn('[SupabaseAuth] Error fetching current user:', e);
+          console.warn('[SQLiteAuth] Error checking active session:', e);
         }
       }
 
       return {
-        user: { email },
+        user: email ? { email, id: localStorage.getItem('spp_user_id') || '' } : null,
         role,
-        name,
+        name: name || 'Student',
         email,
         profile: null
       };
     }
+
+    updateConfig() {
+      return true;
+    }
   }
 
-  // Export singleton instance
-  window.SupabaseAuth = new SupabaseAuthService();
+  // Export singleton instances (both window.SupabaseAuth for full backward compatibility and window.StudyFlowAuth)
+  const authInstance = new SQLiteAuthService();
+  window.SupabaseAuth = authInstance;
+  window.StudyFlowAuth = authInstance;
+  window.SQLiteAuth = authInstance;
 
 })(window);

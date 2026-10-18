@@ -3,10 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Student Placement Prediction System | AI & ML Campus Intelligence</title>
+  <title>StudyFlow AI — Intelligent Student Task Management & Placement Prediction System</title>
+  <meta name="description" content="StudyFlow AI is an integrated platform combining student task management, academic analytics, machine learning predictions, and campus placement preparation.">
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  
   <script>
     // Seamless routing: If loaded with a dashboard hash route (e.g. #/student/overview), forward directly to index.html
     if (window.location.hash && (
@@ -19,17 +22,42 @@
       window.location.replace('index.html' + window.location.hash);
     }
   </script>
+
   <style>
-    /* Dedicated Landing Page Styles */
+    /* ==========================================================================
+       STUDYFLOW AI — DESIGN SYSTEM & VISUAL TOKENS
+       ========================================================================== */
     :root {
-      --primary-green: #008F68;
-      --primary-green-light: #E8F8F0;
-      --primary-green-hover: #007454;
-      --dark-navy: #0B132B;
-      --slate-dark: #1E293B;
-      --slate-muted: #64748B;
-      --slate-light: #F8FAFC;
-      --border-subtle: #E2E8F0;
+      --primary-green: #16803C;
+      --primary-green-hover: #126B32;
+      --primary-green-subtle: #E8F5ED;
+      --dark-green: #123B22;
+      --dark-green-hover: #0C2817;
+      --emerald-accent: #10B981;
+      --emerald-light: #ECFDF5;
+      --bg-canvas: #F8FBF6;
+      --bg-surface: #FFFFFF;
+      --bg-surface-elevated: #FFFFFF;
+      --text-main: #17231A;
+      --text-secondary: #66736A;
+      --text-muted: #8E9C92;
+      --border-subtle: #DCE8DE;
+      --border-light: #EBF2EC;
+      --border-focus: rgba(22, 128, 60, 0.4);
+
+      --shadow-sm: 0 1px 3px rgba(18, 59, 34, 0.04);
+      --shadow-md: 0 4px 16px -2px rgba(18, 59, 34, 0.05), 0 2px 6px -1px rgba(18, 59, 34, 0.03);
+      --shadow-lg: 0 14px 34px -4px rgba(18, 59, 34, 0.07), 0 4px 12px -2px rgba(18, 59, 34, 0.03);
+      --shadow-preview: 0 24px 60px -12px rgba(18, 59, 34, 0.12), 0 0 0 1px rgba(22, 128, 60, 0.08);
+
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 18px;
+      --radius-xl: 24px;
+      --radius-pill: 9999px;
+
+      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-heading: 'Plus Jakarta Sans', 'Inter', sans-serif;
     }
 
     * {
@@ -47,395 +75,986 @@
     }
 
     body, body.landing-body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      background-color: #FFFFFF;
-      color: #1E293B;
+      font-family: var(--font-body);
+      background-color: var(--bg-canvas);
+      color: var(--text-main);
       line-height: 1.6;
       min-height: 100vh !important;
       height: auto !important;
       overflow-x: hidden !important;
       overflow-y: visible !important;
-      margin: 0;
-      padding: 0;
-      position: relative;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* Top Sticky Navigation Bar */
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1220px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Section Headers */
+    .section-header {
+      text-align: center;
+      max-width: 740px;
+      margin: 0 auto 52px auto;
+    }
+
+    .section-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: var(--radius-pill);
+      background: var(--primary-green-subtle);
+      color: var(--primary-green);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      border: 1px solid rgba(22, 128, 60, 0.2);
+    }
+
+    .section-title {
+      font-family: var(--font-heading);
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: -0.8px;
+      line-height: 1.25;
+      color: var(--text-main);
+      margin-bottom: 14px;
+    }
+
+    .section-subtitle {
+      font-size: 16.5px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* ==========================================================================
+       NAVIGATION HEADER
+       ========================================================================== */
     .landing-nav {
       position: sticky;
       top: 0;
       left: 0;
       width: 100%;
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(14px);
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border-subtle);
       z-index: 1000;
       transition: all 0.2s ease;
     }
 
-    .landing-nav-container {
-      max-width: 1240px;
-      margin: 0 auto;
-      padding: 14px 24px;
+    .landing-nav-inner {
       display: flex;
       align-items: center;
       justify-content: space-between;
+      height: 72px;
     }
 
+    /* Brand Logo */
     .brand-logo-wrap {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       text-decoration: none;
-      color: var(--dark-navy);
     }
 
-    .brand-logo-icon {
-      font-size: 24px;
+    .brand-logo-badge {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary-green) 0%, var(--dark-green) 100%);
       display: flex;
       align-items: center;
       justify-content: center;
+      color: #FFFFFF;
+      box-shadow: 0 4px 10px rgba(22, 128, 60, 0.25);
     }
 
     .brand-logo-text {
+      font-family: var(--font-heading);
       font-weight: 800;
-      font-size: 16px;
-      letter-spacing: -0.3px;
-      color: #0F172A;
+      font-size: 19px;
+      letter-spacing: -0.4px;
+      color: var(--text-main);
     }
 
+    .brand-logo-text span {
+      color: var(--primary-green);
+    }
+
+    /* Center Nav Links */
     .landing-nav-links {
       display: flex;
       align-items: center;
-      gap: 28px;
+      gap: 30px;
       list-style: none;
     }
 
     .landing-nav-links a {
-      text-decoration: none;
-      color: #475569;
-      font-size: 13.5px;
+      font-size: 14.5px;
       font-weight: 600;
+      color: var(--text-secondary);
       transition: color 0.15s ease;
+      position: relative;
     }
 
     .landing-nav-links a:hover {
       color: var(--primary-green);
     }
 
+    /* Right Section Actions */
     .landing-nav-actions {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
     }
 
-    .btn-nav-login {
-      padding: 8px 18px;
-      border-radius: 9999px;
+    .btn-login {
+      padding: 9px 20px;
+      border-radius: var(--radius-pill);
       border: 1px solid var(--border-subtle);
       background: #FFFFFF;
-      color: #334155;
-      font-size: 13px;
-      font-weight: 700;
-      text-decoration: none;
+      color: var(--text-main);
+      font-size: 14px;
+      font-weight: 600;
       transition: all 0.15s ease;
-      cursor: pointer;
     }
 
-    .btn-nav-login:hover {
-      background: #F1F5F9;
-      border-color: #CBD5E1;
-      color: #0F172A;
+    .btn-login:hover {
+      background: #F4F7F4;
+      border-color: #CBD5CD;
+      color: var(--dark-green);
     }
 
-    .btn-nav-dashboard {
-      padding: 8px 20px;
-      border-radius: 9999px;
+    .btn-get-started {
+      padding: 9px 22px;
+      border-radius: var(--radius-pill);
       background: var(--primary-green);
       color: #FFFFFF;
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 700;
-      text-decoration: none;
+      box-shadow: 0 3px 10px rgba(22, 128, 60, 0.25);
+      transition: all 0.15s ease;
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      box-shadow: 0 4px 12px rgba(0, 143, 104, 0.25);
-      transition: all 0.15s ease;
-      cursor: pointer;
     }
 
-    .btn-nav-dashboard:hover {
+    .btn-get-started:hover {
       background: var(--primary-green-hover);
-      box-shadow: 0 6px 16px rgba(0, 143, 104, 0.35);
+      box-shadow: 0 5px 14px rgba(22, 128, 60, 0.35);
       transform: translateY(-1px);
     }
 
-    /* Hero Section */
-    .hero-section {
-      padding: 70px 24px 60px;
-      max-width: 1240px;
-      margin: 0 auto;
-      text-align: center;
-      position: relative;
+    /* Mobile Menu Toggle */
+    .mobile-menu-btn {
+      display: none;
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      padding: 8px;
+      cursor: pointer;
     }
 
-    .hero-glow-bg {
-      position: absolute;
-      top: -60px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 750px;
-      height: 450px;
-      background: radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, rgba(59, 130, 246, 0.05) 50%, transparent 70%);
-      filter: blur(50px);
-      z-index: -1;
-      pointer-events: none;
+    .mobile-drawer {
+      display: none;
+      position: fixed;
+      top: 72px;
+      left: 0;
+      width: 100%;
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 20px 24px 28px 24px;
+      box-shadow: var(--shadow-lg);
+      z-index: 999;
     }
 
-    .hero-pill-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 16px;
-      background: var(--primary-green-light);
-      color: var(--primary-green);
-      border: 1px solid rgba(0, 143, 104, 0.2);
-      border-radius: 9999px;
-      font-size: 12.5px;
-      font-weight: 700;
+    .mobile-drawer.open {
+      display: block;
+    }
+
+    .mobile-drawer-links {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      list-style: none;
       margin-bottom: 24px;
     }
 
+    .mobile-drawer-links a {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .mobile-drawer-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .mobile-drawer-actions .btn-login,
+    .mobile-drawer-actions .btn-get-started {
+      text-align: center;
+      justify-content: center;
+      padding: 12px;
+    }
+
+    /* ==========================================================================
+       HERO SECTION
+       ========================================================================== */
+    .hero-section {
+      padding: 68px 0 60px 0;
+      position: relative;
+      background: radial-gradient(circle at 15% 15%, rgba(22, 128, 60, 0.05) 0%, transparent 60%),
+                  radial-gradient(circle at 85% 65%, rgba(16, 185, 129, 0.04) 0%, transparent 50%);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.05fr 1fr;
+      gap: 52px;
+      align-items: center;
+    }
+
+    /* Left Column Content */
+    .hero-content {
+      max-width: 580px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: var(--radius-pill);
+      background: #FFFFFF;
+      border: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-sm);
+      color: var(--primary-green);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      margin-bottom: 22px;
+    }
+
+    .hero-badge-pulse {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--emerald-accent);
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
+    }
+
     .hero-title {
-      font-size: 46px;
-      line-height: 1.15;
+      font-family: var(--font-heading);
+      font-size: 48px;
       font-weight: 800;
-      color: #0F172A;
+      line-height: 1.16;
       letter-spacing: -1.2px;
-      max-width: 880px;
-      margin: 0 auto 20px;
+      color: var(--text-main);
+      margin-bottom: 20px;
     }
 
-    .hero-title span.highlight {
-      background: linear-gradient(135deg, #008F68 0%, #059669 50%, #2563EB 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+    .hero-title .highlight {
+      color: var(--primary-green);
+      position: relative;
     }
 
-    .hero-subtitle {
+    .hero-description {
       font-size: 17px;
-      color: #64748B;
-      max-width: 720px;
-      margin: 0 auto 36px;
-      line-height: 1.6;
+      line-height: 1.62;
+      color: var(--text-secondary);
+      margin-bottom: 32px;
     }
 
     .hero-cta-group {
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 16px;
+      gap: 14px;
+      margin-bottom: 38px;
       flex-wrap: wrap;
-      margin-bottom: 48px;
     }
 
     .btn-hero-primary {
       padding: 13px 28px;
-      border-radius: 12px;
-      background: #0F172A;
+      border-radius: var(--radius-pill);
+      background: var(--primary-green);
       color: #FFFFFF;
-      font-size: 14.5px;
+      font-size: 15px;
       font-weight: 700;
-      text-decoration: none;
       display: inline-flex;
       align-items: center;
       gap: 8px;
+      box-shadow: 0 4px 14px rgba(22, 128, 60, 0.28);
       transition: all 0.2s ease;
-      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.2);
     }
 
     .btn-hero-primary:hover {
-      background: #1E293B;
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.25);
+      background: var(--primary-green-hover);
+      box-shadow: 0 6px 18px rgba(22, 128, 60, 0.38);
+      transform: translateY(-1px);
     }
 
     .btn-hero-secondary {
       padding: 13px 26px;
-      border-radius: 12px;
+      border-radius: var(--radius-pill);
       background: #FFFFFF;
-      color: #0F172A;
       border: 1px solid var(--border-subtle);
-      font-size: 14.5px;
-      font-weight: 700;
-      text-decoration: none;
+      color: var(--text-main);
+      font-size: 15px;
+      font-weight: 600;
+      transition: all 0.2s ease;
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      transition: all 0.2s ease;
     }
 
     .btn-hero-secondary:hover {
-      background: #F8FAFC;
-      border-color: #CBD5E1;
-      transform: translateY(-2px);
+      background: #F4F7F4;
+      border-color: #CBD5CD;
+      color: var(--dark-green);
     }
 
-    /* Live Hero Stats Bar */
-    .hero-stats-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      max-width: 960px;
-      margin: 0 auto 50px;
+    /* Trust Indicators */
+    .hero-trust-strip {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border-light);
+      flex-wrap: wrap;
     }
 
-    .stat-card-box {
-      background: #FFFFFF;
-      border: 1px solid var(--border-subtle);
-      border-radius: 16px;
-      padding: 20px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
-      text-align: center;
-      transition: transform 0.2s ease;
-    }
-
-    .stat-card-box:hover {
-      transform: translateY(-3px);
-      border-color: #CBD5E1;
-    }
-
-    .stat-number {
-      font-size: 28px;
-      font-weight: 800;
-      color: #0F172A;
-      letter-spacing: -0.5px;
-    }
-
-    .stat-number.green { color: var(--primary-green); }
-    .stat-number.blue { color: #2563EB; }
-    .stat-number.purple { color: #7C3AED; }
-
-    .stat-label {
-      font-size: 12px;
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13.5px;
       font-weight: 600;
-      color: #64748B;
-      margin-top: 4px;
+      color: var(--text-secondary);
     }
 
-    /* Hero Interactive Preview Mockup */
-    .hero-mockup-wrapper {
-      max-width: 1100px;
-      margin: 0 auto;
-      border-radius: 20px;
-      border: 1px solid #CBD5E1;
-      box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
-      background: #FFFFFF;
-      overflow: hidden;
+    .trust-icon {
+      width: 20px;
+      height: 20px;
+      color: var(--primary-green);
+      flex-shrink: 0;
+    }
+
+    /* Right Column: Browser Frame Dashboard Preview */
+    .hero-preview-col {
       position: relative;
     }
 
-    .mockup-header-bar {
+    .browser-mockup {
+      background: var(--bg-surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-preview);
+      overflow: hidden;
+      transition: transform 0.3s ease;
+    }
+
+    .browser-mockup:hover {
+      transform: translateY(-2px);
+    }
+
+    .browser-header-bar {
       height: 40px;
-      background: #F1F5F9;
+      background: #F3F6F3;
       border-bottom: 1px solid var(--border-subtle);
       display: flex;
       align-items: center;
-      padding: 0 16px;
-      gap: 8px;
+      padding: 0 14px;
+      gap: 12px;
     }
 
-    .mockup-dot {
+    .browser-dots {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .browser-dot {
       width: 10px;
       height: 10px;
       border-radius: 50%;
     }
 
-    .mockup-dot.red { background: #EF4444; }
-    .mockup-dot.yellow { background: #F59E0B; }
-    .mockup-dot.green { background: #10B981; }
+    .browser-dot.red { background: #FF5F56; }
+    .browser-dot.yellow { background: #FFBD2E; }
+    .browser-dot.green { background: #27C93F; }
 
-    .mockup-url-bar {
+    .browser-url-bar {
       flex: 1;
-      max-width: 480px;
-      margin: 0 auto;
-      background: #FFFFFF;
-      border-radius: 6px;
       height: 24px;
-      border: 1px solid #E2E8F0;
-      font-size: 11px;
+      background: #FFFFFF;
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      gap: 6px;
+    }
+
+    .browser-url-bar svg {
+      width: 11px;
+      height: 11px;
+      color: var(--primary-green);
+    }
+
+    /* Internal Mockup Dashboard Content */
+    .mockup-dashboard {
+      padding: 20px;
+      background: #FAFCF9;
+      font-size: 13px;
+    }
+
+    /* Mockup Header */
+    .mockup-user-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .mockup-user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .mockup-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: var(--primary-green-subtle);
+      color: var(--primary-green);
+      font-weight: 800;
+      font-size: 13px;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #64748B;
-      font-family: monospace;
+      border: 1px solid rgba(22, 128, 60, 0.2);
     }
 
-    .mockup-body-content {
-      padding: 24px;
-      background: #F8FAFC;
+    .mockup-user-title {
+      font-weight: 700;
+      color: var(--text-main);
+      font-size: 13px;
+      line-height: 1.2;
     }
 
-    /* Interactive Live Placement Estimator Micro-Tool */
-    .estimator-section {
-      background: #F8FAFC;
+    .mockup-user-sub {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .mockup-session-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      background: #FFFFFF;
+      border: 1px solid var(--border-subtle);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--primary-green);
+    }
+
+    /* Mockup KPI Cards */
+    .mockup-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .mockup-kpi-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .mockup-kpi-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .mockup-kpi-val {
+      font-family: var(--font-heading);
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text-main);
+      line-height: 1.2;
+      margin-bottom: 4px;
+    }
+
+    .mockup-kpi-val.green {
+      color: var(--primary-green);
+    }
+
+    .mockup-kpi-sub {
+      font-size: 10.5px;
+      color: var(--text-muted);
+    }
+
+    .mockup-progress-bar {
+      width: 100%;
+      height: 5px;
+      background: #E8F2EA;
+      border-radius: 99px;
+      margin-top: 6px;
+      overflow: hidden;
+    }
+
+    .mockup-progress-fill {
+      height: 100%;
+      background: var(--primary-green);
+      border-radius: 99px;
+    }
+
+    /* Mockup Lower Split Cards */
+    .mockup-split-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 12px;
+    }
+
+    .mockup-panel {
+      background: #FFFFFF;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .mockup-panel-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .mockup-panel-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 99px;
+      background: var(--primary-green-subtle);
+      color: var(--primary-green);
+    }
+
+    .mockup-task-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 8px 0;
+      border-bottom: 1px dashed var(--border-light);
+    }
+
+    .mockup-task-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .mockup-task-check {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      border: 1.5px solid var(--primary-green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+
+    .mockup-task-check.done {
+      background: var(--primary-green);
+      color: #FFFFFF;
+    }
+
+    .mockup-task-text {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-main);
+      line-height: 1.3;
+    }
+
+    .mockup-task-meta {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .mockup-ai-card {
+      background: linear-gradient(145deg, #F0FDF4 0%, #FFFFFF 100%);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-top: 6px;
+    }
+
+    .mockup-ai-card-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #047857;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 4px;
+    }
+
+    .mockup-ai-card-desc {
+      font-size: 11px;
+      color: #065F46;
+      line-height: 1.4;
+    }
+
+    /* ==========================================================================
+       PLATFORM HIGHLIGHTS (VALUE STRIP)
+       ========================================================================== */
+    .highlights-strip-section {
+      padding: 14px 0 60px 0;
+    }
+
+    .highlights-strip {
+      background: #FFFFFF;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 24px 32px;
+      box-shadow: var(--shadow-sm);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+    }
+
+    .highlight-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .highlight-icon-box {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-md);
+      background: var(--primary-green-subtle);
+      color: var(--primary-green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      border: 1px solid rgba(22, 128, 60, 0.15);
+    }
+
+    .highlight-title {
+      font-family: var(--font-heading);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 3px;
+    }
+
+    .highlight-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    /* ==========================================================================
+       FEATURES SECTION
+       ========================================================================== */
+    .features-section {
+      padding: 80px 0;
+      background: #FFFFFF;
       border-top: 1px solid var(--border-subtle);
       border-bottom: 1px solid var(--border-subtle);
-      padding: 70px 24px;
     }
 
-    .section-container {
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .section-header {
-      text-align: center;
-      max-width: 680px;
-      margin: 0 auto 46px;
-    }
-
-    .section-pill {
-      font-size: 11.5px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: var(--primary-green);
-      margin-bottom: 10px;
-      display: inline-block;
-    }
-
-    .section-title {
-      font-size: 32px;
-      font-weight: 800;
-      color: #0F172A;
-      letter-spacing: -0.6px;
-      margin-bottom: 12px;
-    }
-
-    .section-desc {
-      font-size: 15px;
-      color: #64748B;
-    }
-
-    .estimator-card {
-      background: #FFFFFF;
-      border-radius: 20px;
-      border: 1px solid var(--border-subtle);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
-      padding: 36px;
+    .features-grid {
       display: grid;
-      grid-template-columns: 1.2fr 1fr;
-      gap: 36px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+    }
+
+    .feature-card {
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 32px 28px;
+      transition: all 0.25s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .feature-card:hover {
+      background: #FFFFFF;
+      border-color: rgba(22, 128, 60, 0.3);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-3px);
+    }
+
+    .feature-icon-wrap {
+      width: 50px;
+      height: 50px;
+      border-radius: var(--radius-md);
+      background: var(--primary-green-subtle);
+      color: var(--primary-green);
+      display: flex;
       align-items: center;
-      max-width: 980px;
-      margin: 0 auto;
+      justify-content: center;
+      margin-bottom: 22px;
+      border: 1px solid rgba(22, 128, 60, 0.18);
+    }
+
+    .feature-card h3 {
+      font-family: var(--font-heading);
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 14px;
+      line-height: 1.3;
+    }
+
+    .feature-checklist {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: auto;
+    }
+
+    .feature-checklist li {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      font-size: 13.5px;
+      color: var(--text-secondary);
+      line-height: 1.45;
+    }
+
+    .feature-checklist li svg {
+      width: 16px;
+      height: 16px;
+      color: var(--primary-green);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    /* ==========================================================================
+       HOW IT WORKS SECTION
+       ========================================================================== */
+    .how-it-works-section {
+      padding: 92px 0;
+      background: var(--bg-canvas);
+    }
+
+    .steps-timeline {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+      position: relative;
+    }
+
+    .step-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 30px 24px;
+      position: relative;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      transition: all 0.2s ease;
+    }
+
+    .step-card:hover {
+      box-shadow: var(--shadow-md);
+      border-color: rgba(22, 128, 60, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .step-number-badge {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--dark-green);
+      color: #FFFFFF;
+      font-family: var(--font-heading);
+      font-size: 15px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .step-card h4 {
+      font-family: var(--font-heading);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 10px;
+    }
+
+    .step-card p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    /* ==========================================================================
+       MACHINE LEARNING INTELLIGENCE SECTION
+       ========================================================================== */
+    .ml-intelligence-section {
+      padding: 92px 0;
+      background: #FFFFFF;
+      border-top: 1px solid var(--border-subtle);
+      border-bottom: 1px solid var(--border-subtle);
+      position: relative;
+    }
+
+    .ml-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 22px;
+      margin-bottom: 48px;
+    }
+
+    .ml-insight-card {
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 26px 22px;
+      transition: all 0.2s ease;
+    }
+
+    .ml-insight-card:hover {
+      background: #FFFFFF;
+      border-color: rgba(22, 128, 60, 0.35);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+
+    .ml-insight-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: var(--primary-green-subtle);
+      color: var(--primary-green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 18px;
+    }
+
+    .ml-insight-card h4 {
+      font-family: var(--font-heading);
+      font-size: 16.5px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 8px;
+      line-height: 1.35;
+    }
+
+    .ml-insight-card p {
+      font-size: 13.5px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* Data Governance Note */
+    .ml-governance-note {
+      background: #F4F9F5;
+      border: 1px solid #CFE3D3;
+      border-radius: var(--radius-md);
+      padding: 16px 22px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      max-width: 900px;
+      margin: 0 auto 48px auto;
+      font-size: 13px;
+      color: #235334;
+      line-height: 1.5;
+    }
+
+    .ml-governance-note svg {
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
+      color: var(--primary-green);
+    }
+
+    /* Interactive Live Estimator Widget */
+    .estimator-box {
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-xl);
+      padding: 38px 42px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .estimator-box-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .estimator-title-wrap h3 {
+      font-family: var(--font-heading);
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .estimator-title-wrap p {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .estimator-layout {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 40px;
+      align-items: center;
     }
 
     .estimator-controls {
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 22px;
     }
 
     .estimator-field {
@@ -448,307 +1067,446 @@
       display: flex;
       justify-content: space-between;
       font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .estimator-label-val {
       font-weight: 700;
-      color: #1E293B;
+      color: var(--primary-green);
     }
 
     .estimator-range {
+      -webkit-appearance: none;
       width: 100%;
       height: 6px;
-      border-radius: 6px;
-      background: #E2E8F0;
+      border-radius: 99px;
+      background: #DCE8DE;
       outline: none;
-      accent-color: var(--primary-green);
+      cursor: pointer;
     }
 
-    .estimator-result-card {
-      background: #F1FDF6;
-      border: 1px solid #A7F3D0;
-      border-radius: 16px;
-      padding: 28px;
+    .estimator-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--primary-green);
+      box-shadow: 0 2px 6px rgba(22, 128, 60, 0.4);
+      cursor: pointer;
+      border: 2px solid #FFFFFF;
+      transition: transform 0.1s ease;
+    }
+
+    .estimator-range::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+    }
+
+    /* Result Preview Output */
+    .estimator-output-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 32px 28px;
       text-align: center;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
-    .result-badge-status {
+    .estimator-status-pill {
       display: inline-block;
-      padding: 6px 18px;
-      border-radius: 9999px;
-      background: #059669;
-      color: #FFFFFF;
-      font-size: 16px;
+      padding: 5px 14px;
+      border-radius: var(--radius-pill);
+      font-size: 12px;
       font-weight: 800;
-      margin-bottom: 12px;
       letter-spacing: 0.5px;
+      background: var(--emerald-light);
+      color: #065F46;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      margin-bottom: 12px;
     }
 
-    .result-prob-value {
-      font-size: 44px;
+    .estimator-score-value {
+      font-family: var(--font-heading);
+      font-size: 46px;
       font-weight: 800;
-      color: #065F46;
+      color: var(--primary-green);
       line-height: 1;
       margin-bottom: 8px;
     }
 
-    .result-prob-desc {
+    .estimator-score-sub {
       font-size: 12.5px;
-      color: #047857;
-      margin-bottom: 20px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 14px;
     }
 
-    .btn-view-simulator {
-      display: inline-block;
+    .estimator-score-desc {
+      font-size: 13.5px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 22px;
+    }
+
+    .btn-launch-sim {
       width: 100%;
-      padding: 10px;
-      background: #0F172A;
+      padding: 11px 20px;
+      border-radius: var(--radius-pill);
+      background: var(--dark-green);
       color: #FFFFFF;
-      text-decoration: none;
-      border-radius: 10px;
-      font-size: 13px;
+      font-size: 13.5px;
       font-weight: 700;
-      transition: background 0.15s ease;
-    }
-
-    .btn-view-simulator:hover {
-      background: #1E293B;
-    }
-
-    /* Feature Grid Section */
-    .features-section {
-      padding: 80px 24px;
-      max-width: 1240px;
-      margin: 0 auto;
-    }
-
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 24px;
-    }
-
-    .feature-card {
-      background: #FFFFFF;
-      border: 1px solid var(--border-subtle);
-      border-radius: 18px;
-      padding: 28px;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
-      transition: all 0.2s ease;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .feature-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.06);
-      border-color: #CBD5E1;
-    }
-
-    .feature-icon-box {
-      width: 46px;
-      height: 46px;
-      border-radius: 12px;
-      display: flex;
+      transition: all 0.15s ease;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 22px;
+      gap: 6px;
+    }
+
+    .btn-launch-sim:hover {
+      background: var(--dark-green-hover);
+      transform: translateY(-1px);
+    }
+
+    /* ==========================================================================
+       ROLE-BASED PLATFORM SECTION
+       ========================================================================== */
+    .roles-section {
+      padding: 92px 0;
+      background: var(--bg-canvas);
+    }
+
+    .roles-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+    }
+
+    .role-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 34px 28px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      transition: all 0.25s ease;
+    }
+
+    .role-card:hover {
+      border-color: rgba(22, 128, 60, 0.35);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-3px);
+    }
+
+    .role-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       margin-bottom: 18px;
     }
 
-    .feature-icon-box.green { background: #ECFDF5; color: #059669; }
-    .feature-icon-box.blue { background: #EFF6FF; color: #2563EB; }
-    .feature-icon-box.purple { background: #F5F3FF; color: #7C3AED; }
-    .feature-icon-box.amber { background: #FFFBEB; color: #D97706; }
-    .feature-icon-box.rose { background: #FFF1F2; color: #E11D48; }
-    .feature-icon-box.teal { background: #F0FDFA; color: #0D9488; }
+    .role-icon-box {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-md);
+      background: var(--primary-green-subtle);
+      color: var(--primary-green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(22, 128, 60, 0.18);
+    }
 
-    .feature-card h3 {
-      font-size: 17px;
+    .role-tag {
+      font-size: 11px;
       font-weight: 700;
-      color: #0F172A;
-      margin-bottom: 8px;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      background: #F4F7F4;
+      color: var(--text-secondary);
+      border: 1px solid var(--border-subtle);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
-    .feature-card p {
+    .role-card h3 {
+      font-family: var(--font-heading);
+      font-size: 21px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 18px;
+    }
+
+    .role-features-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+      margin-bottom: 28px;
+      flex: 1;
+    }
+
+    .role-features-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
       font-size: 13.5px;
-      color: #64748B;
-      line-height: 1.55;
+      color: var(--text-secondary);
+      line-height: 1.45;
     }
 
-    /* Workflow Pipeline Section */
-    .pipeline-section {
-      background: #F8FAFC;
-      border-top: 1px solid var(--border-subtle);
-      border-bottom: 1px solid var(--border-subtle);
-      padding: 80px 24px;
+    .role-features-list li svg {
+      width: 16px;
+      height: 16px;
+      color: var(--primary-green);
+      flex-shrink: 0;
+      margin-top: 2px;
     }
 
-    .pipeline-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 20px;
-      position: relative;
+    .btn-role-action {
+      width: 100%;
+      padding: 12px;
+      border-radius: var(--radius-pill);
+      text-align: center;
+      font-size: 14px;
+      font-weight: 700;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
 
-    .pipeline-step-card {
+    .btn-role-action.primary {
+      background: var(--primary-green);
+      color: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(22, 128, 60, 0.2);
+    }
+
+    .btn-role-action.primary:hover {
+      background: var(--primary-green-hover);
+    }
+
+    .btn-role-action.outline {
       background: #FFFFFF;
       border: 1px solid var(--border-subtle);
-      border-radius: 16px;
-      padding: 24px;
-      position: relative;
+      color: var(--text-main);
     }
 
-    .step-badge-number {
-      width: 28px;
-      height: 28px;
+    .btn-role-action.outline:hover {
+      background: #F4F7F4;
+      border-color: #CBD5CD;
+      color: var(--dark-green);
+    }
+
+    /* ==========================================================================
+       PLACEMENT PREPARATION SECTION
+       ========================================================================== */
+    .placement-section {
+      padding: 92px 0;
+      background: #FFFFFF;
+      border-top: 1px solid var(--border-subtle);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .placement-features-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 18px;
+      margin-bottom: 40px;
+    }
+
+    .placement-pill-card {
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 22px 18px;
+      text-align: center;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .placement-pill-card:hover {
+      background: #FFFFFF;
+      border-color: rgba(22, 128, 60, 0.35);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+
+    .placement-card-icon {
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
-      background: var(--primary-green-light);
+      background: var(--primary-green-subtle);
       color: var(--primary-green);
-      font-weight: 800;
-      font-size: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
       margin-bottom: 14px;
     }
 
-    .pipeline-step-card h4 {
+    .placement-pill-card h4 {
+      font-family: var(--font-heading);
       font-size: 15px;
       font-weight: 700;
-      color: #0F172A;
+      color: var(--text-main);
       margin-bottom: 6px;
+      line-height: 1.3;
     }
 
-    .pipeline-step-card p {
+    .placement-pill-card p {
       font-size: 12.5px;
-      color: #64748B;
-      line-height: 1.5;
+      color: var(--text-secondary);
+      line-height: 1.4;
     }
 
-    /* ML Models Matrix Section */
-    .models-section {
-      padding: 80px 24px;
-      max-width: 1240px;
-      margin: 0 auto;
+    .placement-footer-banner {
+      background: #F4F9F5;
+      border: 1px solid #CFE3D3;
+      border-radius: var(--radius-lg);
+      padding: 26px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 20px;
     }
 
-    .models-table-wrap {
-      background: #FFFFFF;
-      border: 1px solid var(--border-subtle);
-      border-radius: 18px;
-      overflow: hidden;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+    .placement-banner-text h4 {
+      font-family: var(--font-heading);
+      font-size: 17px;
+      font-weight: 700;
+      color: #123B22;
+      margin-bottom: 4px;
     }
 
-    .models-table {
-      width: 100%;
-      border-collapse: collapse;
-      text-align: left;
+    .placement-banner-text p {
       font-size: 13.5px;
+      color: #37533E;
+      max-width: 650px;
     }
 
-    .models-table th {
-      background: #F8FAFC;
-      padding: 14px 20px;
-      font-weight: 700;
-      color: #475569;
-      border-bottom: 1px solid var(--border-subtle);
-    }
-
-    .models-table td {
-      padding: 16px 20px;
-      border-bottom: 1px solid #F1F5F9;
-      color: #1E293B;
-    }
-
-    .badge-accuracy {
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-weight: 700;
-      font-size: 12px;
-    }
-
-    .badge-accuracy.best {
-      background: #ECFDF5;
-      color: #059669;
-      border: 1px solid #A7F3D0;
-    }
-
-    .badge-accuracy.good {
-      background: #EFF6FF;
-      color: #2563EB;
-      border: 1px solid #BFDBFE;
-    }
-
-    /* CTA Banner */
-    .cta-banner-section {
-      max-width: 1240px;
-      margin: 0 auto 80px;
-      padding: 0 24px;
-    }
-
-    .cta-banner-inner {
-      background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
-      border-radius: 24px;
-      padding: 60px 40px;
-      text-align: center;
+    /* ==========================================================================
+       FINAL CALL TO ACTION SECTION
+       ========================================================================== */
+    .final-cta-section {
+      padding: 84px 0;
+      background: var(--dark-green);
       color: #FFFFFF;
       position: relative;
       overflow: hidden;
     }
 
-    .cta-banner-inner h2 {
-      font-size: 34px;
-      font-weight: 800;
-      letter-spacing: -0.6px;
-      margin-bottom: 14px;
-    }
-
-    .cta-banner-inner p {
-      font-size: 16px;
-      color: #94A3B8;
-      max-width: 600px;
-      margin: 0 auto 32px;
-    }
-
-    /* Footer */
-    .landing-footer {
-      background: #0B132B;
-      color: #94A3B8;
-      padding: 60px 24px 30px;
-      border-top: 1px solid #1E293B;
-    }
-
-    .footer-container {
-      max-width: 1240px;
+    .final-cta-inner {
+      text-align: center;
+      max-width: 680px;
       margin: 0 auto;
-      display: grid;
-      grid-template-columns: 2fr 1fr 1fr 1fr;
-      gap: 40px;
-      margin-bottom: 40px;
+      position: relative;
+      z-index: 2;
     }
 
-    .footer-brand h4 {
-      color: #FFFFFF;
-      font-size: 16px;
+    .final-cta-inner h2 {
+      font-family: var(--font-heading);
+      font-size: 38px;
       font-weight: 800;
-      margin-bottom: 12px;
+      letter-spacing: -0.8px;
+      line-height: 1.2;
+      margin-bottom: 16px;
+      color: #FFFFFF;
+    }
+
+    .final-cta-inner p {
+      font-size: 17px;
+      color: #CBD5CD;
+      line-height: 1.6;
+      margin-bottom: 34px;
+    }
+
+    .final-cta-buttons {
       display: flex;
       align-items: center;
-      gap: 8px;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .btn-final-primary {
+      padding: 13px 30px;
+      border-radius: var(--radius-pill);
+      background: var(--emerald-accent);
+      color: #064E3B;
+      font-size: 15px;
+      font-weight: 700;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-final-primary:hover {
+      background: #059669;
+      color: #FFFFFF;
+      box-shadow: 0 6px 18px rgba(16, 185, 129, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .btn-final-secondary {
+      padding: 13px 28px;
+      border-radius: var(--radius-pill);
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      color: #FFFFFF;
+      font-size: 15px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .btn-final-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.6);
+    }
+
+    /* ==========================================================================
+       FOOTER
+       ========================================================================== */
+    .landing-footer {
+      background: #FFFFFF;
+      border-top: 1px solid var(--border-subtle);
+      padding: 64px 0 32px 0;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 48px;
+      margin-bottom: 50px;
     }
 
     .footer-brand p {
-      font-size: 13px;
+      margin-top: 14px;
       line-height: 1.6;
+      color: var(--text-secondary);
       max-width: 320px;
+      font-size: 13.5px;
     }
 
     .footer-col h5 {
-      color: #FFFFFF;
-      font-size: 13px;
+      font-family: var(--font-heading);
+      font-size: 14px;
       font-weight: 700;
-      margin-bottom: 16px;
+      color: var(--text-main);
       text-transform: uppercase;
       letter-spacing: 0.6px;
+      margin-bottom: 18px;
     }
 
     .footer-col ul {
@@ -759,493 +1517,1234 @@
     }
 
     .footer-col a {
-      color: #94A3B8;
-      text-decoration: none;
-      font-size: 13px;
+      color: var(--text-secondary);
       transition: color 0.15s ease;
     }
 
     .footer-col a:hover {
-      color: #34D399;
+      color: var(--primary-green);
     }
 
     .footer-bottom {
-      max-width: 1240px;
-      margin: 0 auto;
-      padding-top: 24px;
-      border-top: 1px solid #1E293B;
+      padding-top: 28px;
+      border-top: 1px solid var(--border-light);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      font-size: 12px;
+      font-size: 13px;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+      gap: 12px;
     }
 
-    /* Responsive */
-    @media (max-width: 991px) {
-      .hero-title { font-size: 36px; }
-      .hero-stats-grid { grid-template-columns: repeat(2, 1fr); }
-      .features-grid { grid-template-columns: repeat(2, 1fr); }
-      .pipeline-grid { grid-template-columns: repeat(2, 1fr); }
-      .estimator-card { grid-template-columns: 1fr; }
-      .footer-container { grid-template-columns: 1fr 1fr; }
+    /* ==========================================================================
+       RESPONSIVE BREAKPOINTS
+       ========================================================================== */
+    @media (max-width: 1024px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+      .hero-content {
+        max-width: 100%;
+        text-align: left;
+      }
+      .highlights-strip {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .steps-timeline {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .ml-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .roles-grid {
+        grid-template-columns: 1fr;
+      }
+      .placement-features-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .footer-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 36px;
+      }
     }
 
-    @media (max-width: 640px) {
-      .landing-nav-links { display: none; }
-      .hero-title { font-size: 28px; }
-      .hero-stats-grid { grid-template-columns: 1fr; }
-      .features-grid { grid-template-columns: 1fr; }
-      .pipeline-grid { grid-template-columns: 1fr; }
-      .footer-container { grid-template-columns: 1fr; }
-      .footer-bottom { flex-direction: column; gap: 12px; text-align: center; }
+    @media (max-width: 768px) {
+      .landing-nav-links,
+      .landing-nav-actions .btn-login,
+      .landing-nav-actions .btn-get-started {
+        display: none;
+      }
+      .mobile-menu-btn {
+        display: block;
+      }
+      .hero-title {
+        font-size: 36px;
+      }
+      .hero-description {
+        font-size: 15.5px;
+      }
+      .highlights-strip {
+        grid-template-columns: 1fr;
+        gap: 18px;
+      }
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+      .steps-timeline {
+        grid-template-columns: 1fr;
+      }
+      .ml-cards-grid {
+        grid-template-columns: 1fr;
+      }
+      .estimator-layout {
+        grid-template-columns: 1fr;
+        gap: 28px;
+      }
+      .estimator-box {
+        padding: 24px;
+      }
+      .mockup-kpi-grid {
+        grid-template-columns: 1fr;
+      }
+      .mockup-split-grid {
+        grid-template-columns: 1fr;
+      }
+      .placement-features-grid {
+        grid-template-columns: 1fr;
+      }
+      .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 28px;
+      }
+      .footer-bottom {
+        flex-direction: column;
+        text-align: center;
+      }
     }
   </style>
 </head>
 <body class="landing-body">
 
-  <!-- Top Sticky Navigation Bar -->
-  <header class="landing-nav">
-    <div class="landing-nav-container">
-      <a href="landing.html" class="brand-logo-wrap">
-        <span class="brand-logo-icon">🎓</span>
-        <span class="brand-logo-text">Student Placement Prediction</span>
+  <!-- ==========================================================================
+       TOP NAVIGATION BAR
+       ========================================================================== -->
+  <header class="landing-nav" id="main-nav">
+    <div class="container landing-nav-inner">
+      <!-- Left: Logo & Brand -->
+      <a href="landing.html" class="brand-logo-wrap" title="StudyFlow AI Home">
+        <div class="brand-logo-badge" aria-hidden="true">
+          <!-- Combined Graduation Cap + AI Sparkle Icon -->
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+            <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+          </svg>
+        </div>
+        <span class="brand-logo-text">StudyFlow <span>AI</span></span>
       </a>
 
-      <nav>
+      <!-- Center: Navigation Links -->
+      <nav aria-label="Main Navigation">
         <ul class="landing-nav-links">
+          <li><a href="#hero">Home</a></li>
           <li><a href="#features">Features</a></li>
-          <li><a href="#estimator">Live Estimator</a></li>
-          <li><a href="#pipeline">How It Works</a></li>
-          <li><a href="#models">ML Models</a></li>
-          <li><a href="index.html#/what-if">Simulator</a></li>
+          <li><a href="#how-it-works">How It Works</a></li>
+          <li><a href="#ml-intelligence">ML Intelligence</a></li>
+          <li><a href="#placement">Placement</a></li>
         </ul>
       </nav>
 
+      <!-- Right: Action CTAs -->
       <div class="landing-nav-actions">
-        <a href="login.html" class="btn-nav-login">Sign In</a>
-        <a href="login.html?mode=register" class="btn-nav-login" style="background: var(--primary-green-light); color: var(--primary-green); border-color: rgba(0, 143, 104, 0.3);">Register</a>
-        <a href="index.html#/dashboard" class="btn-nav-dashboard">
-          <span>🚀</span>
-          <span>Launch Dashboard</span>
+        <a href="login.html" class="btn-login" id="nav-btn-login">Login</a>
+        <a href="login.html?mode=register" class="btn-get-started" id="nav-btn-get-started">
+          <span>Get Started</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
         </a>
+        <!-- Mobile Drawer Toggle -->
+        <button class="mobile-menu-btn" id="btn-mobile-toggle" aria-label="Toggle Navigation Menu">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Off-Canvas Menu Drawer -->
+    <div class="mobile-drawer" id="mobile-drawer" aria-hidden="true">
+      <ul class="mobile-drawer-links">
+        <li><a href="#hero" class="mobile-nav-link">Home</a></li>
+        <li><a href="#features" class="mobile-nav-link">Features</a></li>
+        <li><a href="#how-it-works" class="mobile-nav-link">How It Works</a></li>
+        <li><a href="#ml-intelligence" class="mobile-nav-link">ML Intelligence</a></li>
+        <li><a href="#placement" class="mobile-nav-link">Placement</a></li>
+      </ul>
+      <div class="mobile-drawer-actions">
+        <a href="login.html" class="btn-login">Login</a>
+        <a href="login.html?mode=register" class="btn-get-started">Get Started</a>
       </div>
     </div>
   </header>
 
-  <!-- Hero Section -->
-  <section class="hero-section">
-    <div class="hero-glow-bg"></div>
+  <main>
+    <!-- ==========================================================================
+         HERO SECTION
+         ========================================================================== -->
+    <section class="hero-section" id="hero">
+      <div class="container">
+        <div class="hero-grid">
+          
+          <!-- Left Column: Value Proposition & CTAs -->
+          <div class="hero-content">
+            <div class="hero-badge">
+              <span class="hero-badge-pulse" aria-hidden="true"></span>
+              <span>AI-POWERED ACADEMIC &amp; CAREER PLATFORM</span>
+            </div>
 
-    <div class="hero-pill-badge">
-      <span>✨</span>
-      <span>Machine Learning Campus Recruitment Intelligence 2026</span>
-    </div>
+            <h1 class="hero-title">
+              Turn Your Academic Effort Into <span class="highlight">Career Success.</span>
+            </h1>
 
-    <h1 class="hero-title">
-      Predict Placement Outcomes. <br>
-      <span class="highlight">Bridge Student Skill Gaps</span> with AI.
-    </h1>
+            <p class="hero-description">
+              Manage assignments, collaborate on projects, track academic performance, build in-demand skills, and prepare for placements — all in one intelligent platform.
+            </p>
 
-    <p class="hero-subtitle">
-      A comprehensive supervised machine learning system analyzing student academics, coding proficiency, aptitude scores, and internship experience to accurately forecast placement success before recruiters arrive.
-    </p>
+            <div class="hero-cta-group">
+              <a href="login.html?mode=register" class="btn-hero-primary" id="hero-btn-primary">
+                <span>Get Started Free</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </a>
+              <a href="#features" class="btn-hero-secondary" id="hero-btn-explore">
+                <span>Explore Features</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </a>
+            </div>
 
-    <div class="hero-cta-group">
-      <a href="index.html#/dashboard" class="btn-hero-primary">
-        <span>🚀</span>
-        <span>Open Interactive Dashboard</span>
-      </a>
-      <a href="login.html" class="btn-hero-secondary">
-        <span>🔐</span>
-        <span>Sign In to Portal</span>
-      </a>
-      <a href="login.html?mode=register" class="btn-hero-secondary" style="border-color: rgba(255,255,255,0.45); background: rgba(255,255,255,0.12);">
-        <span>📝</span>
-        <span>Register Account</span>
-      </a>
-    </div>
+            <!-- Trust Indicators -->
+            <div class="hero-trust-strip">
+              <div class="trust-item">
+                <svg class="trust-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 11l3 3L22 4"></path>
+                  <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                </svg>
+                <span>Smart Academic Tracking</span>
+              </div>
+              <div class="trust-item">
+                <svg class="trust-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="M12 2a4.5 4.5 0 0 0 0 9 4.5 4.5 0 0 1 0 9"></path>
+                </svg>
+                <span>Machine Learning Insights</span>
+              </div>
+              <div class="trust-item">
+                <svg class="trust-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                </svg>
+                <span>Placement Preparation</span>
+              </div>
+            </div>
+          </div>
 
-    <!-- Live Placement Statistics Bar -->
-    <div class="hero-stats-grid">
-      <div class="stat-card-box">
-        <div class="stat-number green">89.2%</div>
-        <div class="stat-label">Model Prediction Accuracy</div>
+          <!-- Right Column: Interactive Browser Frame Product Preview -->
+          <div class="hero-preview-col">
+            <div class="browser-mockup" aria-label="StudyFlow AI Dashboard Live Preview">
+              <!-- Window Bar -->
+              <div class="browser-header-bar">
+                <div class="browser-dots" aria-hidden="true">
+                  <span class="browser-dot red"></span>
+                  <span class="browser-dot yellow"></span>
+                  <span class="browser-dot green"></span>
+                </div>
+                <div class="browser-url-bar">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                  </svg>
+                  <span>studyflow.edu/student/dashboard</span>
+                </div>
+              </div>
+
+              <!-- Dashboard Body Preview -->
+              <div class="mockup-dashboard">
+                <!-- User Profile Header -->
+                <div class="mockup-user-header">
+                  <div class="mockup-user-info">
+                    <div class="mockup-avatar">ST</div>
+                    <div>
+                      <div class="mockup-user-title">Student Profile</div>
+                      <div class="mockup-user-sub">B.Tech Computer Science &amp; Engg • Sem 7</div>
+                    </div>
+                  </div>
+                  <span class="mockup-session-badge">
+                    <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#10B981;"></span>
+                    Active Session 2025–26
+                  </span>
+                </div>
+
+                <!-- KPI Metric Cards Grid -->
+                <div class="mockup-kpi-grid">
+                  <div class="mockup-kpi-card">
+                    <div class="mockup-kpi-label">
+                      <span>Assignments</span>
+                      <span style="color: var(--primary-green);">88%</span>
+                    </div>
+                    <div class="mockup-kpi-val green">14/16</div>
+                    <div class="mockup-kpi-sub">Submitted On-Time</div>
+                    <div class="mockup-progress-bar">
+                      <div class="mockup-progress-fill" style="width: 88%;"></div>
+                    </div>
+                  </div>
+
+                  <div class="mockup-kpi-card">
+                    <div class="mockup-kpi-label">
+                      <span>Academic CGPA</span>
+                      <span style="color: #047857;">Top 12%</span>
+                    </div>
+                    <div class="mockup-kpi-val">8.42</div>
+                    <div class="mockup-kpi-sub">0 Active Backlogs</div>
+                    <div class="mockup-progress-bar">
+                      <div class="mockup-progress-fill" style="width: 84%;"></div>
+                    </div>
+                  </div>
+
+                  <div class="mockup-kpi-card">
+                    <div class="mockup-kpi-label">
+                      <span>Placement Ready</span>
+                      <span style="color: var(--primary-green);">High</span>
+                    </div>
+                    <div class="mockup-kpi-val green">84%</div>
+                    <div class="mockup-kpi-sub">Tier-1 Drives Eligible</div>
+                    <div class="mockup-progress-bar">
+                      <div class="mockup-progress-fill" style="width: 84%;"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Lower Split Cards -->
+                <div class="mockup-split-grid">
+                  <!-- Upcoming Deadlines -->
+                  <div class="mockup-panel">
+                    <div class="mockup-panel-title">
+                      <span>Upcoming Deadlines</span>
+                      <span class="mockup-panel-badge">3 Pending</span>
+                    </div>
+                    <div class="mockup-task-item">
+                      <div class="mockup-task-check done">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      </div>
+                      <div>
+                        <div class="mockup-task-text">OS Lab 8: Page Replacement</div>
+                        <div class="mockup-task-meta">Due Tomorrow • Faculty Assignment</div>
+                      </div>
+                    </div>
+                    <div class="mockup-task-item">
+                      <div class="mockup-task-check"></div>
+                      <div>
+                        <div class="mockup-task-text">Distributed Systems Phase 3</div>
+                        <div class="mockup-task-meta">Due in 3 Days • Group Project</div>
+                      </div>
+                    </div>
+                    <div class="mockup-task-item">
+                      <div class="mockup-task-check"></div>
+                      <div>
+                        <div class="mockup-task-text">Cloud Computing Practice Set</div>
+                        <div class="mockup-task-meta">Due Friday • Learning Records</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- ML Insights & Recommendation -->
+                  <div class="mockup-panel">
+                    <div class="mockup-panel-title">
+                      <span>AI Recommendation</span>
+                      <span class="mockup-panel-badge" style="background: #ECFDF5; color: #047857;">Calibrated ML</span>
+                    </div>
+                    <div class="mockup-ai-card">
+                      <div class="mockup-ai-card-title">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                        </svg>
+                        <span>Targeted Skill Growth</span>
+                      </div>
+                      <div class="mockup-ai-card-desc">
+                        Complete Dynamic Programming Module 4 to boost ATS resume score for upcoming campus recruitment drives.
+                      </div>
+                    </div>
+                    <div style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: var(--text-muted);">
+                      <span>Confidence Score: 91.4%</span>
+                      <span style="color: var(--primary-green); font-weight: 600;">+14% Projected Uplift</span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
-      <div class="stat-card-box">
-        <div class="stat-number blue">1,248+</div>
-        <div class="stat-label">Student Profiles Analyzed</div>
-      </div>
-      <div class="stat-card-box">
-        <div class="stat-number purple">71.5%</div>
-        <div class="stat-label">Campus Placement Rate</div>
-      </div>
-      <div class="stat-card-box">
-        <div class="stat-number">6+</div>
-        <div class="stat-label">Trained ML Classification Models</div>
-      </div>
-    </div>
+    </section>
 
-    <!-- Hero Browser Dashboard Mockup -->
-    <div class="hero-mockup-wrapper">
-      <div class="mockup-header-bar">
-        <div class="mockup-dot red"></div>
-        <div class="mockup-dot yellow"></div>
-        <div class="mockup-dot green"></div>
-        <div class="mockup-url-bar">https://placement-prediction.college.edu/dashboard</div>
-      </div>
-      <div class="mockup-body-content">
-        <!-- Interactive Preview Teaser -->
-        <div style="background: #ffffff; border: 1px solid #E2E8F0; border-radius: 14px; padding: 24px; text-align: left;">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+    <!-- ==========================================================================
+         PLATFORM HIGHLIGHTS (VALUE STRIP)
+         ========================================================================== -->
+    <section class="highlights-strip-section" aria-label="Platform Highlights">
+      <div class="container">
+        <div class="highlights-strip">
+          <!-- 1. Academic Management -->
+          <div class="highlight-item">
+            <div class="highlight-icon-box" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+              </svg>
+            </div>
             <div>
-              <h3 style="font-size: 18px; font-weight: 800; color: #0F172A;">Live AI Prediction Preview</h3>
-              <p style="font-size: 13px; color: #64748B;">Supervised Classification Model Output Sample</p>
-            </div>
-            <a href="index.html#/dashboard" style="font-size: 12px; font-weight: 700; color: #008F68; text-decoration: none;">View Full App &rarr;</a>
-          </div>
-
-          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
-            <div style="padding: 16px; background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: 12px;">
-              <div style="font-size: 11px; font-weight: 700; color: #047857;">PREDICTED STATUS</div>
-              <div style="font-size: 22px; font-weight: 800; color: #065F46; margin: 4px 0;">PLACED</div>
-              <div style="font-size: 12px; color: #059669;">84% Likelihood Probability</div>
-            </div>
-            <div style="padding: 16px; background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 12px;">
-              <div style="font-size: 11px; font-weight: 700; color: #1D4ED8;">TOP IMPACT FEATURE</div>
-              <div style="font-size: 22px; font-weight: 800; color: #1E40AF; margin: 4px 0;">CGPA: 8.6</div>
-              <div style="font-size: 12px; color: #2563EB;">Strong Academic Weight (+42%)</div>
-            </div>
-            <div style="padding: 16px; background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 12px;">
-              <div style="font-size: 11px; font-weight: 700; color: #B45309;">SKILL GAP IDENTIFIED</div>
-              <div style="font-size: 22px; font-weight: 800; color: #92400E; margin: 4px 0;">Communication</div>
-              <div style="font-size: 12px; color: #D97706;">Needs Mock Interview Practice</div>
+              <div class="highlight-title">Academic Management</div>
+              <div class="highlight-desc">Keep coursework organized.</div>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
-  </section>
 
-  <!-- Interactive Live Placement Estimator Micro-Tool -->
-  <section class="estimator-section" id="estimator">
-    <div class="section-container">
-      <div class="section-header">
-        <span class="section-pill">Interactive Demo</span>
-        <h2 class="section-title">Test the Prediction Engine Instantly</h2>
-        <p class="section-desc">Adjust student metrics below and see how the trained machine learning model evaluates campus placement likelihood in real time.</p>
-      </div>
-
-      <div class="estimator-card">
-        <div class="estimator-controls">
-          <div class="estimator-field">
-            <div class="estimator-label-row">
-              <span>Cumulative CGPA</span>
-              <span id="label-cgpa" style="color: var(--primary-green);">7.8 / 10.0</span>
+          <!-- 2. Collaborative Learning -->
+          <div class="highlight-item">
+            <div class="highlight-icon-box" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
             </div>
-            <input type="range" class="estimator-range" id="input-cgpa" min="5.0" max="10.0" step="0.1" value="7.8">
+            <div>
+              <div class="highlight-title">Collaborative Learning</div>
+              <div class="highlight-desc">Work together on group projects.</div>
+            </div>
           </div>
 
-          <div class="estimator-field">
-            <div class="estimator-label-row">
-              <span>Aptitude Test Score</span>
-              <span id="label-aptitude" style="color: var(--primary-green);">72%</span>
+          <!-- 3. AI-Powered Insights -->
+          <div class="highlight-item">
+            <div class="highlight-icon-box" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              </svg>
             </div>
-            <input type="range" class="estimator-range" id="input-aptitude" min="30" max="100" step="1" value="72">
+            <div>
+              <div class="highlight-title">AI-Powered Insights</div>
+              <div class="highlight-desc">Understand progress and skill gaps.</div>
+            </div>
           </div>
 
-          <div class="estimator-field">
-            <div class="estimator-label-row">
-              <span>Technical & Coding Rating</span>
-              <span id="label-tech" style="color: var(--primary-green);">7 / 10</span>
+          <!-- 4. Career Readiness -->
+          <div class="highlight-item">
+            <div class="highlight-icon-box" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+              </svg>
             </div>
-            <input type="range" class="estimator-range" id="input-tech" min="1" max="10" step="1" value="7">
-          </div>
-
-          <div class="estimator-field">
-            <div class="estimator-label-row">
-              <span>Internship Experience</span>
-              <span id="label-internship" style="color: var(--primary-green);">1 Internship</span>
+            <div>
+              <div class="highlight-title">Career Readiness</div>
+              <div class="highlight-desc">Prepare for recruitment opportunities.</div>
             </div>
-            <input type="range" class="estimator-range" id="input-internship" min="0" max="3" step="1" value="1">
           </div>
         </div>
+      </div>
+    </section>
 
-        <div class="estimator-result-card">
-          <div class="result-badge-status" id="res-badge">PLACED</div>
-          <div class="result-prob-value" id="res-prob">82%</div>
-          <p class="result-prob-desc" id="res-desc">High probability of recruitment based on strong CGPA and aptitude score.</p>
-          <a href="index.html#/what-if" class="btn-view-simulator">Launch Full What-If Simulator &rarr;</a>
+    <!-- ==========================================================================
+         FEATURES SECTION
+         ========================================================================== -->
+    <section class="features-section" id="features">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-badge">Platform Capabilities</span>
+          <h2 class="section-title">Everything You Need to Learn, Improve &amp; Get Hired</h2>
+          <p class="section-subtitle">
+            One connected platform for academic productivity, performance improvement, and career preparation.
+          </p>
+        </div>
+
+        <div class="features-grid">
+          <!-- Feature 1: Smart Task Management -->
+          <div class="feature-card">
+            <div class="feature-icon-wrap" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 11l3 3L22 4"></path>
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+              </svg>
+            </div>
+            <h3>Smart Task Management</h3>
+            <ul class="feature-checklist">
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>View assignments and deadlines in one central timeline.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Track completed, pending, and overdue tasks.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Organize academic priorities with smart sorting.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Receive relevant automated submission reminders.</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Feature 2: Group Projects & Collaboration -->
+          <div class="feature-card">
+            <div class="feature-icon-wrap" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+            </div>
+            <h3>Group Projects &amp; Collaboration</h3>
+            <ul class="feature-checklist">
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Create student group projects with custom milestones.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Organize team members, assignees, and responsibilities.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Track milestones and overall project deliverable progress.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Share reports, file links, and project updates.</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Feature 3: Academic Performance Analytics -->
+          <div class="feature-card">
+            <div class="feature-icon-wrap" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="20" x2="18" y2="10"></line>
+                <line x1="12" y1="20" x2="12" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="14"></line>
+              </svg>
+            </div>
+            <h3>Academic Performance Analytics</h3>
+            <ul class="feature-checklist">
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Track assignment completion rates across semesters.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Review published faculty marks and constructive feedback.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Monitor laboratory and self-directed practice records.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Understand growth trajectories and academic progress.</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Feature 4: Machine Learning Predictions -->
+          <div class="feature-card">
+            <div class="feature-icon-wrap" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+            </div>
+            <h3>Machine Learning Predictions</h3>
+            <ul class="feature-checklist">
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Estimate assignment completion likelihood before due dates.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Predict academic performance with validated models.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Identify potential academic support needs early.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Provide explainable, data-driven recommendations.</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Feature 5: Skill-Gap Analysis -->
+          <div class="feature-card">
+            <div class="feature-icon-wrap" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <circle cx="12" cy="12" r="6"></circle>
+                <circle cx="12" cy="12" r="2"></circle>
+              </svg>
+            </div>
+            <h3>Skill-Gap Analysis</h3>
+            <ul class="feature-checklist">
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Track relevant technical, aptitude, and soft skills.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Identify missing competencies for specific job roles.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Recommend targeted practice resources and modules.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Monitor competency improvement over consecutive terms.</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Feature 6: Placement Preparation -->
+          <div class="feature-card">
+            <div class="feature-icon-wrap" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+              </svg>
+            </div>
+            <h3>Placement Preparation</h3>
+            <ul class="feature-checklist">
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Explore published company recruitment drives and eligibility.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Review calculated placement readiness metrics.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Analyze resumes against recruiter ATS criteria.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Track job applications and recruitment stage progress.</span>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- Core Features Section -->
-  <section class="features-section" id="features">
-    <div class="section-container">
-      <div class="section-header">
-        <span class="section-pill">Core Capabilities</span>
-        <h2 class="section-title">Built for Modern Campus Recruitment</h2>
-        <p class="section-desc">From predictive classification to explainable AI and skill gap remediation, everything students and colleges need in one platform.</p>
-      </div>
-
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon-box green">🧠</div>
-          <h3>AI Prediction Explanation</h3>
-          <p>Transparents decisions using feature importance attribution. Students discover exact factors influencing their likelihood score.</p>
+    <!-- ==========================================================================
+         HOW IT WORKS SECTION
+         ========================================================================== -->
+    <section class="how-it-works-section" id="how-it-works">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-badge">Student Progression</span>
+          <h2 class="section-title">Your Journey From Student to Placement-Ready Professional</h2>
+          <p class="section-subtitle">
+            A structured, progressive workflow engineered to bridge the gap between classroom academics and corporate hiring.
+          </p>
         </div>
 
-        <div class="feature-card">
-          <div class="feature-icon-box blue">📊</div>
-          <h3>Skill Gap Analysis</h3>
-          <p>Identifies competencies holding students back across technical, aptitude, and communication parameters with tailored suggestions.</p>
-        </div>
+        <div class="steps-timeline">
+          <!-- Step 1 -->
+          <div class="step-card">
+            <div class="step-number-badge">1</div>
+            <h4>Step 1 — Organize</h4>
+            <p>
+              Manage assignments, labs, learning records, practice activities, and group projects in one unified, clear dashboard.
+            </p>
+          </div>
 
-        <div class="feature-card">
-          <div class="feature-icon-box purple">🔄</div>
-          <h3>What-If Simulation Engine</h3>
-          <p>Interactive playground allowing students to adjust mock grades and project counts to see how placement odds improve dynamically.</p>
-        </div>
+          <!-- Step 2 -->
+          <div class="step-card">
+            <div class="step-number-badge">2</div>
+            <h4>Step 2 — Track</h4>
+            <p>
+              Monitor academic progress, submission status, and published marks with transparent grading and instructor feedback.
+            </p>
+          </div>
 
-        <div class="feature-card">
-          <div class="feature-icon-box amber">📄</div>
-          <h3>AI Resume Analyzer</h3>
-          <p>Parses student resumes against recruiter ATS criteria, highlighting matched skills, missing keywords, and recommended additions.</p>
-        </div>
+          <!-- Step 3 -->
+          <div class="step-card">
+            <div class="step-number-badge">3</div>
+            <h4>Step 3 — Improve</h4>
+            <p>
+              Use available machine learning insights to identify improvement areas, resolve skill gaps, and develop relevant competencies.
+            </p>
+          </div>
 
-        <div class="feature-card">
-          <div class="feature-icon-box rose">👥</div>
-          <h3>Batch CSV Prediction</h3>
-          <p>Enables placement cells and college administrators to upload 500+ student records at once and export detailed classification reports.</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon-box teal">💼</div>
-          <h3>Company & Job Matching</h3>
-          <p>Compares student qualification profiles with requirements of top hiring partners (TCS, Infosys, Wipro, Amazon, Microsoft).</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Pipeline / How It Works Section -->
-  <section class="pipeline-section" id="pipeline">
-    <div class="section-container">
-      <div class="section-header">
-        <span class="section-pill">Architecture & Flow</span>
-        <h2 class="section-title">End-to-End Machine Learning Pipeline</h2>
-        <p class="section-desc">How student academic records transform into actionable placement forecasts.</p>
-      </div>
-
-      <div class="pipeline-grid">
-        <div class="pipeline-step-card">
-          <div class="step-badge-number">1</div>
-          <h4>Student Data Ingestion</h4>
-          <p>Collects 12+ student attributes including 10th%, 12th%, CGPA, backlogs, aptitude test, and coding skills.</p>
-        </div>
-
-        <div class="pipeline-step-card">
-          <div class="step-badge-number">2</div>
-          <h4>Data Preprocessing</h4>
-          <p>Handles missing values, standardizes continuous features, and applies one-hot encoding on categorical attributes.</p>
-        </div>
-
-        <div class="pipeline-step-card">
-          <div class="step-badge-number">3</div>
-          <h4>Supervised ML Classification</h4>
-          <p>Ensemble of trained models (Random Forest, Logistic Regression, Decision Tree) outputs calibrated probability score.</p>
-        </div>
-
-        <div class="pipeline-step-card">
-          <div class="step-badge-number">4</div>
-          <h4>Actionable Interventions</h4>
-          <p>Provides personalized recommendations, readiness tracking, and targeted practice plans before interviews.</p>
+          <!-- Step 4 -->
+          <div class="step-card">
+            <div class="step-number-badge">4</div>
+            <h4>Step 4 — Get Placement-Ready</h4>
+            <p>
+              Prepare for recruitment drives, optimize your resume for ATS scoring, and track applications through offer confirmation.
+            </p>
+          </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- ML Models Comparison Matrix -->
-  <section class="models-section" id="models">
-    <div class="section-container">
-      <div class="section-header">
-        <span class="section-pill">Model Benchmarks</span>
-        <h2 class="section-title">Classification Performance Comparison</h2>
-        <p class="section-desc">Evaluated across historical college recruitment datasets using 80/20 train-test splits.</p>
+    <!-- ==========================================================================
+         MACHINE LEARNING INTELLIGENCE SECTION
+         ========================================================================== -->
+    <section class="ml-intelligence-section" id="ml-intelligence">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-badge">Predictive Analytics</span>
+          <h2 class="section-title">Smarter Insights. Better Academic Decisions.</h2>
+          <p class="section-subtitle">
+            StudyFlow AI uses available academic and skill-related data to support more informed learning and placement preparation decisions.
+          </p>
+        </div>
+
+        <!-- 4 ML Insight Cards -->
+        <div class="ml-cards-grid">
+          <div class="ml-insight-card">
+            <div class="ml-insight-icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
+            </div>
+            <h4>Assignment Completion Prediction</h4>
+            <p>Estimates likelihood of on-time assignment and lab submission based on historical paces, milestone completion, and workload distribution.</p>
+          </div>
+
+          <div class="ml-insight-card">
+            <div class="ml-insight-icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                <polyline points="17 6 23 6 23 12"></polyline>
+              </svg>
+            </div>
+            <h4>Academic Performance Forecasting</h4>
+            <p>Leverages validated academic trends, continuous evaluation scores, and practice records to forecast semester performance indicators.</p>
+          </div>
+
+          <div class="ml-insight-card">
+            <div class="ml-insight-icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+            </div>
+            <h4>Student Support &amp; Risk Indicators</h4>
+            <p>Detects submission bottlenecks and academic difficulty early, enabling faculty mentors to intervene proactively with targeted support.</p>
+          </div>
+
+          <div class="ml-insight-card">
+            <div class="ml-insight-icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+            </div>
+            <h4>Skill-Gap &amp; Career Recommendations</h4>
+            <p>Matches student technical proficiencies against verified employer hiring criteria to prescribe personalized learning paths.</p>
+          </div>
+        </div>
+
+        <!-- Model Transparency & Governance Note -->
+        <div class="ml-governance-note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+          <div>
+            <strong>Data &amp; Model Governance Notice:</strong> Predictions depend on available student data, submission history, and validated model parameters. Model insights provide explainable guidance to support student preparation and do not represent guaranteed placement outcomes.
+          </div>
+        </div>
+
+        <!-- Interactive Live Estimator Tool -->
+        <div class="estimator-box">
+          <div class="estimator-box-header">
+            <div class="estimator-title-wrap">
+              <h3>Live Placement Likelihood Estimator</h3>
+              <p>Adjust academic and skill parameters below to observe calibrated ML prediction responsiveness.</p>
+            </div>
+            <span class="mockup-session-badge" style="background: var(--primary-green-subtle); color: var(--primary-green); border-color: rgba(22,128,60,0.2);">
+              Interactive Model Preview
+            </span>
+          </div>
+
+          <div class="estimator-layout">
+            <!-- Controls -->
+            <div class="estimator-controls">
+              <div class="estimator-field">
+                <div class="estimator-label-row">
+                  <span>Cumulative CGPA</span>
+                  <span class="estimator-label-val" id="lbl-cgpa">8.2 / 10.0</span>
+                </div>
+                <input type="range" class="estimator-range" id="slider-cgpa" min="5.0" max="10.0" step="0.1" value="8.2" aria-label="Cumulative CGPA">
+              </div>
+
+              <div class="estimator-field">
+                <div class="estimator-label-row">
+                  <span>Aptitude Assessment Score</span>
+                  <span class="estimator-label-val" id="lbl-aptitude">76%</span>
+                </div>
+                <input type="range" class="estimator-range" id="slider-aptitude" min="30" max="100" step="1" value="76" aria-label="Aptitude Assessment Score">
+              </div>
+
+              <div class="estimator-field">
+                <div class="estimator-label-row">
+                  <span>Technical &amp; Coding Proficiency</span>
+                  <span class="estimator-label-val" id="lbl-tech">8 / 10</span>
+                </div>
+                <input type="range" class="estimator-range" id="slider-tech" min="1" max="10" step="1" value="8" aria-label="Technical & Coding Proficiency">
+              </div>
+
+              <div class="estimator-field">
+                <div class="estimator-label-row">
+                  <span>Internship Experience</span>
+                  <span class="estimator-label-val" id="lbl-intern">1 Completed</span>
+                </div>
+                <input type="range" class="estimator-range" id="slider-intern" min="0" max="3" step="1" value="1" aria-label="Internship Experience">
+              </div>
+            </div>
+
+            <!-- Output Preview Card -->
+            <div class="estimator-output-card">
+              <div class="estimator-status-pill" id="estimator-status-pill">HIGH READINESS</div>
+              <div class="estimator-score-value" id="estimator-score-val">84%</div>
+              <div class="estimator-score-sub">Calibrated Placement Likelihood</div>
+              <p class="estimator-score-desc" id="estimator-score-desc">
+                Strong academic baseline and coding rating position the candidate favorably for campus placement drives.
+              </p>
+              <a href="index.html#/what-if" class="btn-launch-sim" id="btn-full-simulator">
+                <span>Explore Full Simulator &amp; What-If</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+
       </div>
+    </section>
 
-      <div class="models-table-wrap">
-        <table class="models-table">
-          <thead>
-            <tr>
-              <th>Algorithm / Classifier</th>
-              <th>Accuracy</th>
-              <th>Precision</th>
-              <th>Recall</th>
-              <th>F1-Score</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>Random Forest Classifier</strong></td>
-              <td><span class="badge-accuracy best">92.4%</span></td>
-              <td>91.8%</td>
-              <td>93.1%</td>
-              <td>92.4%</td>
-              <td><span style="color: #059669; font-weight: 700;">★ Best Performing</span></td>
-            </tr>
-            <tr>
-              <td><strong>Support Vector Machine (SVM)</strong></td>
-              <td><span class="badge-accuracy good">88.5%</span></td>
-              <td>87.9%</td>
-              <td>89.2%</td>
-              <td>88.5%</td>
-              <td>Supported</td>
-            </tr>
-            <tr>
-              <td><strong>Logistic Regression</strong></td>
-              <td><span class="badge-accuracy good">86.8%</span></td>
-              <td>85.4%</td>
-              <td>87.0%</td>
-              <td>86.2%</td>
-              <td>Supported</td>
-            </tr>
-            <tr>
-              <td><strong>Decision Tree Classifier</strong></td>
-              <td><span class="badge-accuracy good">84.1%</span></td>
-              <td>83.5%</td>
-              <td>85.0%</td>
-              <td>84.2%</td>
-              <td>Supported</td>
-            </tr>
-          </tbody>
-        </table>
+    <!-- ==========================================================================
+         ROLE-BASED PLATFORM SECTION
+         ========================================================================== -->
+    <section class="roles-section" id="roles">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-badge">Unified Collaboration</span>
+          <h2 class="section-title">One Platform. Three Connected Roles.</h2>
+          <p class="section-subtitle">
+            Seamlessly linking student academic efforts, faculty guidance, and institutional placement cell management.
+          </p>
+        </div>
+
+        <div class="roles-grid">
+          <!-- Student Role Card -->
+          <div class="role-card">
+            <div class="role-card-header">
+              <div class="role-icon-box" aria-hidden="true">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                  <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+                </svg>
+              </div>
+              <span class="role-tag">Primary User</span>
+            </div>
+            <h3>Student</h3>
+            <ul class="role-features-list">
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Manage tasks and track upcoming course deadlines.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Submit assignments and lab work seamlessly.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Update self-directed learning and practice records.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Collaborate on group projects and milestone tracking.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Review academic progress and placement preparation.</span>
+              </li>
+            </ul>
+            <a href="login.html?role=student" class="btn-role-action primary" id="btn-login-student">
+              <span>Student Login</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </a>
+          </div>
+
+          <!-- Faculty Role Card -->
+          <div class="role-card">
+            <div class="role-card-header">
+              <div class="role-icon-box" aria-hidden="true">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="8.5" cy="7" r="4"></circle>
+                  <polyline points="17 11 19 13 23 9"></polyline>
+                </svg>
+              </div>
+              <span class="role-tag">Academic Mentor</span>
+            </div>
+            <h3>Faculty</h3>
+            <ul class="role-features-list">
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Create and publish course and lab assignments.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Review student submissions and deliverable files.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Evaluate work, assign scores, and publish marks.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Monitor authorized student performance cohorts.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Access academic analytics and predictive support signals.</span>
+              </li>
+            </ul>
+            <a href="login.html?role=faculty" class="btn-role-action outline" id="btn-login-faculty">
+              <span>Faculty Login</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </a>
+          </div>
+
+          <!-- TPO Admin Role Card -->
+          <div class="role-card">
+            <div class="role-card-header">
+              <div class="role-icon-box" aria-hidden="true">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                </svg>
+              </div>
+              <span class="role-tag">T&amp;P Authority</span>
+            </div>
+            <h3>Training &amp; Placement Cell</h3>
+            <ul class="role-features-list">
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Publish company offers and recruitment drive schedules.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Manage eligible recruitment criteria and cutoffs.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Review student applications and placement progress.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Maintain verified recruitment information for students.</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Track department-wide placement ratios and offers.</span>
+              </li>
+            </ul>
+            <a href="login.html?role=officer" class="btn-role-action outline" id="btn-login-officer">
+              <span>TPO Admin Login</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </a>
+          </div>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- CTA Banner Section -->
-  <section class="cta-banner-section">
-    <div class="cta-banner-inner">
-      <h2>Ready to Boost Campus Placement Success?</h2>
-      <p>Join placement cells, faculty mentors, and CSE AI/ML students actively using data-driven intelligence.</p>
-      <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;">
-        <a href="index.html#/dashboard" class="btn-hero-primary" style="background: var(--primary-green); color: #FFFFFF;">
-          <span>🚀</span>
-          <span>Access Student Dashboard</span>
-        </a>
-        <a href="login.html" class="btn-hero-secondary" style="background: transparent; color: #FFFFFF; border-color: rgba(255,255,255,0.3);">
-          <span>🔐</span>
-          <span>Sign In to Portal</span>
-        </a>
-        <a href="login.html?mode=register" class="btn-hero-secondary" style="background: rgba(255,255,255,0.15); color: #FFFFFF; border-color: rgba(255,255,255,0.4);">
-          <span>📝</span>
-          <span>Register New Account</span>
-        </a>
+    <!-- ==========================================================================
+         PLACEMENT PREPARATION SECTION
+         ========================================================================== -->
+    <section class="placement-section" id="placement">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-badge">Career Readiness</span>
+          <h2 class="section-title">Build Skills. Discover Opportunities. Prepare With Confidence.</h2>
+          <p class="section-subtitle">
+            Integrated tools bridging academic records with real-world campus recruitment standards.
+          </p>
+        </div>
+
+        <div class="placement-features-grid">
+          <div class="placement-pill-card">
+            <div class="placement-card-icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            </div>
+            <h4>Readiness Overview</h4>
+            <p>Composite readiness score synthesizing academics, aptitude, and code quality.</p>
+          </div>
+
+          <div class="placement-pill-card">
+            <div class="placement-card-icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            </div>
+            <h4>Skill-Gap Roadmaps</h4>
+            <p>Identify missing keywords and practice algorithms demanded by recruiters.</p>
+          </div>
+
+          <div class="placement-pill-card">
+            <div class="placement-card-icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><circle cx="11" cy="14" r="2"></circle><line x1="12.5" y1="15.5" x2="14.5" y2="17.5"></line></svg>
+            </div>
+            <h4>Resume ATS Analyzer</h4>
+            <p>Evaluates resume formatting, skills taxonomy, and ATS keyword relevance.</p>
+          </div>
+
+          <div class="placement-pill-card">
+            <div class="placement-card-icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            </div>
+            <h4>Campus Drives</h4>
+            <p>Direct access to recruitment drives published by college placement authorities.</p>
+          </div>
+
+          <div class="placement-pill-card">
+            <div class="placement-card-icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><polyline points="9 15 11 17 15 13"></polyline></svg>
+            </div>
+            <h4>Application Tracking</h4>
+            <p>End-to-end recruitment pipeline monitoring from initial shortlisting to offer.</p>
+          </div>
+        </div>
+
+        <!-- Verified Placement Notice Banner & Primary CTA -->
+        <div class="placement-footer-banner">
+          <div class="placement-banner-text">
+            <h4>Verified Institutional Records</h4>
+            <p>Company listings, recruitment eligibility, and hiring schedules reflect authentic published records actively managed by your institution's Training &amp; Placement Cell Administration.</p>
+          </div>
+          <a href="login.html?role=student" class="btn-hero-primary" id="btn-start-prep">
+            <span>Start Your Career Preparation</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </a>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- Footer -->
+    <!-- ==========================================================================
+         FINAL CALL TO ACTION SECTION
+         ========================================================================== -->
+    <section class="final-cta-section" aria-label="Call to Action">
+      <div class="container">
+        <div class="final-cta-inner">
+          <h2>Your Next Achievement Starts Here.</h2>
+          <p>
+            Build consistent study habits, improve your technical competencies, and take the next confident step toward your career goals with StudyFlow AI.
+          </p>
+          <div class="final-cta-buttons">
+            <a href="login.html?mode=register" class="btn-final-primary" id="cta-btn-get-started">
+              <span>Get Started Free</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </a>
+            <a href="login.html" class="btn-final-secondary" id="cta-btn-signin">
+              <span>Sign In to Portal</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ==========================================================================
+       FOOTER
+       ========================================================================== -->
   <footer class="landing-footer">
-    <div class="footer-container">
-      <div class="footer-brand">
-        <h4><span>🎓</span> Student Placement Prediction</h4>
-        <p>A supervised machine learning system engineered for academic institutions to forecast recruitment outcomes and empower student careers.</p>
+    <div class="container">
+      <div class="footer-grid">
+        <!-- Brand Description -->
+        <div class="footer-brand">
+          <div class="brand-logo-wrap">
+            <div class="brand-logo-badge" style="width: 32px; height: 32px; border-radius: 8px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+              </svg>
+            </div>
+            <span class="brand-logo-text" style="font-size: 18px;">StudyFlow <span>AI</span></span>
+          </div>
+          <p>
+            An Intelligent Student Task Management and Placement Prediction System engineered to bridge academic effort and campus career achievement.
+          </p>
+        </div>
+
+        <!-- Product Links -->
+        <div class="footer-col">
+          <h5>Product</h5>
+          <ul>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#how-it-works">How It Works</a></li>
+            <li><a href="#ml-intelligence">ML Intelligence</a></li>
+            <li><a href="#placement">Placement Preparation</a></li>
+          </ul>
+        </div>
+
+        <!-- Account Links -->
+        <div class="footer-col">
+          <h5>Account</h5>
+          <ul>
+            <li><a href="login.html">Sign In</a></li>
+            <li><a href="login.html?mode=register">Create Account</a></li>
+            <li><a href="index.html#/dashboard">App Dashboard</a></li>
+            <li><a href="index.html#/what-if">What-If Simulator</a></li>
+          </ul>
+        </div>
+
+        <!-- Role Links -->
+        <div class="footer-col">
+          <h5>Portal Access</h5>
+          <ul>
+            <li><a href="login.html?role=student">Student Portal</a></li>
+            <li><a href="login.html?role=faculty">Faculty Mentor</a></li>
+            <li><a href="login.html?role=officer">TPO Administration</a></li>
+            <li><a href="index.html#/student/profile">Academic Profile</a></li>
+          </ul>
+        </div>
       </div>
 
-      <div class="footer-col">
-        <h5>Quick Links</h5>
-        <ul>
-          <li><a href="landing.html">Home</a></li>
-          <li><a href="login.html">Sign In Portal</a></li>
-          <li><a href="login.html?mode=register">Create Account</a></li>
-          <li><a href="index.html#/dashboard">Main Dashboard</a></li>
-          <li><a href="index.html#/what-if">What-If Simulator</a></li>
-        </ul>
+      <div class="footer-bottom">
+        <div>&copy; 2026 StudyFlow AI. All rights reserved.</div>
+        <div>An Intelligent Student Task Management and Placement Prediction System</div>
       </div>
-
-      <div class="footer-col">
-        <h5>Portal Access</h5>
-        <ul>
-          <li><a href="login.html?role=student">Student Portal</a></li>
-          <li><a href="login.html?role=faculty">Faculty Mentor Portal</a></li>
-          <li><a href="login.html?role=officer">T&P Officer Portal</a></li>
-          <li><a href="index.html#/student/profile">Student Profile</a></li>
-        </ul>
-      </div>
-
-      <div class="footer-col">
-        <h5>Tech Stack</h5>
-        <ul>
-          <li><span>Python & Scikit-Learn</span></li>
-          <li><span>Random Forest & XGBoost</span></li>
-          <li><span>HTML5 / CSS3 / Vanilla JS</span></li>
-          <li><span>Node.js / Express</span></li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="footer-bottom">
-      <div>&copy; 2026 Student Placement Prediction System. All rights reserved.</div>
-      <div>Designed for CSE AI/ML Semester Project & College Placement Cells.</div>
     </div>
   </footer>
 
+  <!-- ==========================================================================
+       SCRIPTS: ESTIMATOR & MOBILE NAVIGATION
+       ========================================================================== -->
   <script>
-    // Live interactive placement estimator logic on landing page
-    const inCgpa = document.getElementById('input-cgpa');
-    const inApt = document.getElementById('input-aptitude');
-    const inTech = document.getElementById('input-tech');
-    const inIntern = document.getElementById('input-internship');
+    // Mobile Drawer Navigation Toggle
+    const mobileBtn = document.getElementById('btn-mobile-toggle');
+    const mobileDrawer = document.getElementById('mobile-drawer');
 
-    const lblCgpa = document.getElementById('label-cgpa');
-    const lblApt = document.getElementById('label-aptitude');
-    const lblTech = document.getElementById('label-tech');
-    const lblIntern = document.getElementById('label-internship');
+    if (mobileBtn && mobileDrawer) {
+      mobileBtn.addEventListener('click', () => {
+        const isOpen = mobileDrawer.classList.toggle('open');
+        mobileDrawer.setAttribute('aria-hidden', !isOpen);
+      });
 
-    const resBadge = document.getElementById('res-badge');
-    const resProb = document.getElementById('res-prob');
-    const resDesc = document.getElementById('res-desc');
+      // Close drawer on link click
+      document.querySelectorAll('.mobile-nav-link').forEach(link => {
+        link.addEventListener('click', () => {
+          mobileDrawer.classList.remove('open');
+          mobileDrawer.setAttribute('aria-hidden', 'true');
+        });
+      });
+    }
 
-    function calculatePlacement() {
-      const cgpa = parseFloat(inCgpa.value);
-      const apt = parseInt(inApt.value);
-      const tech = parseInt(inTech.value);
-      const intern = parseInt(inIntern.value);
+    // Live Placement Likelihood Estimator
+    const sliderCgpa = document.getElementById('slider-cgpa');
+    const sliderApt = document.getElementById('slider-aptitude');
+    const sliderTech = document.getElementById('slider-tech');
+    const sliderIntern = document.getElementById('slider-intern');
+
+    const lblCgpa = document.getElementById('lbl-cgpa');
+    const lblApt = document.getElementById('lbl-aptitude');
+    const lblTech = document.getElementById('lbl-tech');
+    const lblIntern = document.getElementById('lbl-intern');
+
+    const scorePill = document.getElementById('estimator-status-pill');
+    const scoreVal = document.getElementById('estimator-score-val');
+    const scoreDesc = document.getElementById('estimator-score-desc');
+
+    function updateEstimator() {
+      if (!sliderCgpa || !sliderApt || !sliderTech || !sliderIntern) return;
+
+      const cgpa = parseFloat(sliderCgpa.value);
+      const apt = parseInt(sliderApt.value);
+      const tech = parseInt(sliderTech.value);
+      const intern = parseInt(sliderIntern.value);
 
       lblCgpa.textContent = `${cgpa.toFixed(1)} / 10.0`;
       lblApt.textContent = `${apt}%`;
       lblTech.textContent = `${tech} / 10`;
-      lblIntern.textContent = intern === 1 ? '1 Internship' : `${intern} Internships`;
+      lblIntern.textContent = intern === 1 ? '1 Completed' : `${intern} Completed`;
 
       // Supervised classification model approximation formula
-      const score = (cgpa * 6.5) + (apt * 0.35) + (tech * 2.6) + (intern * 5.0);
-      const prob = Math.min(98, Math.max(25, Math.round(score * 0.85)));
-      const isPlaced = prob >= 60;
+      const rawScore = (cgpa * 6.6) + (apt * 0.34) + (tech * 2.5) + (intern * 5.2);
+      const prob = Math.min(97, Math.max(22, Math.round(rawScore * 0.84)));
 
-      resProb.textContent = `${prob}%`;
+      scoreVal.textContent = `${prob}%`;
 
-      if (isPlaced) {
-        resBadge.textContent = 'PLACED';
-        resBadge.style.background = '#059669';
-        resProb.style.color = '#065F46';
-        resDesc.textContent = `High recruitment likelihood (${prob}%). Profile meets standards of top recruiters.`;
+      if (prob >= 75) {
+        scorePill.textContent = 'HIGH READINESS';
+        scorePill.style.background = '#ECFDF5';
+        scorePill.style.color = '#065F46';
+        scorePill.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+        scoreVal.style.color = '#16803C';
+        scoreDesc.textContent = `High probability of campus recruitment (${prob}%). Profile demonstrates strong competitive readiness across academic and coding criteria.`;
+      } else if (prob >= 55) {
+        scorePill.textContent = 'MODERATE READINESS';
+        scorePill.style.background = '#EFF6FF';
+        scorePill.style.color = '#1E40AF';
+        scorePill.style.borderColor = 'rgba(59, 130, 246, 0.3)';
+        scoreVal.style.color = '#2563EB';
+        scoreDesc.textContent = `Moderate recruitment likelihood (${prob}%). Recommended to complete additional coding practice records and aptitude modules.`;
       } else {
-        resBadge.textContent = 'NOT PLACED';
-        resBadge.style.background = '#DC2626';
-        resProb.style.color = '#991B1B';
-        resDesc.textContent = `Moderate to low likelihood (${prob}%). Focus on improving CGPA and aptitude score.`;
+        scorePill.textContent = 'NEEDS TARGETED PRACTICE';
+        scorePill.style.background = '#FEF2F2';
+        scorePill.style.color = '#991B1B';
+        scorePill.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+        scoreVal.style.color = '#DC2626';
+        scoreDesc.textContent = `Needs improvement (${prob}%). Focus on clearing backlogs, lifting semester CGPA, and participating in mentored group projects.`;
       }
     }
 
-    [inCgpa, inApt, inTech, inIntern].forEach(input => {
-      input.addEventListener('input', calculatePlacement);
+    [sliderCgpa, sliderApt, sliderTech, sliderIntern].forEach(slider => {
+      if (slider) slider.addEventListener('input', updateEstimator);
     });
 
-    calculatePlacement();
+    updateEstimator();
   </script>
 </body>
 </html>
