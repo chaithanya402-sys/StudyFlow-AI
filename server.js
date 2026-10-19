@@ -1405,6 +1405,9 @@ app.get('/api/state', (req, res) => {
     });
 
     // 4. Mentor Tasks, Notes, and Interventions
+    if (currentStudentId) {
+      ensureDefaultStudentTasks(currentStudentId);
+    }
     let mentorTasksRows = db.prepare('SELECT * FROM mentor_tasks').all();
     if (currentStudentId) {
       mentorTasksRows = mentorTasksRows.filter(t => t.student_id === currentStudentId || !t.student_id);
@@ -1417,7 +1420,8 @@ app.get('/api/state', (req, res) => {
       dueDate: t.due_date,
       priority: t.priority,
       status: t.status,
-      notes: t.notes
+      notes: t.notes,
+      assignedDate: t.created_at ? t.created_at.split(' ')[0] : '2026-10-15'
     }));
 
     let mentorNotesRows = db.prepare('SELECT * FROM mentor_notes').all();
@@ -1821,12 +1825,23 @@ app.post(['/api/records/:type/:id/submit', '/api/assignments/:type/:id/submit'],
       return res.status(404).json({ success: false, error: `Assignment '${id}' not found.` });
     }
 
-    const studentId = req.user ? req.user.id : body.studentId;
-    if (!studentId) {
+    // SECURITY: Require authentication - no fallback to body parameters
+    if (!req.user) {
       return res.status(401).json({ success: false, error: 'Authentication required. Please log in to submit coursework.' });
     }
-    const studentName = req.user ? req.user.fullName : (body.studentName || 'Student');
-    const rollNo = req.user ? req.user.rollNo : (body.rollNo || '');
+
+    // SECURITY: Students can only submit for themselves
+    if (req.user.role === 'student' && body.studentId && body.studentId !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        error: 'Forbidden: Students cannot submit assignments on behalf of other students.'
+      });
+    }
+
+    // Always use authenticated user's identity
+    const studentId = req.user.id;
+    const studentName = req.user.fullName;
+    const rollNo = req.user.rollNo;
     const submittedDate = new Date().toISOString().replace('T', ' ').slice(0, 16);
 
     let fileUrl = body.submissionUrl || '';
@@ -2172,6 +2187,20 @@ app.get(['/api/students/eligible', '/api/projects/eligible-students'], (req, res
 app.get('/api/students/:id', (req, res) => {
   try {
     const id = req.params.id;
+
+    // SECURITY: Authorization check - prevent unauthorized profile access
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: 'Authentication required. Please log in to view student profiles.' });
+    }
+
+    // Students can only view their own profile
+    if (req.user.role === 'student' && req.user.id !== id) {
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied: Students can only view their own profile. Faculty and officers can view all student profiles.'
+      });
+    }
+
     const student = getFormattedStudentProfile(id);
 
     if (!student) {
@@ -2210,34 +2239,146 @@ app.patch('/api/students/:id', handleStudentIdUpdate);
 // -----------------------------------------------------------------------------
 // 7. Mentoring Tasks & Notes Endpoints (/api/tasks & /api/mentor-notes)
 // -----------------------------------------------------------------------------
+function ensureDefaultStudentTasks(studentId) {
+  if (!studentId) return;
+  try {
+    const count = db.prepare('SELECT COUNT(*) as count FROM mentor_tasks WHERE student_id = ?').get(studentId).count;
+    if (count === 0) {
+      const studentUser = db.prepare('SELECT id, full_name FROM users WHERE id = ?').get(studentId);
+      if (!studentUser) return;
+
+      const studentProfile = db.prepare('SELECT mentor_id FROM student_profiles WHERE user_id = ?').get(studentId);
+      let mentorId = (studentProfile && studentProfile.mentor_id) ? studentProfile.mentor_id : 'fac_001';
+      const mentorUser = db.prepare('SELECT id FROM users WHERE id = ?').get(mentorId);
+      if (!mentorUser) mentorId = 'fac_001';
+
+      const insertTask = db.prepare(`
+        INSERT OR IGNORE INTO mentor_tasks (id, mentor_id, student_id, title, due_date, priority, status, notes)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+
+      const defaultTasks = [
+        {
+          id: 'tsk_init_1_' + studentId.slice(-6),
+          title: 'Complete Academic Profile & Semester Scores',
+          dueDate: '2026-10-25',
+          priority: 'High',
+          status: 'Pending',
+          notes: '[Academic] Input your CGPA, 10th/12th percentages, and technical skills to unlock ML placement prediction.'
+        },
+        {
+          id: 'tsk_init_2_' + studentId.slice(-6),
+          title: 'Run ATS Resume Compatibility Check',
+          dueDate: '2026-10-28',
+          priority: 'Medium',
+          status: 'Pending',
+          notes: '[Placement Prep] Scan your resume against campus drive job descriptions and verify ATS score.'
+        },
+        {
+          id: 'tsk_init_3_' + studentId.slice(-6),
+          title: 'Practice 15 Coding & Data Structures Problems',
+          dueDate: '2026-11-02',
+          priority: 'High',
+          status: 'Pending',
+          notes: '[Coding & DSA] Solve Tree and Dynamic Programming practice benchmarks for upcoming technical tests.'
+        },
+        {
+          id: 'tsk_init_4_' + studentId.slice(-6),
+          title: 'Review Campus Recruitment Drives & Eligibility',
+          dueDate: '2026-11-05',
+          priority: 'Medium',
+          status: 'Pending',
+          notes: '[Campus Drives] Review cutoff criteria and apply to active recruitment drives from Google India, Microsoft, and Cisco.'
+        }
+      ];
+
+      const tx = db.transaction(() => {
+        for (const t of defaultTasks) {
+          insertTask.run(t.id, mentorId, studentId, t.title, t.dueDate, t.priority, t.status, t.notes);
+        }
+      });
+      tx();
+    }
+  } catch (err) {
+    console.warn('[Tasks] ensureDefaultStudentTasks warning:', err.message);
+  }
+}
+
+function seedExistingStudentTasks() {
+  try {
+    const students = db.prepare("SELECT id FROM users WHERE role = 'student'").all();
+    for (const s of students) {
+      ensureDefaultStudentTasks(s.id);
+    }
+  } catch (err) {
+    console.warn('[Tasks] seedExistingStudentTasks warning:', err.message);
+  }
+}
+seedExistingStudentTasks();
+
 app.get('/api/tasks', (req, res) => {
   try {
     const studentId = req.query.studentId || (req.user && req.user.role === 'student' ? req.user.id : null);
+    if (studentId) {
+      ensureDefaultStudentTasks(studentId);
+    }
     let tasks;
     if (studentId) {
       tasks = db.prepare('SELECT * FROM mentor_tasks WHERE student_id = ? ORDER BY due_date ASC').all(studentId);
     } else {
       tasks = db.prepare('SELECT * FROM mentor_tasks ORDER BY due_date ASC').all();
     }
-    res.json({ success: true, count: tasks.length, data: tasks });
+    const formatted = tasks.map(t => ({
+      id: t.id,
+      mentorId: t.mentor_id,
+      studentId: t.student_id,
+      title: t.title,
+      dueDate: t.due_date,
+      priority: t.priority,
+      status: t.status,
+      notes: t.notes,
+      assignedDate: t.created_at ? t.created_at.split(' ')[0] : '2026-10-15'
+    }));
+    res.json({ success: true, count: formatted.length, data: formatted });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-app.post('/api/tasks', requireRole(['faculty', 'officer']), (req, res) => {
+app.post('/api/tasks', requireRole(['student', 'faculty', 'officer']), (req, res) => {
   try {
-    const { studentId, title, dueDate, priority, notes } = req.body;
+    const { title, dueDate, priority, notes, id } = req.body;
+    let studentId = req.body.studentId;
+    if (req.user && req.user.role === 'student') {
+      studentId = req.user.id;
+    }
+    if (!studentId && req.user) {
+      studentId = req.user.id;
+    }
     if (!studentId || !title) {
       return res.status(400).json({ success: false, error: 'studentId and title are required.' });
     }
 
-    const newId = 'task_' + Date.now().toString(36);
-    const mentorId = req.user ? req.user.id : 'fac_001';
+    const newId = id || ('tsk_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6));
+    let mentorId = req.body.mentorId;
+    if (!mentorId) {
+      if (req.user && req.user.role === 'faculty') {
+        mentorId = req.user.id;
+      } else {
+        const sp = db.prepare('SELECT mentor_id FROM student_profiles WHERE user_id = ?').get(studentId);
+        mentorId = (sp && sp.mentor_id) ? sp.mentor_id : 'fac_001';
+      }
+    }
+
+    // Verify mentorId exists in users to satisfy foreign key constraint
+    const mentorUser = db.prepare('SELECT id FROM users WHERE id = ?').get(mentorId);
+    if (!mentorUser) {
+      mentorId = 'fac_001';
+    }
 
     const insertTx = db.transaction(() => {
       db.prepare(`
-        INSERT INTO mentor_tasks (id, mentor_id, student_id, title, due_date, priority, status, notes)
+        INSERT OR REPLACE INTO mentor_tasks (id, mentor_id, student_id, title, due_date, priority, status, notes)
         VALUES (?, ?, ?, ?, ?, ?, 'Pending', ?)
       `).run(newId, mentorId, studentId, title, dueDate || '2026-11-01', priority || 'Medium', notes || '');
 
@@ -2250,8 +2391,8 @@ app.post('/api/tasks', requireRole(['faculty', 'officer']), (req, res) => {
         'student',
         'Tasks',
         'info',
-        `New Mentoring Task Assigned: ${title}`,
-        `Due date: ${dueDate || 'Nov 01, 2026'}. Notes: "${notes || 'Complete task.'}"`,
+        `New Task: ${title}`,
+        `Due date: ${dueDate || 'Upcoming'}. Notes: "${notes || 'Complete task.'}"`,
         'Just now',
         '#/student/tasks'
       );
@@ -2272,6 +2413,10 @@ app.put('/api/tasks/:id/status', (req, res) => {
       return res.status(404).json({ success: false, error: `Task '${id}' not found.` });
     }
 
+    if (req.user && req.user.role === 'student' && task.student_id !== req.user.id) {
+      return res.status(403).json({ success: false, error: 'Cannot update tasks of other students.' });
+    }
+
     const newStatus = req.body.status || (task.status === 'Completed' ? 'Pending' : 'Completed');
     db.prepare('UPDATE mentor_tasks SET status = ? WHERE id = ?').run(newStatus, id);
 
@@ -2281,9 +2426,18 @@ app.put('/api/tasks/:id/status', (req, res) => {
   }
 });
 
-app.delete('/api/tasks/:id', requireRole(['faculty', 'officer']), (req, res) => {
+app.delete('/api/tasks/:id', (req, res) => {
   try {
     const { id } = req.params;
+    const task = db.prepare('SELECT * FROM mentor_tasks WHERE id = ?').get(id);
+    if (!task) {
+      return res.status(404).json({ success: false, error: `Task '${id}' not found.` });
+    }
+
+    if (req.user && req.user.role === 'student' && task.student_id !== req.user.id) {
+      return res.status(403).json({ success: false, error: 'Cannot delete tasks of other students.' });
+    }
+
     db.prepare('DELETE FROM mentor_tasks WHERE id = ?').run(id);
     res.json({ success: true, message: `Task '${id}' deleted.` });
   } catch (err) {
@@ -2499,12 +2653,24 @@ app.get('/api/applications', (req, res) => {
 app.post('/api/applications', (req, res) => {
   try {
     const { driveId } = req.body;
-    const studentId = req.user ? req.user.id : req.body.studentId;
-    if (!studentId) {
+
+    // SECURITY: Require authentication - no fallback to body parameters
+    if (!req.user) {
       return res.status(401).json({ success: false, error: 'Authentication required to apply for campus placement drives.' });
     }
-    const studentName = req.user ? req.user.fullName : (req.body.studentName || 'Student');
-    const rollNo = req.user ? req.user.rollNo : (req.body.rollNo || '');
+
+    // SECURITY: Students can only apply for themselves
+    if (req.user.role === 'student' && req.body.studentId && req.body.studentId !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        error: 'Forbidden: Students cannot apply to drives on behalf of other students.'
+      });
+    }
+
+    // Always use authenticated user's identity
+    const studentId = req.user.id;
+    const studentName = req.user.fullName;
+    const rollNo = req.user.rollNo;
 
     const drive = db.prepare('SELECT * FROM placement_drives WHERE id = ?').get(driveId);
     if (!drive) {
@@ -2642,8 +2808,14 @@ app.put('/api/applications/:id/status', requireRole(['officer']), (req, res) => 
 // -----------------------------------------------------------------------------
 app.get('/api/notifications', (req, res) => {
   try {
-    const userId = req.user ? req.user.id : (req.query.userId || null);
-    const userRole = req.user ? req.user.role : (req.query.role || 'student');
+    // SECURITY: Require authentication - no fallback to query parameters
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: 'Authentication required. Please log in to view notifications.' });
+    }
+
+    // Always use authenticated user's identity
+    const userId = req.user.id;
+    const userRole = req.user.role;
 
     const notifs = db.prepare(`
       SELECT * FROM notifications
@@ -2666,6 +2838,30 @@ app.put('/api/notifications/:id/read', (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
+// Log ML prediction for monitoring and audit trail
+function logPrediction(studentId, predictionType, inputs, output, metadata = {}) {
+  try {
+    const predLogId = 'predlog_' + Date.now().toString(36);
+    db.prepare(`
+      INSERT INTO ml_prediction_log (
+        id, student_id, prediction_type, inputs_json, output_json,
+        model_version, timestamp, metadata_json
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      predLogId,
+      studentId,
+      predictionType,
+      JSON.stringify(inputs),
+      JSON.stringify(output),
+      output.modelVersion || 'v1.0',
+      new Date().toISOString(),
+      JSON.stringify(metadata)
+    );
+  } catch (err) {
+    console.warn('[ML Prediction Log] Failed to log prediction:', err.message);
+  }
+}
 
 // -----------------------------------------------------------------------------
 // 11. ML Prediction Engine Endpoints (/api/ml/predict & /api/ml/history)
@@ -2734,6 +2930,13 @@ app.post(['/api/ml/predict', '/api/ml/predict-exam'], (req, res) => {
     }
 
     const predId = 'prd_' + Date.now().toString(36);
+
+    // Log prediction for monitoring
+    logPrediction(targetStudentId, 'exam_score', examPred.inputs, examPred, {
+      isSimulation: Boolean(isSimulation),
+      userAgent: req.headers['user-agent'],
+      ipAddress: req.ip
+    });
 
     if (!isSimulation) {
       const predTx = db.transaction(() => {
@@ -2828,6 +3031,26 @@ app.post('/api/ml/predict-placement', (req, res) => {
       tenthPct: req.body.tenthPct !== undefined ? req.body.tenthPct : row.tenth_pct,
       twelfthPct: req.body.twelfthPct !== undefined ? req.body.twelfthPct : row.twelfth_pct
     });
+
+    // Log prediction for monitoring and audit trail
+    if (result.available) {
+      const predictionInputs = {
+        cgpa: req.body.cgpa !== undefined ? req.body.cgpa : row.cgpa,
+        internships: req.body.internships !== undefined ? req.body.internships : internships.length,
+        projects: req.body.projects !== undefined ? req.body.projects : projects.length,
+        certifications: req.body.workshopsCertifications !== undefined ? req.body.workshopsCertifications : certs.length,
+        aptitudeScore: req.body.aptitudeScore !== undefined ? req.body.aptitudeScore : row.aptitude_score,
+        technicalScore: req.body.technicalScore !== undefined ? req.body.technicalScore : row.technical_score,
+        communicationScore: req.body.communicationScore !== undefined ? req.body.communicationScore : row.communication_score,
+        backlogs: req.body.backlogs !== undefined ? req.body.backlogs : row.backlogs,
+        tenthPct: req.body.tenthPct !== undefined ? req.body.tenthPct : row.tenth_pct,
+        twelfthPct: req.body.twelfthPct !== undefined ? req.body.twelfthPct : row.twelfth_pct
+      };
+      logPrediction(studentId, 'placement_outcome', predictionInputs, result, {
+        userAgent: req.headers['user-agent'],
+        ipAddress: req.ip
+      });
+    }
 
     res.json({
       success: true,

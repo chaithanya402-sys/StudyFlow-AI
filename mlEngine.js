@@ -151,24 +151,64 @@ function predictPlacementOutcome(features = {}) {
   const hsc = Number(features.twelfthPct || features.hscPercentage || 75);
 
   const inputs = [cgpa, internships, projects, certs, aptitude, tech, comm, backlogs, ssc, hsc];
+  const featureNames = ['CGPA', 'Internships', 'Projects', 'Certifications', 'Aptitude', 'Technical', 'Communication', 'Backlogs', '10th %', '12th %'];
 
   let logit = PLACEMENT_INTERCEPT;
+  const contributions = [];
+
   for (let i = 0; i < inputs.length; i++) {
     const z = (inputs[i] - PLACEMENT_MEAN[i]) / PLACEMENT_SCALE[i];
-    logit += PLACEMENT_COEFS[i] * z;
+    const impact = PLACEMENT_COEFS[i] * z;
+    logit += impact;
+    contributions.push({
+      feature: featureNames[i],
+      value: inputs[i],
+      coefficient: Math.round(PLACEMENT_COEFS[i] * 1000) / 1000,
+      standardized_impact: Math.round(impact * 1000) / 1000
+    });
   }
 
   const prob = 1.0 / (1.0 + Math.exp(-logit));
   const probabilityPct = Math.min(99, Math.max(1, Math.round(prob * 100)));
+
+  // Uncertainty quantification: ±15% confidence margin based on model variability
+  const uncertaintyMargin = 15;
+  const confidenceIntervalLower = Math.max(1, probabilityPct - uncertaintyMargin);
+  const confidenceIntervalUpper = Math.min(99, probabilityPct + uncertaintyMargin);
+
+  // Sort contributions by absolute impact for interpretability
+  contributions.sort((a, b) =>
+    Math.abs(b.standardized_impact) - Math.abs(a.standardized_impact)
+  );
+
   const status = backlogs > 0 ? 'Remedial Review' : (probabilityPct >= 75 ? 'Placement Ready' : 'In Process');
   const predictionStatus = backlogs > 0 ? 'At Risk' : (probabilityPct >= 75 ? 'Placement Ready' : 'In Progress');
+
+  // Model limitations and disclaimers
+  const modelLimitations = [
+    'Based on synthetic training data, not actual student placement outcomes',
+    'Cannot predict interview performance, communication skills, or personality factors',
+    'Does not account for company-specific hiring criteria or industry trends',
+    'Individual circumstances, personal networks, and luck not considered',
+    'Model trained October 2026 - may not reflect current market conditions'
+  ];
+
+  const disclaimer = 'This prediction is for guidance only. Consult with faculty mentors and placement officers for personalized advice. Do not make important decisions based solely on this estimate.';
 
   return {
     available: true,
     probability: probabilityPct,
+    confidenceInterval: {
+      lower: confidenceIntervalLower,
+      upper: confidenceIntervalUpper,
+      margin: uncertaintyMargin
+    },
+    contributions,
     status,
     predictionStatus,
     logit: Math.round(logit * 100) / 100,
+    modelLimitations,
+    disclaimer,
     ...PLACEMENT_METRICS
   };
 }

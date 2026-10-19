@@ -439,6 +439,22 @@ function initSchema() {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
     CREATE INDEX IF NOT EXISTS idx_project_updates_proj ON project_updates(project_id);
+
+    -- 22. ML Prediction Log Table (for monitoring and audit trail)
+    CREATE TABLE IF NOT EXISTS ml_prediction_log (
+      id TEXT PRIMARY KEY,
+      student_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      prediction_type TEXT NOT NULL CHECK(prediction_type IN ('exam_score', 'placement_outcome')),
+      inputs_json TEXT NOT NULL,
+      output_json TEXT NOT NULL,
+      model_version TEXT NOT NULL,
+      timestamp TEXT NOT NULL,
+      metadata_json TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_ml_prediction_log_student ON ml_prediction_log(student_id);
+    CREATE INDEX IF NOT EXISTS idx_ml_prediction_log_timestamp ON ml_prediction_log(timestamp DESC);
+    CREATE INDEX IF NOT EXISTS idx_ml_prediction_log_type ON ml_prediction_log(prediction_type);
   `);
 
   // Safe runtime column migrations for student_profiles
