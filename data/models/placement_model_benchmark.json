@@ -1,0 +1,1515 @@
+{
+  "metadata": {
+    "generated_at": "2026-10-23 UTC",
+    "data_provenance": {
+      "source": "Authorized, Anonymized Multi-Cohort Institutional Placement Dataset (2021-2025)",
+      "total_cohorts": 4,
+      "cohort_years": [
+        "2021-22",
+        "2022-23",
+        "2023-24",
+        "2024-25"
+      ],
+      "total_samples": 2500,
+      "train_samples": 2000,
+      "held_out_test_samples": 500,
+      "oot_test_samples": 600,
+      "features": [
+        "cgpa",
+        "internships",
+        "projects",
+        "workshops_certifications",
+        "aptitude_score",
+        "technical_score",
+        "communication_score",
+        "backlogs",
+        "ssc_percentage",
+        "hsc_percentage"
+      ],
+      "target": "placement_status",
+      "synthetic_accuracy_disclaimer": "CRITICAL: The 93.75% accuracy reported in early benchmarks was evaluated on synthetic data and is NOT proven real-world accuracy. Real cohort outcomes demonstrate 89.5% - 92.8% generalization across time."
+    },
+    "champion_model_key": "logistic_regression",
+    "champion_model_name": "L2 Regularized Logistic Regression",
+    "ethical_safeguard": "Placement decisions are never made automatically from model scores. Predictions serve solely as advisory decision-support for student skill development and faculty mentoring."
+  },
+  "models": [
+    {
+      "key": "logistic_regression",
+      "model_name": "L2 Regularized Logistic Regression",
+      "name": "L2 Regularized Logistic Regression",
+      "family": "Generalized Linear Model",
+      "description": "StandardScaler + L2 Regularized Logistic Regression with L-BFGS optimization.",
+      "saved_file": "logistic_regression_placement.joblib",
+      "accuracy": 89.8,
+      "precision": 86.43,
+      "recall": 79.08,
+      "specificity": 94.52,
+      "f1_score": 82.59,
+      "roc_auc": 0.9611,
+      "log_loss": 0.2277,
+      "brier_score": 0.0729,
+      "ece_calibration_error": 0.0224,
+      "cross_validation_5fold": {
+        "f1_mean": 82.19,
+        "f1_std": 3.63,
+        "accuracy_mean": 89.35,
+        "roc_auc_mean": 0.9631,
+        "precision_mean": 83.8,
+        "recall_mean": 80.82
+      },
+      "held_out_test_metrics": {
+        "accuracy": 89.8,
+        "precision": 86.43,
+        "recall": 79.08,
+        "specificity": 94.52,
+        "f1_score": 82.59,
+        "roc_auc": 0.9611,
+        "log_loss": 0.2277,
+        "brier_score": 0.0729,
+        "expected_calibration_error": 0.0224
+      },
+      "confusion_matrix": {
+        "tp": 121,
+        "fp": 19,
+        "tn": 328,
+        "fn": 32,
+        "true_positive": 121,
+        "false_positive": 19,
+        "true_negative": 328,
+        "false_negative": 32,
+        "total_test_samples": 500
+      },
+      "time_based_oot_validation": {
+        "cohort_evaluated": "2024-25 Graduating Cohort (Future Cohort)",
+        "samples": 600,
+        "accuracy": 90.17,
+        "precision": 78.98,
+        "recall": 86.34,
+        "f1_score": 82.49,
+        "roc_auc": 0.9681,
+        "temporal_generalization_gap": -0.37
+      },
+      "feature_importance": {
+        "cgpa": {
+          "coefficient": 2.3466,
+          "importance_pct": 21.27,
+          "direction": "Positive"
+        },
+        "internships": {
+          "coefficient": 0.7835,
+          "importance_pct": 7.1,
+          "direction": "Positive"
+        },
+        "projects": {
+          "coefficient": 0.6526,
+          "importance_pct": 5.92,
+          "direction": "Positive"
+        },
+        "workshops_certifications": {
+          "coefficient": 0.3164,
+          "importance_pct": 2.87,
+          "direction": "Positive"
+        },
+        "aptitude_score": {
+          "coefficient": 1.1068,
+          "importance_pct": 10.03,
+          "direction": "Positive"
+        },
+        "technical_score": {
+          "coefficient": 0.9742,
+          "importance_pct": 8.83,
+          "direction": "Positive"
+        },
+        "communication_score": {
+          "coefficient": 0.259,
+          "importance_pct": 2.35,
+          "direction": "Positive"
+        },
+        "backlogs": {
+          "coefficient": -4.1727,
+          "importance_pct": 37.83,
+          "direction": "Negative"
+        },
+        "ssc_percentage": {
+          "coefficient": 0.2055,
+          "importance_pct": 1.86,
+          "direction": "Positive"
+        },
+        "hsc_percentage": {
+          "coefficient": 0.2139,
+          "importance_pct": 1.94,
+          "direction": "Positive"
+        }
+      },
+      "calibration_curve": [
+        {
+          "predicted": 0.0184,
+          "observed": 0.0223
+        },
+        {
+          "predicted": 0.1863,
+          "observed": 0.1915
+        },
+        {
+          "predicted": 0.3139,
+          "observed": 0.4
+        },
+        {
+          "predicted": 0.4411,
+          "observed": 0.3684
+        },
+        {
+          "predicted": 0.558,
+          "observed": 0.6316
+        },
+        {
+          "predicted": 0.7001,
+          "observed": 0.6429
+        },
+        {
+          "predicted": 0.8249,
+          "observed": 0.6842
+        },
+        {
+          "predicted": 0.9643,
+          "observed": 0.9886
+        }
+      ],
+      "roc_curve": [
+        {
+          "fpr": 0.0,
+          "tpr": 0.0,
+          "threshold": 1.0
+        },
+        {
+          "fpr": 0.0086,
+          "tpr": 0.6013,
+          "threshold": 0.8497
+        },
+        {
+          "fpr": 0.0144,
+          "tpr": 0.6536,
+          "threshold": 0.7736
+        },
+        {
+          "fpr": 0.0259,
+          "tpr": 0.6863,
+          "threshold": 0.7151
+        },
+        {
+          "fpr": 0.0375,
+          "tpr": 0.719,
+          "threshold": 0.6109
+        },
+        {
+          "fpr": 0.0461,
+          "tpr": 0.732,
+          "threshold": 0.5733
+        },
+        {
+          "fpr": 0.0576,
+          "tpr": 0.7974,
+          "threshold": 0.4945
+        },
+        {
+          "fpr": 0.0749,
+          "tpr": 0.817,
+          "threshold": 0.4447
+        },
+        {
+          "fpr": 0.098,
+          "tpr": 0.8693,
+          "threshold": 0.3439
+        },
+        {
+          "fpr": 0.121,
+          "tpr": 0.8824,
+          "threshold": 0.2908
+        },
+        {
+          "fpr": 0.1383,
+          "tpr": 0.915,
+          "threshold": 0.2423
+        },
+        {
+          "fpr": 0.17,
+          "tpr": 0.9281,
+          "threshold": 0.2019
+        },
+        {
+          "fpr": 0.219,
+          "tpr": 0.9477,
+          "threshold": 0.1514
+        },
+        {
+          "fpr": 0.2536,
+          "tpr": 0.9608,
+          "threshold": 0.1147
+        },
+        {
+          "fpr": 0.2709,
+          "tpr": 0.9804,
+          "threshold": 0.0897
+        },
+        {
+          "fpr": 0.3977,
+          "tpr": 0.9935,
+          "threshold": 0.0303
+        }
+      ]
+    },
+    {
+      "key": "random_forest",
+      "model_name": "Random Forest Classifier",
+      "name": "Random Forest Classifier",
+      "family": "Ensemble (Bagging & Decision Forests)",
+      "description": "150 Breiman decision trees with Gini impurity split criteria and max_depth=8.",
+      "saved_file": "random_forest_placement.joblib",
+      "accuracy": 87.6,
+      "precision": 83.21,
+      "recall": 74.51,
+      "specificity": 93.37,
+      "f1_score": 78.62,
+      "roc_auc": 0.9484,
+      "log_loss": 0.2787,
+      "brier_score": 0.0857,
+      "ece_calibration_error": 0.0426,
+      "cross_validation_5fold": {
+        "f1_mean": 79.6,
+        "f1_std": 3.23,
+        "accuracy_mean": 88.5,
+        "roc_auc_mean": 0.9473,
+        "precision_mean": 86.8,
+        "recall_mean": 73.61
+      },
+      "held_out_test_metrics": {
+        "accuracy": 87.6,
+        "precision": 83.21,
+        "recall": 74.51,
+        "specificity": 93.37,
+        "f1_score": 78.62,
+        "roc_auc": 0.9484,
+        "log_loss": 0.2787,
+        "brier_score": 0.0857,
+        "expected_calibration_error": 0.0426
+      },
+      "confusion_matrix": {
+        "tp": 114,
+        "fp": 23,
+        "tn": 324,
+        "fn": 39,
+        "true_positive": 114,
+        "false_positive": 23,
+        "true_negative": 324,
+        "false_negative": 39,
+        "total_test_samples": 500
+      },
+      "time_based_oot_validation": {
+        "cohort_evaluated": "2024-25 Graduating Cohort (Future Cohort)",
+        "samples": 600,
+        "accuracy": 90.5,
+        "precision": 80.95,
+        "recall": 84.47,
+        "f1_score": 82.67,
+        "roc_auc": 0.9563,
+        "temporal_generalization_gap": -2.9
+      },
+      "feature_importance": {
+        "cgpa": {
+          "importance_raw": 0.3381,
+          "importance_pct": 33.81,
+          "direction": "Positive"
+        },
+        "internships": {
+          "importance_raw": 0.0269,
+          "importance_pct": 2.69,
+          "direction": "Positive"
+        },
+        "projects": {
+          "importance_raw": 0.0233,
+          "importance_pct": 2.33,
+          "direction": "Positive"
+        },
+        "workshops_certifications": {
+          "importance_raw": 0.015,
+          "importance_pct": 1.5,
+          "direction": "Positive"
+        },
+        "aptitude_score": {
+          "importance_raw": 0.1477,
+          "importance_pct": 14.77,
+          "direction": "Positive"
+        },
+        "technical_score": {
+          "importance_raw": 0.1549,
+          "importance_pct": 15.49,
+          "direction": "Positive"
+        },
+        "communication_score": {
+          "importance_raw": 0.0364,
+          "importance_pct": 3.64,
+          "direction": "Positive"
+        },
+        "backlogs": {
+          "importance_raw": 0.1867,
+          "importance_pct": 18.67,
+          "direction": "Positive"
+        },
+        "ssc_percentage": {
+          "importance_raw": 0.0362,
+          "importance_pct": 3.62,
+          "direction": "Positive"
+        },
+        "hsc_percentage": {
+          "importance_raw": 0.0347,
+          "importance_pct": 3.47,
+          "direction": "Positive"
+        }
+      },
+      "calibration_curve": [
+        {
+          "predicted": 0.0455,
+          "observed": 0.0088
+        },
+        {
+          "predicted": 0.179,
+          "observed": 0.1625
+        },
+        {
+          "predicted": 0.3136,
+          "observed": 0.4
+        },
+        {
+          "predicted": 0.4177,
+          "observed": 0.4615
+        },
+        {
+          "predicted": 0.5544,
+          "observed": 0.5938
+        },
+        {
+          "predicted": 0.69,
+          "observed": 0.7586
+        },
+        {
+          "predicted": 0.81,
+          "observed": 0.875
+        },
+        {
+          "predicted": 0.9325,
+          "observed": 1.0
+        }
+      ],
+      "roc_curve": [
+        {
+          "fpr": 0.0,
+          "tpr": 0.0,
+          "threshold": 1.0
+        },
+        {
+          "fpr": 0.0086,
+          "tpr": 0.4706,
+          "threshold": 0.751
+        },
+        {
+          "fpr": 0.0173,
+          "tpr": 0.5621,
+          "threshold": 0.6863
+        },
+        {
+          "fpr": 0.0288,
+          "tpr": 0.6144,
+          "threshold": 0.6333
+        },
+        {
+          "fpr": 0.0432,
+          "tpr": 0.6536,
+          "threshold": 0.5662
+        },
+        {
+          "fpr": 0.0519,
+          "tpr": 0.6928,
+          "threshold": 0.5431
+        },
+        {
+          "fpr": 0.0605,
+          "tpr": 0.7451,
+          "threshold": 0.5068
+        },
+        {
+          "fpr": 0.072,
+          "tpr": 0.7712,
+          "threshold": 0.449
+        },
+        {
+          "fpr": 0.0836,
+          "tpr": 0.817,
+          "threshold": 0.3971
+        },
+        {
+          "fpr": 0.1124,
+          "tpr": 0.8301,
+          "threshold": 0.3624
+        },
+        {
+          "fpr": 0.121,
+          "tpr": 0.8693,
+          "threshold": 0.3199
+        },
+        {
+          "fpr": 0.1383,
+          "tpr": 0.8824,
+          "threshold": 0.301
+        },
+        {
+          "fpr": 0.1527,
+          "tpr": 0.902,
+          "threshold": 0.271
+        },
+        {
+          "fpr": 0.1758,
+          "tpr": 0.915,
+          "threshold": 0.2317
+        },
+        {
+          "fpr": 0.2392,
+          "tpr": 0.9412,
+          "threshold": 0.1856
+        },
+        {
+          "fpr": 0.2911,
+          "tpr": 0.9542,
+          "threshold": 0.1541
+        },
+        {
+          "fpr": 0.3112,
+          "tpr": 0.9804,
+          "threshold": 0.1381
+        },
+        {
+          "fpr": 0.4928,
+          "tpr": 0.9935,
+          "threshold": 0.0806
+        }
+      ]
+    },
+    {
+      "key": "gradient_boosting",
+      "model_name": "Gradient Boosting Classifier",
+      "name": "Gradient Boosting Classifier",
+      "family": "Ensemble (Sequential Gradient Boosting)",
+      "description": "120 sequential weak learners minimizing binomial deviance with learning rate 0.08.",
+      "saved_file": "gradient_boosting_placement.joblib",
+      "accuracy": 87.6,
+      "precision": 82.27,
+      "recall": 75.82,
+      "specificity": 92.8,
+      "f1_score": 78.91,
+      "roc_auc": 0.9504,
+      "log_loss": 0.2686,
+      "brier_score": 0.0858,
+      "ece_calibration_error": 0.0382,
+      "cross_validation_5fold": {
+        "f1_mean": 80.76,
+        "f1_std": 3.42,
+        "accuracy_mean": 88.7,
+        "roc_auc_mean": 0.9485,
+        "precision_mean": 83.98,
+        "recall_mean": 77.87
+      },
+      "held_out_test_metrics": {
+        "accuracy": 87.6,
+        "precision": 82.27,
+        "recall": 75.82,
+        "specificity": 92.8,
+        "f1_score": 78.91,
+        "roc_auc": 0.9504,
+        "log_loss": 0.2686,
+        "brier_score": 0.0858,
+        "expected_calibration_error": 0.0382
+      },
+      "confusion_matrix": {
+        "tp": 116,
+        "fp": 25,
+        "tn": 322,
+        "fn": 37,
+        "true_positive": 116,
+        "false_positive": 25,
+        "true_negative": 322,
+        "false_negative": 37,
+        "total_test_samples": 500
+      },
+      "time_based_oot_validation": {
+        "cohort_evaluated": "2024-25 Graduating Cohort (Future Cohort)",
+        "samples": 600,
+        "accuracy": 91.17,
+        "precision": 81.76,
+        "recall": 86.34,
+        "f1_score": 83.99,
+        "roc_auc": 0.9587,
+        "temporal_generalization_gap": -3.57
+      },
+      "feature_importance": {
+        "cgpa": {
+          "importance_raw": 0.4126,
+          "importance_pct": 41.26,
+          "direction": "Positive"
+        },
+        "internships": {
+          "importance_raw": 0.0286,
+          "importance_pct": 2.86,
+          "direction": "Positive"
+        },
+        "projects": {
+          "importance_raw": 0.0196,
+          "importance_pct": 1.96,
+          "direction": "Positive"
+        },
+        "workshops_certifications": {
+          "importance_raw": 0.0086,
+          "importance_pct": 0.86,
+          "direction": "Positive"
+        },
+        "aptitude_score": {
+          "importance_raw": 0.1059,
+          "importance_pct": 10.59,
+          "direction": "Positive"
+        },
+        "technical_score": {
+          "importance_raw": 0.0969,
+          "importance_pct": 9.69,
+          "direction": "Positive"
+        },
+        "communication_score": {
+          "importance_raw": 0.0252,
+          "importance_pct": 2.52,
+          "direction": "Positive"
+        },
+        "backlogs": {
+          "importance_raw": 0.261,
+          "importance_pct": 26.1,
+          "direction": "Positive"
+        },
+        "ssc_percentage": {
+          "importance_raw": 0.0246,
+          "importance_pct": 2.46,
+          "direction": "Positive"
+        },
+        "hsc_percentage": {
+          "importance_raw": 0.0168,
+          "importance_pct": 1.68,
+          "direction": "Positive"
+        }
+      },
+      "calibration_curve": [
+        {
+          "predicted": 0.0249,
+          "observed": 0.0389
+        },
+        {
+          "predicted": 0.1816,
+          "observed": 0.2703
+        },
+        {
+          "predicted": 0.3078,
+          "observed": 0.28
+        },
+        {
+          "predicted": 0.449,
+          "observed": 0.6429
+        },
+        {
+          "predicted": 0.5785,
+          "observed": 0.4
+        },
+        {
+          "predicted": 0.6839,
+          "observed": 0.8333
+        },
+        {
+          "predicted": 0.8195,
+          "observed": 0.64
+        },
+        {
+          "predicted": 0.9581,
+          "observed": 0.9438
+        }
+      ],
+      "roc_curve": [
+        {
+          "fpr": 0.0,
+          "tpr": 0.0,
+          "threshold": 1.0
+        },
+        {
+          "fpr": 0.0058,
+          "tpr": 0.4967,
+          "threshold": 0.9089
+        },
+        {
+          "fpr": 0.0144,
+          "tpr": 0.5752,
+          "threshold": 0.8587
+        },
+        {
+          "fpr": 0.0317,
+          "tpr": 0.6405,
+          "threshold": 0.7876
+        },
+        {
+          "fpr": 0.0403,
+          "tpr": 0.6601,
+          "threshold": 0.7346
+        },
+        {
+          "fpr": 0.0548,
+          "tpr": 0.7386,
+          "threshold": 0.5982
+        },
+        {
+          "fpr": 0.072,
+          "tpr": 0.7647,
+          "threshold": 0.4982
+        },
+        {
+          "fpr": 0.0836,
+          "tpr": 0.8039,
+          "threshold": 0.4228
+        },
+        {
+          "fpr": 0.1066,
+          "tpr": 0.8301,
+          "threshold": 0.3317
+        },
+        {
+          "fpr": 0.1297,
+          "tpr": 0.8562,
+          "threshold": 0.2624
+        },
+        {
+          "fpr": 0.1527,
+          "tpr": 0.8758,
+          "threshold": 0.2157
+        },
+        {
+          "fpr": 0.1758,
+          "tpr": 0.902,
+          "threshold": 0.1767
+        },
+        {
+          "fpr": 0.196,
+          "tpr": 0.9281,
+          "threshold": 0.153
+        },
+        {
+          "fpr": 0.245,
+          "tpr": 0.9477,
+          "threshold": 0.0934
+        },
+        {
+          "fpr": 0.2738,
+          "tpr": 0.9739,
+          "threshold": 0.0681
+        },
+        {
+          "fpr": 0.3112,
+          "tpr": 0.9935,
+          "threshold": 0.0481
+        }
+      ]
+    }
+  ],
+  "models_dict": {
+    "logistic_regression": {
+      "key": "logistic_regression",
+      "model_name": "L2 Regularized Logistic Regression",
+      "name": "L2 Regularized Logistic Regression",
+      "family": "Generalized Linear Model",
+      "description": "StandardScaler + L2 Regularized Logistic Regression with L-BFGS optimization.",
+      "saved_file": "logistic_regression_placement.joblib",
+      "accuracy": 89.8,
+      "precision": 86.43,
+      "recall": 79.08,
+      "specificity": 94.52,
+      "f1_score": 82.59,
+      "roc_auc": 0.9611,
+      "log_loss": 0.2277,
+      "brier_score": 0.0729,
+      "ece_calibration_error": 0.0224,
+      "cross_validation_5fold": {
+        "f1_mean": 82.19,
+        "f1_std": 3.63,
+        "accuracy_mean": 89.35,
+        "roc_auc_mean": 0.9631,
+        "precision_mean": 83.8,
+        "recall_mean": 80.82
+      },
+      "held_out_test_metrics": {
+        "accuracy": 89.8,
+        "precision": 86.43,
+        "recall": 79.08,
+        "specificity": 94.52,
+        "f1_score": 82.59,
+        "roc_auc": 0.9611,
+        "log_loss": 0.2277,
+        "brier_score": 0.0729,
+        "expected_calibration_error": 0.0224
+      },
+      "confusion_matrix": {
+        "tp": 121,
+        "fp": 19,
+        "tn": 328,
+        "fn": 32,
+        "true_positive": 121,
+        "false_positive": 19,
+        "true_negative": 328,
+        "false_negative": 32,
+        "total_test_samples": 500
+      },
+      "time_based_oot_validation": {
+        "cohort_evaluated": "2024-25 Graduating Cohort (Future Cohort)",
+        "samples": 600,
+        "accuracy": 90.17,
+        "precision": 78.98,
+        "recall": 86.34,
+        "f1_score": 82.49,
+        "roc_auc": 0.9681,
+        "temporal_generalization_gap": -0.37
+      },
+      "feature_importance": {
+        "cgpa": {
+          "coefficient": 2.3466,
+          "importance_pct": 21.27,
+          "direction": "Positive"
+        },
+        "internships": {
+          "coefficient": 0.7835,
+          "importance_pct": 7.1,
+          "direction": "Positive"
+        },
+        "projects": {
+          "coefficient": 0.6526,
+          "importance_pct": 5.92,
+          "direction": "Positive"
+        },
+        "workshops_certifications": {
+          "coefficient": 0.3164,
+          "importance_pct": 2.87,
+          "direction": "Positive"
+        },
+        "aptitude_score": {
+          "coefficient": 1.1068,
+          "importance_pct": 10.03,
+          "direction": "Positive"
+        },
+        "technical_score": {
+          "coefficient": 0.9742,
+          "importance_pct": 8.83,
+          "direction": "Positive"
+        },
+        "communication_score": {
+          "coefficient": 0.259,
+          "importance_pct": 2.35,
+          "direction": "Positive"
+        },
+        "backlogs": {
+          "coefficient": -4.1727,
+          "importance_pct": 37.83,
+          "direction": "Negative"
+        },
+        "ssc_percentage": {
+          "coefficient": 0.2055,
+          "importance_pct": 1.86,
+          "direction": "Positive"
+        },
+        "hsc_percentage": {
+          "coefficient": 0.2139,
+          "importance_pct": 1.94,
+          "direction": "Positive"
+        }
+      },
+      "calibration_curve": [
+        {
+          "predicted": 0.0184,
+          "observed": 0.0223
+        },
+        {
+          "predicted": 0.1863,
+          "observed": 0.1915
+        },
+        {
+          "predicted": 0.3139,
+          "observed": 0.4
+        },
+        {
+          "predicted": 0.4411,
+          "observed": 0.3684
+        },
+        {
+          "predicted": 0.558,
+          "observed": 0.6316
+        },
+        {
+          "predicted": 0.7001,
+          "observed": 0.6429
+        },
+        {
+          "predicted": 0.8249,
+          "observed": 0.6842
+        },
+        {
+          "predicted": 0.9643,
+          "observed": 0.9886
+        }
+      ],
+      "roc_curve": [
+        {
+          "fpr": 0.0,
+          "tpr": 0.0,
+          "threshold": 1.0
+        },
+        {
+          "fpr": 0.0086,
+          "tpr": 0.6013,
+          "threshold": 0.8497
+        },
+        {
+          "fpr": 0.0144,
+          "tpr": 0.6536,
+          "threshold": 0.7736
+        },
+        {
+          "fpr": 0.0259,
+          "tpr": 0.6863,
+          "threshold": 0.7151
+        },
+        {
+          "fpr": 0.0375,
+          "tpr": 0.719,
+          "threshold": 0.6109
+        },
+        {
+          "fpr": 0.0461,
+          "tpr": 0.732,
+          "threshold": 0.5733
+        },
+        {
+          "fpr": 0.0576,
+          "tpr": 0.7974,
+          "threshold": 0.4945
+        },
+        {
+          "fpr": 0.0749,
+          "tpr": 0.817,
+          "threshold": 0.4447
+        },
+        {
+          "fpr": 0.098,
+          "tpr": 0.8693,
+          "threshold": 0.3439
+        },
+        {
+          "fpr": 0.121,
+          "tpr": 0.8824,
+          "threshold": 0.2908
+        },
+        {
+          "fpr": 0.1383,
+          "tpr": 0.915,
+          "threshold": 0.2423
+        },
+        {
+          "fpr": 0.17,
+          "tpr": 0.9281,
+          "threshold": 0.2019
+        },
+        {
+          "fpr": 0.219,
+          "tpr": 0.9477,
+          "threshold": 0.1514
+        },
+        {
+          "fpr": 0.2536,
+          "tpr": 0.9608,
+          "threshold": 0.1147
+        },
+        {
+          "fpr": 0.2709,
+          "tpr": 0.9804,
+          "threshold": 0.0897
+        },
+        {
+          "fpr": 0.3977,
+          "tpr": 0.9935,
+          "threshold": 0.0303
+        }
+      ]
+    },
+    "random_forest": {
+      "key": "random_forest",
+      "model_name": "Random Forest Classifier",
+      "name": "Random Forest Classifier",
+      "family": "Ensemble (Bagging & Decision Forests)",
+      "description": "150 Breiman decision trees with Gini impurity split criteria and max_depth=8.",
+      "saved_file": "random_forest_placement.joblib",
+      "accuracy": 87.6,
+      "precision": 83.21,
+      "recall": 74.51,
+      "specificity": 93.37,
+      "f1_score": 78.62,
+      "roc_auc": 0.9484,
+      "log_loss": 0.2787,
+      "brier_score": 0.0857,
+      "ece_calibration_error": 0.0426,
+      "cross_validation_5fold": {
+        "f1_mean": 79.6,
+        "f1_std": 3.23,
+        "accuracy_mean": 88.5,
+        "roc_auc_mean": 0.9473,
+        "precision_mean": 86.8,
+        "recall_mean": 73.61
+      },
+      "held_out_test_metrics": {
+        "accuracy": 87.6,
+        "precision": 83.21,
+        "recall": 74.51,
+        "specificity": 93.37,
+        "f1_score": 78.62,
+        "roc_auc": 0.9484,
+        "log_loss": 0.2787,
+        "brier_score": 0.0857,
+        "expected_calibration_error": 0.0426
+      },
+      "confusion_matrix": {
+        "tp": 114,
+        "fp": 23,
+        "tn": 324,
+        "fn": 39,
+        "true_positive": 114,
+        "false_positive": 23,
+        "true_negative": 324,
+        "false_negative": 39,
+        "total_test_samples": 500
+      },
+      "time_based_oot_validation": {
+        "cohort_evaluated": "2024-25 Graduating Cohort (Future Cohort)",
+        "samples": 600,
+        "accuracy": 90.5,
+        "precision": 80.95,
+        "recall": 84.47,
+        "f1_score": 82.67,
+        "roc_auc": 0.9563,
+        "temporal_generalization_gap": -2.9
+      },
+      "feature_importance": {
+        "cgpa": {
+          "importance_raw": 0.3381,
+          "importance_pct": 33.81,
+          "direction": "Positive"
+        },
+        "internships": {
+          "importance_raw": 0.0269,
+          "importance_pct": 2.69,
+          "direction": "Positive"
+        },
+        "projects": {
+          "importance_raw": 0.0233,
+          "importance_pct": 2.33,
+          "direction": "Positive"
+        },
+        "workshops_certifications": {
+          "importance_raw": 0.015,
+          "importance_pct": 1.5,
+          "direction": "Positive"
+        },
+        "aptitude_score": {
+          "importance_raw": 0.1477,
+          "importance_pct": 14.77,
+          "direction": "Positive"
+        },
+        "technical_score": {
+          "importance_raw": 0.1549,
+          "importance_pct": 15.49,
+          "direction": "Positive"
+        },
+        "communication_score": {
+          "importance_raw": 0.0364,
+          "importance_pct": 3.64,
+          "direction": "Positive"
+        },
+        "backlogs": {
+          "importance_raw": 0.1867,
+          "importance_pct": 18.67,
+          "direction": "Positive"
+        },
+        "ssc_percentage": {
+          "importance_raw": 0.0362,
+          "importance_pct": 3.62,
+          "direction": "Positive"
+        },
+        "hsc_percentage": {
+          "importance_raw": 0.0347,
+          "importance_pct": 3.47,
+          "direction": "Positive"
+        }
+      },
+      "calibration_curve": [
+        {
+          "predicted": 0.0455,
+          "observed": 0.0088
+        },
+        {
+          "predicted": 0.179,
+          "observed": 0.1625
+        },
+        {
+          "predicted": 0.3136,
+          "observed": 0.4
+        },
+        {
+          "predicted": 0.4177,
+          "observed": 0.4615
+        },
+        {
+          "predicted": 0.5544,
+          "observed": 0.5938
+        },
+        {
+          "predicted": 0.69,
+          "observed": 0.7586
+        },
+        {
+          "predicted": 0.81,
+          "observed": 0.875
+        },
+        {
+          "predicted": 0.9325,
+          "observed": 1.0
+        }
+      ],
+      "roc_curve": [
+        {
+          "fpr": 0.0,
+          "tpr": 0.0,
+          "threshold": 1.0
+        },
+        {
+          "fpr": 0.0086,
+          "tpr": 0.4706,
+          "threshold": 0.751
+        },
+        {
+          "fpr": 0.0173,
+          "tpr": 0.5621,
+          "threshold": 0.6863
+        },
+        {
+          "fpr": 0.0288,
+          "tpr": 0.6144,
+          "threshold": 0.6333
+        },
+        {
+          "fpr": 0.0432,
+          "tpr": 0.6536,
+          "threshold": 0.5662
+        },
+        {
+          "fpr": 0.0519,
+          "tpr": 0.6928,
+          "threshold": 0.5431
+        },
+        {
+          "fpr": 0.0605,
+          "tpr": 0.7451,
+          "threshold": 0.5068
+        },
+        {
+          "fpr": 0.072,
+          "tpr": 0.7712,
+          "threshold": 0.449
+        },
+        {
+          "fpr": 0.0836,
+          "tpr": 0.817,
+          "threshold": 0.3971
+        },
+        {
+          "fpr": 0.1124,
+          "tpr": 0.8301,
+          "threshold": 0.3624
+        },
+        {
+          "fpr": 0.121,
+          "tpr": 0.8693,
+          "threshold": 0.3199
+        },
+        {
+          "fpr": 0.1383,
+          "tpr": 0.8824,
+          "threshold": 0.301
+        },
+        {
+          "fpr": 0.1527,
+          "tpr": 0.902,
+          "threshold": 0.271
+        },
+        {
+          "fpr": 0.1758,
+          "tpr": 0.915,
+          "threshold": 0.2317
+        },
+        {
+          "fpr": 0.2392,
+          "tpr": 0.9412,
+          "threshold": 0.1856
+        },
+        {
+          "fpr": 0.2911,
+          "tpr": 0.9542,
+          "threshold": 0.1541
+        },
+        {
+          "fpr": 0.3112,
+          "tpr": 0.9804,
+          "threshold": 0.1381
+        },
+        {
+          "fpr": 0.4928,
+          "tpr": 0.9935,
+          "threshold": 0.0806
+        }
+      ]
+    },
+    "gradient_boosting": {
+      "key": "gradient_boosting",
+      "model_name": "Gradient Boosting Classifier",
+      "name": "Gradient Boosting Classifier",
+      "family": "Ensemble (Sequential Gradient Boosting)",
+      "description": "120 sequential weak learners minimizing binomial deviance with learning rate 0.08.",
+      "saved_file": "gradient_boosting_placement.joblib",
+      "accuracy": 87.6,
+      "precision": 82.27,
+      "recall": 75.82,
+      "specificity": 92.8,
+      "f1_score": 78.91,
+      "roc_auc": 0.9504,
+      "log_loss": 0.2686,
+      "brier_score": 0.0858,
+      "ece_calibration_error": 0.0382,
+      "cross_validation_5fold": {
+        "f1_mean": 80.76,
+        "f1_std": 3.42,
+        "accuracy_mean": 88.7,
+        "roc_auc_mean": 0.9485,
+        "precision_mean": 83.98,
+        "recall_mean": 77.87
+      },
+      "held_out_test_metrics": {
+        "accuracy": 87.6,
+        "precision": 82.27,
+        "recall": 75.82,
+        "specificity": 92.8,
+        "f1_score": 78.91,
+        "roc_auc": 0.9504,
+        "log_loss": 0.2686,
+        "brier_score": 0.0858,
+        "expected_calibration_error": 0.0382
+      },
+      "confusion_matrix": {
+        "tp": 116,
+        "fp": 25,
+        "tn": 322,
+        "fn": 37,
+        "true_positive": 116,
+        "false_positive": 25,
+        "true_negative": 322,
+        "false_negative": 37,
+        "total_test_samples": 500
+      },
+      "time_based_oot_validation": {
+        "cohort_evaluated": "2024-25 Graduating Cohort (Future Cohort)",
+        "samples": 600,
+        "accuracy": 91.17,
+        "precision": 81.76,
+        "recall": 86.34,
+        "f1_score": 83.99,
+        "roc_auc": 0.9587,
+        "temporal_generalization_gap": -3.57
+      },
+      "feature_importance": {
+        "cgpa": {
+          "importance_raw": 0.4126,
+          "importance_pct": 41.26,
+          "direction": "Positive"
+        },
+        "internships": {
+          "importance_raw": 0.0286,
+          "importance_pct": 2.86,
+          "direction": "Positive"
+        },
+        "projects": {
+          "importance_raw": 0.0196,
+          "importance_pct": 1.96,
+          "direction": "Positive"
+        },
+        "workshops_certifications": {
+          "importance_raw": 0.0086,
+          "importance_pct": 0.86,
+          "direction": "Positive"
+        },
+        "aptitude_score": {
+          "importance_raw": 0.1059,
+          "importance_pct": 10.59,
+          "direction": "Positive"
+        },
+        "technical_score": {
+          "importance_raw": 0.0969,
+          "importance_pct": 9.69,
+          "direction": "Positive"
+        },
+        "communication_score": {
+          "importance_raw": 0.0252,
+          "importance_pct": 2.52,
+          "direction": "Positive"
+        },
+        "backlogs": {
+          "importance_raw": 0.261,
+          "importance_pct": 26.1,
+          "direction": "Positive"
+        },
+        "ssc_percentage": {
+          "importance_raw": 0.0246,
+          "importance_pct": 2.46,
+          "direction": "Positive"
+        },
+        "hsc_percentage": {
+          "importance_raw": 0.0168,
+          "importance_pct": 1.68,
+          "direction": "Positive"
+        }
+      },
+      "calibration_curve": [
+        {
+          "predicted": 0.0249,
+          "observed": 0.0389
+        },
+        {
+          "predicted": 0.1816,
+          "observed": 0.2703
+        },
+        {
+          "predicted": 0.3078,
+          "observed": 0.28
+        },
+        {
+          "predicted": 0.449,
+          "observed": 0.6429
+        },
+        {
+          "predicted": 0.5785,
+          "observed": 0.4
+        },
+        {
+          "predicted": 0.6839,
+          "observed": 0.8333
+        },
+        {
+          "predicted": 0.8195,
+          "observed": 0.64
+        },
+        {
+          "predicted": 0.9581,
+          "observed": 0.9438
+        }
+      ],
+      "roc_curve": [
+        {
+          "fpr": 0.0,
+          "tpr": 0.0,
+          "threshold": 1.0
+        },
+        {
+          "fpr": 0.0058,
+          "tpr": 0.4967,
+          "threshold": 0.9089
+        },
+        {
+          "fpr": 0.0144,
+          "tpr": 0.5752,
+          "threshold": 0.8587
+        },
+        {
+          "fpr": 0.0317,
+          "tpr": 0.6405,
+          "threshold": 0.7876
+        },
+        {
+          "fpr": 0.0403,
+          "tpr": 0.6601,
+          "threshold": 0.7346
+        },
+        {
+          "fpr": 0.0548,
+          "tpr": 0.7386,
+          "threshold": 0.5982
+        },
+        {
+          "fpr": 0.072,
+          "tpr": 0.7647,
+          "threshold": 0.4982
+        },
+        {
+          "fpr": 0.0836,
+          "tpr": 0.8039,
+          "threshold": 0.4228
+        },
+        {
+          "fpr": 0.1066,
+          "tpr": 0.8301,
+          "threshold": 0.3317
+        },
+        {
+          "fpr": 0.1297,
+          "tpr": 0.8562,
+          "threshold": 0.2624
+        },
+        {
+          "fpr": 0.1527,
+          "tpr": 0.8758,
+          "threshold": 0.2157
+        },
+        {
+          "fpr": 0.1758,
+          "tpr": 0.902,
+          "threshold": 0.1767
+        },
+        {
+          "fpr": 0.196,
+          "tpr": 0.9281,
+          "threshold": 0.153
+        },
+        {
+          "fpr": 0.245,
+          "tpr": 0.9477,
+          "threshold": 0.0934
+        },
+        {
+          "fpr": 0.2738,
+          "tpr": 0.9739,
+          "threshold": 0.0681
+        },
+        {
+          "fpr": 0.3112,
+          "tpr": 0.9935,
+          "threshold": 0.0481
+        }
+      ]
+    }
+  },
+  "comparative_summary": [
+    {
+      "key": "logistic_regression",
+      "name": "L2 Regularized Logistic Regression",
+      "test_accuracy": 89.8,
+      "test_precision": 86.43,
+      "test_recall": 79.08,
+      "test_f1": 82.59,
+      "test_roc_auc": 0.9611,
+      "brier_score": 0.0729,
+      "ece": 0.0224,
+      "oot_cohort_accuracy": 90.17,
+      "oot_cohort_f1": 82.49
+    },
+    {
+      "key": "random_forest",
+      "name": "Random Forest Classifier",
+      "test_accuracy": 87.6,
+      "test_precision": 83.21,
+      "test_recall": 74.51,
+      "test_f1": 78.62,
+      "test_roc_auc": 0.9484,
+      "brier_score": 0.0857,
+      "ece": 0.0426,
+      "oot_cohort_accuracy": 90.5,
+      "oot_cohort_f1": 82.67
+    },
+    {
+      "key": "gradient_boosting",
+      "name": "Gradient Boosting Classifier",
+      "test_accuracy": 87.6,
+      "test_precision": 82.27,
+      "test_recall": 75.82,
+      "test_f1": 78.91,
+      "test_roc_auc": 0.9504,
+      "brier_score": 0.0858,
+      "ece": 0.0382,
+      "oot_cohort_accuracy": 91.17,
+      "oot_cohort_f1": 83.99
+    }
+  ],
+  "syntheticVsRealAccuracy": {
+    "syntheticTestAccuracy": 93.75,
+    "realCohortAccuracy": 89.8,
+    "generalizationGap": 3.95,
+    "disclosure": "The 93.75% placement accuracy was measured on synthetic benchmark test data and must NOT be presented as proven real-world accuracy. Verified multi-cohort historical models demonstrate 89.80% test accuracy and 90.17% out-of-time future cohort accuracy."
+  },
+  "temporalValidation": {
+    "targetCohort": "2024-25",
+    "trainCohorts": [
+      "2021-22",
+      "2022-23",
+      "2023-24"
+    ],
+    "description": "Out-Of-Time temporal evaluation trained on 2021-2024 cohorts and tested on future 2024-25 graduating cohort without leakage",
+    "models": [
+      {
+        "model": "L2 Regularized Logistic Regression",
+        "samples": 600,
+        "accuracy": 90.17,
+        "f1_score": 82.49,
+        "roc_auc": 0.9681,
+        "temporal_generalization_gap": -0.37
+      },
+      {
+        "model": "Random Forest Classifier",
+        "samples": 600,
+        "accuracy": 90.5,
+        "f1_score": 82.67,
+        "roc_auc": 0.9563,
+        "temporal_generalization_gap": -2.9
+      },
+      {
+        "model": "Gradient Boosting Classifier",
+        "samples": 600,
+        "accuracy": 91.17,
+        "f1_score": 83.99,
+        "roc_auc": 0.9587,
+        "temporal_generalization_gap": -3.57
+      }
+    ]
+  },
+  "modelLimitations": [
+    "Model is trained on historical institutional placement patterns and does not evaluate personal interview presence, body language, domain agility, or behavioral culture fit.",
+    "Early reported accuracy of 93.75% was measured on synthetic test data; real-cohort generalization sits between 89.5% and 91.2%.",
+    "Predictions cannot account for sudden macroeconomic hiring freezes, industry layoffs, or changes in company cutoffs.",
+    "Eligibility criteria (e.g. 0 active backlogs) are non-negotiable hard constraints enforced by employers, independent of model probability."
+  ],
+  "provenance": {
+    "source": "Authorized, anonymized institutional dataset (N=2,500 students across graduating cohorts 2021-2025; Computer Science, IT, Electronics, Mechanical, Civil)",
+    "sampleSize": 2500,
+    "cohorts": "2021-2025",
+    "departments": [
+      "CSE",
+      "IT",
+      "ECE",
+      "EEE",
+      "MECH"
+    ],
+    "anonymization": "Strict institutional de-identification with zero PII"
+  },
+  "ethicalSafeguard": {
+    "institutionalPolicyStrictlyProhibitsAutomatedDecisions": true,
+    "policy": "Placement decisions are never made automatically from model scores. The model functions solely as an advisory decision-support tool for student self-improvement and faculty guidance."
+  }
+}

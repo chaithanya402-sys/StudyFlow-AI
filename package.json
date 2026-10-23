@@ -6,9 +6,10 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "test": "node test_security.js && node test_workflows.js",
+    "test": "node test_security.js && node test_workflows.js && node test_ml_credibility.js",
     "test:security": "node test_security.js",
     "test:workflows": "node test_workflows.js",
+    "test:ml": "node test_ml_credibility.js",
     "serve:py": "python server.py"
   },
   "keywords": [

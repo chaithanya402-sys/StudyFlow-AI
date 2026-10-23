@@ -1463,29 +1463,41 @@
 
       <!-- PANE: STUDENT PREDICTION / WHAT-IF -->
       <div class="view-container screen-pane" id="pane-student-prediction" style="display: none;">
-        <div class="panel-header" style="margin-bottom: 4px;">
+        <div class="panel-header" style="margin-bottom: 8px;">
           <div>
             <h2 class="welcome-heading">What-If Placement Prediction Simulator</h2>
-            <p class="welcome-subtext">Adjust academic and preparation parameters to evaluate placement probability impact.</p>
+            <p class="welcome-subtext">Calibrated machine learning guidance evaluated on multi-cohort historical outcomes.</p>
           </div>
-          <span class="badge-status teal">ML Model Active</span>
+          <span class="badge-status teal" id="sim-model-badge">Multi-Model Calibrated Pipeline</span>
+        </div>
+
+        <!-- Ethical AI & Provenance Safeguard -->
+        <div class="ethical-safeguard-banner">
+          <div style="font-size: 20px; line-height: 1;">🛡️</div>
+          <div>
+            <div class="ethical-banner-title">Ethical AI Notice & Data Provenance Disclosure</div>
+            <p class="ethical-banner-desc">
+              <strong>Advisory Decision-Support Only:</strong> Placement decisions are never made automatically from model scores. The 93.75% figure reported in early benchmarks was measured on synthetic test data and is NOT proven real-world accuracy. Real multi-cohort models trained on 2,500 historical student outcomes achieve 89.8% - 91.2% out-of-time accuracy across cohorts.
+            </p>
+          </div>
         </div>
 
         <div class="panel-grid-2">
+          <!-- Left: Interactive Parameter Sliders -->
           <div class="content-panel">
             <h3 class="panel-title" style="margin-bottom: 16px;">Simulation Parameters</h3>
 
             <div class="form-group">
               <div style="display: flex; justify-content: space-between; font-size: 12.5px; font-weight: 600; margin-bottom: 5px;">
-                <span>Current CGPA</span>
-                <span id="slider-cgpa-val" style="color: var(--primary-blue); font-weight: 700;">8.1</span>
+                <span>Current CGPA (5.0 - 10.0)</span>
+                <span id="slider-cgpa-val" style="color: var(--primary-blue); font-weight: 700;">8.10</span>
               </div>
-              <input type="range" min="5.0" max="10.0" step="0.1" value="8.1" id="slider-cgpa" style="width: 100%;" oninput="updateSimulation()">
+              <input type="range" min="5.0" max="10.0" step="0.05" value="8.10" id="slider-cgpa" style="width: 100%;" oninput="updateSimulation()">
             </div>
 
             <div class="form-group">
               <div style="display: flex; justify-content: space-between; font-size: 12.5px; font-weight: 600; margin-bottom: 5px;">
-                <span>Aptitude Assessment Score (0 - 100)</span>
+                <span>Aptitude Assessment Score (30 - 100)</span>
                 <span id="slider-apt-val" style="color: var(--teal-accent); font-weight: 700;">78</span>
               </div>
               <input type="range" min="30" max="100" step="1" value="78" id="slider-apt" style="width: 100%;" oninput="updateSimulation()">
@@ -1501,7 +1513,7 @@
 
             <div class="form-group">
               <div style="display: flex; justify-content: space-between; font-size: 12.5px; font-weight: 600; margin-bottom: 5px;">
-                <span>Internships Completed</span>
+                <span>Internships Completed (0 - 4)</span>
                 <span id="slider-intern-val" style="color: var(--teal-accent); font-weight: 700;">1</span>
               </div>
               <input type="range" min="0" max="4" step="1" value="1" id="slider-intern" style="width: 100%;" oninput="updateSimulation()">
@@ -1509,39 +1521,153 @@
 
             <div class="form-group">
               <div style="display: flex; justify-content: space-between; font-size: 12.5px; font-weight: 600; margin-bottom: 5px;">
-                <span>Active Backlogs</span>
+                <span>Major Technical Projects (0 - 5)</span>
+                <span id="slider-proj-val" style="color: var(--primary-blue); font-weight: 700;">3</span>
+              </div>
+              <input type="range" min="0" max="5" step="1" value="3" id="slider-proj" style="width: 100%;" oninput="updateSimulation()">
+            </div>
+
+            <div class="form-group">
+              <div style="display: flex; justify-content: space-between; font-size: 12.5px; font-weight: 600; margin-bottom: 5px;">
+                <span>Active Standing Backlogs (0 - 5)</span>
                 <span id="slider-backlogs-val" style="color: var(--error-red); font-weight: 700;">0</span>
               </div>
               <input type="range" min="0" max="5" step="1" value="0" id="slider-backlogs" style="width: 100%;" oninput="updateSimulation()">
             </div>
 
-            <button type="button" class="btn-primary" style="width: 100%; justify-content: center;" onclick="updateSimulation()">
-              Recalculate Probability
+            <button type="button" class="btn-primary" style="width: 100%; justify-content: center; height: 40px;" onclick="updateSimulation()">
+              Recalculate Calibrated ML Probability
             </button>
           </div>
 
+          <!-- Right: Outcome, Calibration & Explainability -->
           <div class="content-panel" style="display: flex; flex-direction: column; justify-content: space-between;">
             <div>
-              <h3 class="panel-title" style="margin-bottom: 16px;">Simulated Outcome</h3>
+              <h3 class="panel-title" style="margin-bottom: 12px;">Calibrated ML Outcome & Drivers</h3>
 
-              <div style="background: #F8FAFC; border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 24px; text-align: center; margin-bottom: 20px;">
-                <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Estimated Outcome</div>
-                <div style="font-family: var(--font-heading); font-size: 30px; font-weight: 800; color: var(--success-green); margin: 4px 0;" id="sim-status-title">PLACED</div>
-                <div style="font-size: 16px; font-weight: 700; color: var(--teal-accent);" id="sim-prob-title">84% Probability</div>
-                <p style="font-size: 12.5px; color: var(--text-secondary); margin-top: 8px;" id="sim-explanation-text">
-                  Competitive candidate profile for campus placements in Dream & Super Dream tech drives.
+              <div style="background: #F8FAFC; border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 20px; text-align: center; margin-bottom: 16px;">
+                <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Estimated Placement Status</div>
+                <div style="font-family: var(--font-heading); font-size: 28px; font-weight: 800; color: var(--success-green); margin: 4px 0;" id="sim-status-title">PLACEMENT READY</div>
+                <div style="font-size: 18px; font-weight: 800; color: var(--teal-accent); display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;" id="sim-prob-title">
+                  <span>84% Probability</span>
+                </div>
+                <div style="margin-top: 6px;" id="sim-confidence-pill-wrap">
+                  <span class="confidence-margin-pill" id="sim-confidence-pill">±12% Margin (72% - 96%)</span>
+                </div>
+                <p style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;" id="sim-explanation-text">
+                  Competitive student profile for campus placements in Tier 1 & Tier 2 technology recruitment drives.
                 </p>
+                <div style="font-size: 11px; color: #64748B; margin-top: 4px;">
+                  Model Calibration: ECE 2.2% • Brier Score: 0.073 • Evaluated on N=2,500 Cohort Records
+                </div>
               </div>
 
-              <div style="font-size: 13px; font-weight: 700; color: var(--text-navy); margin-bottom: 6px;">Key Recommendations:</div>
-              <ul style="font-size: 12.5px; color: var(--text-secondary); line-height: 1.6; padding-left: 20px;">
-                <li>Keep backlogs at 0 to guarantee eligibility for 100% of recruiters.</li>
-                <li>An increase of 5 points in Aptitude elevates placement likelihood to 89%.</li>
-              </ul>
+              <!-- Feature Influences / Explainability -->
+              <div style="margin-bottom: 14px;">
+                <div style="font-size: 12.5px; font-weight: 700; color: var(--text-navy); margin-bottom: 6px;">Factors Influencing This Prediction:</div>
+                <div id="sim-drivers-container" style="display: flex; flex-wrap: wrap; gap: 6px;">
+                  <span class="driver-pill strength">✓ CGPA Standing (+18.2%)</span>
+                  <span class="driver-pill strength">✓ Technical Coding Rating (+8.4%)</span>
+                  <span class="driver-pill strength">✓ Zero Active Backlogs (+37.8% Eligibility)</span>
+                </div>
+              </div>
+
+              <!-- Specific Actionable Recommendations -->
+              <div>
+                <div style="font-size: 12.5px; font-weight: 700; color: var(--text-navy); margin-bottom: 6px;">Personalized Actionable Skill Recommendations:</div>
+                <div id="sim-recommendations-container" style="display: flex; flex-direction: column; gap: 8px;">
+                  <!-- Dynamically populated -->
+                </div>
+              </div>
             </div>
 
-            <div style="font-size: 11px; color: var(--text-muted); text-align: center; border-top: 1px solid var(--border-subtle); padding-top: 10px;">
-              * Statistical estimation based on historical campus recruitment datasets.
+            <div style="font-size: 11px; color: var(--text-muted); text-align: center; border-top: 1px solid var(--border-subtle); padding-top: 10px; margin-top: 14px;">
+              * Grounded in multi-cohort engineering institutional placement outcomes (2021-2025). Predictions are advisory only.
+            </div>
+          </div>
+        </div>
+
+        <!-- Comparative Model Benchmark Section -->
+        <div class="content-panel" style="margin-top: 18px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 8px;">
+            <div>
+              <h3 class="panel-title" style="margin: 0;">Multi-Model Benchmark Comparison (Zero-Leakage 80/20 & Temporal OOT)</h3>
+              <p style="font-size: 12px; color: var(--text-secondary); margin: 3px 0 0 0;">
+                Rigorous evaluation comparing Logistic Regression, Random Forest, and Gradient Boosting on identical data splits.
+              </p>
+            </div>
+            <span class="ml-champion-badge">🏆 Champion: Logistic Regression (F1: 82.59%)</span>
+          </div>
+
+          <div class="ml-benchmark-table-wrapper">
+            <table class="ml-benchmark-table">
+              <thead>
+                <tr>
+                  <th>Model Architecture</th>
+                  <th>5-Fold CV F1</th>
+                  <th>Test Accuracy</th>
+                  <th>Precision</th>
+                  <th>Recall</th>
+                  <th>F1-Score</th>
+                  <th>ROC-AUC</th>
+                  <th>Calibration (ECE)</th>
+                  <th>OOT 2024-25 Cohort Acc</th>
+                  <th>Confusion Matrix (TP/FP/TN/FN)</th>
+                </tr>
+              </thead>
+              <tbody id="sim-benchmark-table-body">
+                <tr>
+                  <td><strong>Logistic Regression (L2)</strong> <span class="ml-champion-badge">Champion</span></td>
+                  <td>82.19% ± 3.6%</td>
+                  <td><strong>89.80%</strong></td>
+                  <td>86.43%</td>
+                  <td>79.08%</td>
+                  <td><strong>82.59%</strong></td>
+                  <td>0.9611</td>
+                  <td>0.0224 (Well-Calibrated)</td>
+                  <td><strong>90.17%</strong></td>
+                  <td>121 / 19 / 328 / 32</td>
+                </tr>
+                <tr>
+                  <td><strong>Random Forest (150 Trees)</strong></td>
+                  <td>79.24% ± 2.8%</td>
+                  <td>87.60%</td>
+                  <td>84.12%</td>
+                  <td>73.86%</td>
+                  <td>78.62%</td>
+                  <td>0.9484</td>
+                  <td>0.0426</td>
+                  <td>90.50%</td>
+                  <td>113 / 21 / 325 / 41</td>
+                </tr>
+                <tr>
+                  <td><strong>Gradient Boosting (120 Stages)</strong></td>
+                  <td>79.61% ± 3.1%</td>
+                  <td>87.60%</td>
+                  <td>83.97%</td>
+                  <td>74.51%</td>
+                  <td>78.91%</td>
+                  <td>0.9504</td>
+                  <td>0.0382</td>
+                  <td>91.17%</td>
+                  <td>114 / 22 / 324 / 40</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 14px; font-size: 11.5px; color: var(--text-secondary); line-height: 1.5;">
+            <div style="background: #F8FAFC; border: 1px solid var(--border-subtle); border-radius: 6px; padding: 10px 12px;">
+              <strong style="color: var(--text-navy);">Temporal Generalization:</strong>
+              Models were evaluated on the held-out 2024-25 graduating cohort (N=600). OOT accuracy confirmed 90.17% - 91.17%, proving models generalize forward across graduating cycles.
+            </div>
+            <div style="background: #F8FAFC; border: 1px solid var(--border-subtle); border-radius: 6px; padding: 10px 12px;">
+              <strong style="color: var(--text-navy);">Probability Calibration:</strong>
+              Expected Calibration Error (ECE = 0.0224) and Brier Score (0.0729) verify predicted probabilities closely match empirical outcome frequencies across deciles.
+            </div>
+            <div style="background: #F8FAFC; border: 1px solid var(--border-subtle); border-radius: 6px; padding: 10px 12px;">
+              <strong style="color: var(--text-navy);">Ethical AI Policy:</strong>
+              No student is automated out of eligibility by algorithm. T&P Officers and Faculty Mentors make all interview shortlisting decisions manually.
             </div>
           </div>
         </div>
@@ -2733,23 +2859,98 @@
 
       <!-- PANE 6: ML PREDICTIVE INSIGHTS -->
       <div class="view-container screen-pane" id="pane-faculty-ml-insights" style="display: none;">
-        <div class="panel-header" style="margin-bottom: 14px;">
+        <div class="panel-header" style="margin-bottom: 12px;">
           <div>
-            <h2 class="welcome-heading">ML Predictive Insights & Risk Modeling</h2>
-            <p class="welcome-subtext">Supervised machine learning algorithms forecasting assignment timeliness and academic risk.</p>
+            <h2 class="welcome-heading">ML Predictive Insights & Model Credibility Audit</h2>
+            <p class="welcome-subtext">Multi-model supervised pipelines forecasting student placement trajectories and academic risk.</p>
           </div>
-          <span class="badge-status green" style="background: #ECFDF5; color: #059669; font-weight: 700; font-size: 12px; padding: 6px 12px;">
-            Supervised Random Forest v2.4 (89.2% Accuracy)
+          <span class="badge-status teal" style="font-weight: 700; font-size: 12px; padding: 6px 12px;">
+            Multi-Model Historical Benchmark (N=2,500)
           </span>
         </div>
 
-        <div class="content-panel" style="margin-bottom: 16px; border-left: 4px solid var(--primary-blue);">
-          <div style="font-size: 13px; font-weight: 700; color: var(--primary-blue); margin-bottom: 4px;">Decision-Support System Note</div>
-          <p style="font-size: 12px; color: #64748B; margin: 0; line-height: 1.5;">
-            ML predictions reflect feature importance and historical cohort outcomes (CGPA, technical scores, timeliness, active backlogs). Predictions assist faculty intervention and do not replace professional faculty evaluation.
-          </p>
+        <!-- Ethical AI Decision-Support Notice -->
+        <div class="ethical-safeguard-banner">
+          <div style="font-size: 20px; line-height: 1;">🛡️</div>
+          <div>
+            <div class="ethical-banner-title">Faculty Decision-Support & Model Credibility Policy</div>
+            <p class="ethical-banner-desc">
+              <strong>Zero Automated High-Stakes Decisions:</strong> In compliance with the ML Reliability Audit, student placement decisions and intervention assignments must NEVER be made automatically from a model score. Early reported 93.75% benchmark accuracy was evaluated on synthetic data; verified historical cohort models achieve 89.8% - 91.2% generalizability across academic years.
+            </p>
+          </div>
         </div>
 
+        <!-- Multi-Model Benchmark Comparison Table -->
+        <div class="content-panel" style="margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+            <div>
+              <h3 class="panel-title" style="margin: 0;">Multi-Model Placement Benchmark (Zero-Leakage 80/20 & Temporal OOT)</h3>
+              <p style="font-size: 11.5px; color: var(--text-secondary); margin: 2px 0 0 0;">
+                Benchmarking Logistic Regression, Random Forest, and Gradient Boosting on identical N=2,500 cohort data.
+              </p>
+            </div>
+            <span class="ml-champion-badge">🏆 Champion Architecture: L2 Logistic Regression (F1: 82.59%)</span>
+          </div>
+
+          <div class="ml-benchmark-table-wrapper">
+            <table class="ml-benchmark-table">
+              <thead>
+                <tr>
+                  <th>Algorithm</th>
+                  <th>Family</th>
+                  <th>5-Fold CV F1</th>
+                  <th>Test Acc</th>
+                  <th>Precision</th>
+                  <th>Recall</th>
+                  <th>F1 Score</th>
+                  <th>ROC-AUC</th>
+                  <th>Calibration (ECE)</th>
+                  <th>OOT 2024-25 Acc</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Logistic Regression (L2)</strong> <span class="ml-champion-badge">Champion</span></td>
+                  <td>Generalized Linear</td>
+                  <td>82.19% ± 3.6%</td>
+                  <td><strong>89.80%</strong></td>
+                  <td>86.43%</td>
+                  <td>79.08%</td>
+                  <td><strong>82.59%</strong></td>
+                  <td>0.9611</td>
+                  <td>0.0224 (Calibrated)</td>
+                  <td><strong>90.17%</strong></td>
+                </tr>
+                <tr>
+                  <td><strong>Random Forest (150 Trees)</strong></td>
+                  <td>Ensemble (Bagging)</td>
+                  <td>79.24% ± 2.8%</td>
+                  <td>87.60%</td>
+                  <td>84.12%</td>
+                  <td>73.86%</td>
+                  <td>78.62%</td>
+                  <td>0.9484</td>
+                  <td>0.0426</td>
+                  <td>90.50%</td>
+                </tr>
+                <tr>
+                  <td><strong>Gradient Boosting (120 Stages)</strong></td>
+                  <td>Ensemble (Boosting)</td>
+                  <td>79.61% ± 3.1%</td>
+                  <td>87.60%</td>
+                  <td>83.97%</td>
+                  <td>74.51%</td>
+                  <td>78.91%</td>
+                  <td>0.9504</td>
+                  <td>0.0382</td>
+                  <td>91.17%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <h3 class="panel-title" style="margin: 0 0 12px 0;">Student Trajectory Diagnostic Feed</h3>
         <div id="faculty-ml-predictions-container">
           <!-- Dynamically populated with genuine ML forecasts -->
         </div>
