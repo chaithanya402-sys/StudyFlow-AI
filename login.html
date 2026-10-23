@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sign In & Register | Student Placement Prediction System</title>
+  <title>Create Account & Sign In | StudyFlow AI</title>
+  <meta name="description" content="Join StudyFlow AI to track academic progress, evaluate skill proficiencies, and prepare for campus placement success.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -13,18 +14,23 @@
 
   <style>
     :root {
-      --primary-green: #16803C;
-      --dark-green: #123B22;
       --primary-blue: #2563EB;
       --primary-blue-hover: #1D4ED8;
       --primary-blue-light: #EFF6FF;
-      --teal-accent: #0D9488;
+      --primary-blue-border: #BFDBFE;
+      --dark-navy: #102A56;
+      --navy-deep: #0B192C;
+      --bg-canvas: #F5F8FF;
+      --card-bg: #FFFFFF;
       --border-subtle: #E2E8F0;
+      --border-input: #CBD5E1;
+      --text-dark: #0F172A;
       --text-muted: #64748B;
-      --text-dark: #17231A;
-      --success-green: #15803D;
+      --text-light: #94A3B8;
+      --success-green: #16A34A;
       --error-red: #DC2626;
       --warning-amber: #D97706;
+      --teal-accent: #0D9488;
     }
 
     * {
@@ -35,101 +41,230 @@
 
     html {
       overflow-y: auto;
-      height: auto;
+      height: 100%;
     }
 
     body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      background: #F8FAFC;
+      font-family: 'Inter', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-canvas);
       color: var(--text-dark);
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
       margin: 0;
-      padding: 24px 20px;
+      padding: 32px 20px;
       overflow-y: auto;
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(37, 99, 235, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(16, 42, 86, 0.04) 0%, transparent 40%);
     }
 
     .auth-container {
       width: 100%;
-      max-width: 1140px;
+      max-width: 1160px;
       min-height: 680px;
-      background: #FFFFFF;
+      background: var(--card-bg);
       border-radius: 24px;
-      box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
+      box-shadow: 0 25px 60px -15px rgba(16, 42, 86, 0.12), 0 0 0 1px rgba(37, 99, 235, 0.08);
       display: grid;
       grid-template-columns: 1fr 1.25fr;
       overflow: hidden;
       border: 1px solid var(--border-subtle);
+      position: relative;
     }
 
-    /* Left Side Showcase */
+    /* ==========================================================================
+       LEFT PANEL - ROYAL BLUE TO NAVY HERO SECTION
+       ========================================================================== */
     .auth-showcase-panel {
       position: relative;
-      background: linear-gradient(145deg, #123B22 0%, #16803C 45%, #0F172A 100%);
-      background-size: cover;
-      background-position: center;
-      padding: 48px 40px;
+      background: linear-gradient(145deg, #102A56 0%, #1D4ED8 65%, #2563EB 100%);
+      padding: 36px 36px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       color: #FFFFFF;
+      overflow: hidden;
+    }
+
+    /* Ambient decorative waves in hero background */
+    .showcase-bg-waves {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 220px;
+      pointer-events: none;
+      opacity: 0.25;
+      z-index: 1;
+    }
+
+    .showcase-content-wrapper {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      justify-content: space-between;
     }
 
     .showcase-top-badge {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 6px 14px;
+      padding: 5px 13px;
       border-radius: 9999px;
-      background: rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(8px);
+      background: rgba(255, 255, 255, 0.14);
+      backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.25);
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 700;
       width: fit-content;
+      margin-bottom: 14px;
+      letter-spacing: 0.3px;
     }
 
-    .showcase-mid-content h2 {
-      font-size: 32px;
-      font-weight: 800;
-      line-height: 1.25;
-      letter-spacing: -0.5px;
+    .showcase-top-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
       margin-bottom: 14px;
     }
 
-    .showcase-mid-content p {
-      font-size: 14px;
-      color: rgba(255, 255, 255, 0.85);
-      line-height: 1.6;
-      max-width: 380px;
-      margin-bottom: 28px;
+    .showcase-brand-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #FFFFFF;
     }
 
+    .showcase-brand-text {
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+
+    .showcase-brand-text span {
+      color: #93C5FD;
+    }
+
+    .showcase-heading {
+      font-size: 27px;
+      font-weight: 800;
+      line-height: 1.25;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+      color: #FFFFFF;
+    }
+
+    .showcase-subtext {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.88);
+      line-height: 1.5;
+      margin-bottom: 16px;
+      max-width: 440px;
+    }
+
+    /* Three Feature Highlights (Create Account View) */
+    .hero-features-list {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      margin-bottom: 16px;
+    }
+
+    .hero-feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 11px;
+      padding: 9px 12px;
+      border-radius: 11px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      backdrop-filter: blur(6px);
+      transition: all 0.2s ease;
+    }
+
+    .hero-feature-item:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.24);
+      transform: translateX(3px);
+    }
+
+    .hero-feature-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.16);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: #93C5FD;
+    }
+
+    .hero-feature-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #FFFFFF;
+      margin-bottom: 2px;
+    }
+
+    .hero-feature-desc {
+      font-size: 10.5px;
+      color: rgba(255, 255, 255, 0.75);
+      line-height: 1.35;
+    }
+
+    /* Vector SVG Educational Illustration (Laptop + Books + AI nodes) */
+    .hero-illustration-box {
+      width: 100%;
+      height: 125px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .hero-illustration-box svg {
+      width: 100%;
+      height: 100%;
+      max-height: 125px;
+      filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.15));
+    }
+
+    /* Showcase Metrics Row (Sign In View) */
     .showcase-metrics-row {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-bottom: 30px;
+      gap: 10px;
+      margin-bottom: 20px;
     }
 
     .showcase-metric-box {
       background: rgba(255, 255, 255, 0.1);
       border: 1px solid rgba(255, 255, 255, 0.18);
       border-radius: 12px;
-      padding: 14px 10px;
+      padding: 10px 6px;
       text-align: center;
     }
 
     .showcase-metric-val {
-      font-size: 22px;
+      font-size: 19px;
       font-weight: 800;
       color: #FFFFFF;
     }
 
     .showcase-metric-lbl {
-      font-size: 11px;
+      font-size: 10px;
       color: rgba(255, 255, 255, 0.75);
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -137,31 +272,32 @@
       font-weight: 600;
     }
 
+    /* Testimonial Box (Sign In View) */
     .showcase-testimonial-box {
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.16);
       border-radius: 14px;
-      padding: 16px;
-      margin-bottom: 24px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
     }
 
     .testimonial-quote {
-      font-size: 12.5px;
-      line-height: 1.5;
+      font-size: 11.5px;
+      line-height: 1.45;
       font-style: italic;
       color: rgba(255, 255, 255, 0.95);
-      margin-bottom: 12px;
+      margin-bottom: 8px;
     }
 
     .testimonial-author {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 9px;
     }
 
     .author-avatar {
-      width: 32px;
-      height: 32px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       background: var(--teal-accent);
       color: #FFFFFF;
@@ -169,35 +305,56 @@
       align-items: center;
       justify-content: center;
       font-weight: 700;
-      font-size: 12px;
+      font-size: 10.5px;
     }
 
     .author-info-name {
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 700;
       color: #FFFFFF;
     }
 
     .author-info-role {
-      font-size: 11px;
+      font-size: 10px;
       color: rgba(255, 255, 255, 0.7);
     }
 
-    /* Right Form Panel */
+    .showcase-footer {
+      font-size: 10.5px;
+      color: rgba(255, 255, 255, 0.7);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      letter-spacing: 0.2px;
+    }
+
+    /* ==========================================================================
+       RIGHT PANEL - CREATE ACCOUNT / SIGN IN CARD
+       ========================================================================== */
     .auth-form-panel {
-      padding: 40px 44px;
+      padding: 28px 36px;
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
       overflow-y: auto;
-      max-height: 85vh;
+      max-height: calc(100vh - 48px);
+      scrollbar-width: thin;
+      scrollbar-color: #CBD5E1 transparent;
+    }
+
+    .auth-form-panel::-webkit-scrollbar {
+      width: 5px;
+    }
+    .auth-form-panel::-webkit-scrollbar-thumb {
+      background-color: #CBD5E1;
+      border-radius: 9999px;
     }
 
     .top-action-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
 
     .top-back-link {
@@ -206,7 +363,7 @@
       gap: 6px;
       color: var(--text-muted);
       text-decoration: none;
-      font-size: 12.5px;
+      font-size: 12px;
       font-weight: 600;
       transition: color 0.15s ease;
     }
@@ -216,11 +373,11 @@
     }
 
     .btn-config-gear {
-      background: #F1F5F9;
-      border: 1px solid #CBD5E1;
+      background: #F8FAFC;
+      border: 1px solid var(--border-subtle);
       padding: 4px 10px;
-      border-radius: 8px;
-      font-size: 11.5px;
+      border-radius: 9999px;
+      font-size: 11px;
       font-weight: 600;
       color: #334155;
       cursor: pointer;
@@ -231,7 +388,8 @@
     }
 
     .btn-config-gear:hover {
-      background: #E2E8F0;
+      background: #EFF6FF;
+      border-color: var(--primary-blue-border);
     }
 
     .status-dot {
@@ -240,157 +398,129 @@
       border-radius: 50%;
       display: inline-block;
     }
-    .status-dot.online { background: #16A34A; }
-    .status-dot.offline { background: #94A3B8; }
+    .status-dot.online { 
+      background: var(--success-green); 
+      box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.2);
+    }
+    .status-dot.offline { background: var(--text-light); }
 
-    .auth-brand-logo {
+    /* Centered StudyFlow AI Brand Header */
+    .auth-brand-center {
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 8px;
-      font-size: 18px;
-      margin-bottom: 16px;
+      justify-content: center;
+      margin-bottom: 10px;
     }
 
-    .auth-header-title {
-      font-size: 26px;
-      font-weight: 800;
-      color: #0F172A;
-      letter-spacing: -0.5px;
-      margin-bottom: 4px;
-    }
-
-    .auth-header-subtitle {
-      font-size: 13px;
-      color: var(--text-muted);
-      margin-bottom: 18px;
-    }
-
-    /* Main Tab Switcher: Sign In vs Create Account */
-    .auth-mode-tabs {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      background: #F1F5F9;
-      padding: 4px;
-      border-radius: 12px;
-      margin-bottom: 18px;
-      gap: 4px;
-    }
-
-    .auth-mode-btn {
-      padding: 9px 12px;
-      border-radius: 8px;
-      border: none;
-      background: transparent;
-      color: #64748B;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
+    .brand-logo-badge {
+      width: 40px;
+      height: 40px;
+      border-radius: 11px;
+      background: linear-gradient(135deg, #2563EB 0%, #102A56 100%);
+      color: #FFFFFF;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
-      transition: all 0.15s ease;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+      margin-bottom: 6px;
     }
 
-    .auth-mode-btn.active {
-      background: #FFFFFF;
+    .brand-title-text {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--dark-navy);
+      letter-spacing: -0.3px;
+    }
+
+    .brand-title-text span {
+      color: var(--primary-blue);
+    }
+
+    .auth-card-title {
+      font-size: 22px;
+      font-weight: 800;
       color: #0F172A;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+      letter-spacing: -0.5px;
+      text-align: center;
+      margin-bottom: 3px;
     }
 
-    /* Role Switcher Tabs */
+    .auth-card-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-bottom: 14px;
+      line-height: 1.4;
+    }
+
+    /* Role Selector Pills */
     .role-tabs-wrap {
       display: flex;
       background: #F8FAFC;
       border: 1px solid var(--border-subtle);
-      padding: 4px;
-      border-radius: 10px;
-      margin-bottom: 16px;
-      gap: 4px;
+      padding: 3px;
+      border-radius: 11px;
+      margin-bottom: 14px;
+      gap: 5px;
     }
 
     .role-tab-btn {
       flex: 1;
-      padding: 7px 8px;
-      border-radius: 6px;
-      border: none;
+      padding: 8px 8px;
+      border-radius: 8px;
+      border: 1px solid transparent;
       background: transparent;
       color: #64748B;
       font-size: 11.5px;
-      font-weight: 700;
+      font-weight: 600;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 5px;
+      gap: 6px;
       transition: all 0.15s ease;
+      font-family: inherit;
+    }
+
+    .role-tab-btn:hover {
+      color: #1E293B;
+      background: rgba(255, 255, 255, 0.6);
     }
 
     .role-tab-btn.active {
       background: #FFFFFF;
-      color: #0F172A;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-      border: 1px solid #CBD5E1;
-    }
-
-    /* Quick Demo Login Chips */
-    .demo-chips-box {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-bottom: 18px;
-      padding: 8px 12px;
-      background: #F8FAFC;
-      border: 1px dashed #CBD5E1;
-      border-radius: 10px;
-    }
-
-    .demo-chips-label {
-      font-size: 11px;
-      font-weight: 700;
-      color: #475569;
-    }
-
-    .btn-demo-chip {
-      padding: 3px 8px;
-      border-radius: 6px;
-      border: 1px solid #CBD5E1;
-      background: #FFFFFF;
-      font-size: 10.5px;
-      font-weight: 700;
-      color: #1E293B;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-
-    .btn-demo-chip:hover {
-      background: var(--primary-blue-light);
-      border-color: var(--primary-blue);
       color: var(--primary-blue);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+      border: 1.5px solid var(--primary-blue);
+      font-weight: 700;
     }
 
-    /* Form Fields */
+    .role-tab-btn.active svg {
+      stroke: var(--primary-blue);
+    }
+
+    /* Forms & Inputs */
     .auth-form {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 10px;
     }
 
     .input-row-2 {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      gap: 10px;
     }
 
     .input-group {
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 3px;
     }
 
     .input-label {
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
       color: #334155;
       display: flex;
@@ -406,18 +536,21 @@
 
     .input-field-icon {
       position: absolute;
-      left: 12px;
-      font-size: 13px;
+      left: 11px;
+      font-size: 12.5px;
       color: #94A3B8;
+      display: flex;
+      align-items: center;
+      pointer-events: none;
     }
 
     .auth-input, .auth-select {
       width: 100%;
-      height: 42px;
-      padding: 0 36px 0 34px;
-      border-radius: 10px;
-      border: 1px solid var(--border-subtle);
-      font-size: 13px;
+      height: 39px;
+      padding: 0 34px 0 32px;
+      border-radius: 9px;
+      border: 1px solid var(--border-input);
+      font-size: 12px;
       color: #0F172A;
       background: #FFFFFF;
       outline: none;
@@ -426,116 +559,231 @@
     }
 
     .auth-select {
-      padding: 0 12px;
+      padding: 0 28px 0 32px;
       cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
     }
 
     .auth-input:focus, .auth-select:focus {
       border-color: var(--primary-blue);
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+    }
+
+    .auth-input.error, .auth-select.error {
+      border-color: var(--error-red);
+      background-color: #FEF2F2;
+    }
+
+    .field-error-hint {
+      font-size: 10px;
+      color: var(--error-red);
+      font-weight: 500;
+      margin-top: 1px;
+      display: none;
     }
 
     .toggle-pwd-btn {
       position: absolute;
-      right: 10px;
+      right: 8px;
       background: none;
       border: none;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 13px;
       color: #94A3B8;
       padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
     }
 
-    /* Protected Faculty Code Banner */
-    .faculty-protection-box {
-      display: none;
+    .toggle-pwd-btn:hover {
+      color: #334155;
+    }
+
+    /* Passcode / Protected Role Box */
+    .role-security-box {
       background: #FFFBEB;
       border: 1px solid #FDE68A;
-      border-radius: 10px;
-      padding: 12px;
-      margin-top: 4px;
+      border-radius: 9px;
+      padding: 10px 12px;
+      margin-top: 2px;
+      margin-bottom: 2px;
     }
 
-    .faculty-protection-box.active {
-      display: block;
-    }
-
-    .faculty-protection-title {
+    .role-security-header {
       display: flex;
       align-items: center;
       gap: 6px;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
       color: #92400E;
+      margin-bottom: 3px;
+    }
+
+    .role-security-desc {
+      font-size: 10.5px;
+      color: #78350F;
+      line-height: 1.35;
       margin-bottom: 6px;
     }
 
-    .faculty-protection-desc {
-      font-size: 11px;
-      color: #78350F;
-      line-height: 1.4;
-      margin-bottom: 8px;
-    }
-
-    .form-options-row {
+    /* Password Requirements & Real-time Confirmation */
+    .password-feedback-box {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 12px;
-      margin-top: 2px;
-    }
-
-    .remember-me-label {
-      display: flex;
-      align-items: center;
+      flex-wrap: wrap;
       gap: 6px;
-      color: #475569;
-      cursor: pointer;
-      font-weight: 500;
+      margin-top: 1px;
+      margin-bottom: 2px;
     }
 
-    .forgot-pwd-link {
+    .pwd-check-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2.5px 7px;
+      border-radius: 6px;
+      background: #F1F5F9;
+      color: #64748B;
+      border: 1px solid #E2E8F0;
+      transition: all 0.15s ease;
+    }
+
+    .pwd-check-chip.valid {
+      background: #ECFDF5;
+      color: #065F46;
+      border-color: #A7F3D0;
+    }
+
+    .pwd-check-chip.invalid {
+      background: #FEF2F2;
+      color: #991B1B;
+      border-color: #FECACA;
+    }
+
+    /* Terms & Checkbox */
+    .terms-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin: 2px 0;
+    }
+
+    .terms-label {
+      font-size: 11px;
+      color: #475569;
+      line-height: 1.35;
+      cursor: pointer;
+    }
+
+    .terms-label a {
       color: var(--primary-blue);
       text-decoration: none;
-      font-weight: 700;
+      font-weight: 600;
     }
 
-    .forgot-pwd-link:hover {
+    .terms-label a:hover {
       text-decoration: underline;
     }
 
-    /* Submit Button */
-    .btn-submit-login {
-      height: 44px;
-      border-radius: 12px;
+    /* Primary Action Button */
+    .btn-primary-action {
+      height: 41px;
+      border-radius: 11px;
       border: none;
-      background: var(--primary-blue);
+      background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
       color: #FFFFFF;
-      font-size: 13.5px;
+      font-size: 13px;
       font-weight: 700;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      transition: all 0.15s ease;
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
-      margin-top: 4px;
+      transition: all 0.18s ease;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.28);
+      margin-top: 3px;
+      font-family: inherit;
     }
 
-    .btn-submit-login:hover {
-      background: var(--primary-blue-hover);
-      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+    .btn-primary-action:hover {
+      background: linear-gradient(135deg, #1D4ED8 0%, #1E40AF 100%);
+      box-shadow: 0 6px 18px rgba(37, 99, 235, 0.38);
       transform: translateY(-1px);
     }
 
-    .btn-submit-login:disabled {
+    .btn-primary-action:active {
+      transform: translateY(0);
+    }
+
+    .btn-primary-action:disabled {
       opacity: 0.7;
       cursor: not-allowed;
       transform: none;
+      box-shadow: none;
     }
 
-    /* Divider */
+    /* Bottom Alternate Navigation */
+    .auth-bottom-nav {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    .auth-bottom-nav a {
+      color: var(--primary-blue);
+      font-weight: 700;
+      text-decoration: none;
+      transition: color 0.15s ease;
+    }
+
+    .auth-bottom-nav a:hover {
+      text-decoration: underline;
+      color: var(--primary-blue-hover);
+    }
+
+    /* Notification Banner */
+    .login-alert {
+      display: none;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 14px;
+      line-height: 1.45;
+      animation: fadeIn 0.2s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .login-alert.success {
+      background: #ECFDF5;
+      color: #065F46;
+      border: 1px solid #A7F3D0;
+    }
+
+    .login-alert.error {
+      background: #FEF2F2;
+      color: #991B1B;
+      border: 1px solid #FECACA;
+    }
+
+    .login-alert.info {
+      background: #EFF6FF;
+      color: #1E40AF;
+      border: 1px solid #BFDBFE;
+    }
+
+    /* SSO Button & Divider (Sign In View) */
     .auth-divider {
       display: flex;
       align-items: center;
@@ -558,7 +806,6 @@
       padding: 0 10px;
     }
 
-    /* SSO Button */
     .btn-sso-login {
       height: 40px;
       border-radius: 10px;
@@ -574,6 +821,7 @@
       cursor: pointer;
       transition: all 0.15s ease;
       text-decoration: none;
+      font-family: inherit;
     }
 
     .btn-sso-login:hover {
@@ -581,53 +829,34 @@
       border-color: #CBD5E1;
     }
 
-    .guest-access-link {
-      text-align: center;
-      margin-top: 14px;
-      font-size: 12.5px;
-      color: #64748B;
+    .form-options-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      margin-top: 2px;
     }
 
-    .guest-access-link a {
-      color: var(--teal-accent);
-      font-weight: 700;
+    .remember-me-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #475569;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .forgot-pwd-link {
+      color: var(--primary-blue);
       text-decoration: none;
+      font-weight: 600;
     }
 
-    .guest-access-link a:hover {
+    .forgot-pwd-link:hover {
       text-decoration: underline;
     }
 
-    /* Alert Notice */
-    .login-alert {
-      display: none;
-      padding: 10px 14px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 600;
-      margin-bottom: 14px;
-      line-height: 1.4;
-    }
-
-    .login-alert.success {
-      background: #ECFDF5;
-      color: #065F46;
-      border: 1px solid #A7F3D0;
-    }
-
-    .login-alert.error {
-      background: #FEF2F2;
-      color: #991B1B;
-      border: 1px solid #FECACA;
-    }
-
-    .login-alert.info {
-      background: #EFF6FF;
-      color: #1E40AF;
-      border: 1px solid #BFDBFE;
-    }
-
-    /* Modal for Supabase Settings */
+    /* Modal dialogs */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -646,28 +875,65 @@
 
     .modal-card {
       background: #FFFFFF;
-      border-radius: 16px;
+      border-radius: 18px;
       width: 100%;
       max-width: 520px;
-      padding: 24px;
+      padding: 26px;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border-subtle);
+      max-height: 90vh;
+      overflow-y: auto;
     }
 
     /* Responsive */
-    @media (max-width: 900px) {
+    @media (max-width: 960px) {
       .auth-container {
         grid-template-columns: 1fr;
-        max-width: 520px;
+        max-width: 560px;
+        min-height: auto;
       }
       .auth-showcase-panel {
+        padding: 32px 24px;
+      }
+      .hero-illustration-box {
         display: none;
       }
+      .hero-features-list {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
       .auth-form-panel {
-        padding: 32px 24px;
+        padding: 28px 24px;
         max-height: none;
+      }
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 12px;
+      }
+      .auth-container {
+        border-radius: 16px;
       }
       .input-row-2 {
         grid-template-columns: 1fr;
+      }
+      .auth-showcase-panel {
+        padding: 24px 18px;
+      }
+      .showcase-heading {
+        font-size: 22px;
+      }
+      .auth-form-panel {
+        padding: 24px 16px;
+      }
+      .auth-card-title {
+        font-size: 21px;
+      }
+      .role-tab-btn {
+        padding: 8px 4px;
+        font-size: 11px;
       }
     }
   </style>
@@ -676,58 +942,222 @@
 
   <div class="auth-container">
 
-    <!-- Left Showcase Panel -->
+    <!-- ======================================================================
+         LEFT SHOWCASE PANEL (ROYAL-BLUE TO NAVY GRADIENT HERO SECTION)
+         ====================================================================== -->
     <div class="auth-showcase-panel">
-      <div>
-        <div class="showcase-top-badge">
-          <span>✨</span>
-          <span>AI Placement Engine v2.4</span>
+      <!-- Background Ambient Waves -->
+      <svg class="showcase-bg-waves" viewBox="0 0 500 240" fill="none" preserveAspectRatio="none">
+        <path d="M0,160 C120,220 220,120 340,180 C420,220 480,170 500,160 L500,240 L0,240 Z" fill="rgba(255,255,255,0.1)"></path>
+        <path d="M0,190 C150,140 280,240 400,190 C460,170 490,200 500,190 L500,240 L0,240 Z" fill="rgba(255,255,255,0.15)"></path>
+      </svg>
+
+      <div class="showcase-content-wrapper">
+        <!-- Top Pill Badge -->
+        <div>
+          <div class="showcase-top-badge" id="showcase-badge">
+            <span style="font-size: 13px;">✨</span>
+            <span id="showcase-badge-text">AI Placement Engine v2.4</span>
+          </div>
+
+          <!-- StudyFlow AI Branding (Shown on Register mode) -->
+          <div class="showcase-top-brand" id="showcase-brand" style="display: none;">
+            <div class="showcase-brand-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+              </svg>
+            </div>
+            <div class="showcase-brand-text">StudyFlow <span>AI</span></div>
+          </div>
         </div>
-      </div>
 
-      <div class="showcase-mid-content">
-        <h2>Empowering Campus Careers with Machine Learning.</h2>
-        <p>A supervised classification platform evaluating academic profiles, skill proficiencies, and aptitude metrics to guide students toward placement success.</p>
+        <!-- ==============================================
+             LEFT VIEW A: CREATE ACCOUNT HERO HIGHLIGHTS
+             ============================================== -->
+        <div id="showcase-view-register" style="display: none;">
+          <h2 class="showcase-heading">Start Your Journey with StudyFlow AI</h2>
+          <p class="showcase-subtext">Create your account to manage academic tasks, track your progress, develop your skills, and prepare for placement success.</p>
 
-        <div class="showcase-metrics-row">
-          <div class="showcase-metric-box">
-            <div class="showcase-metric-val">89.2%</div>
-            <div class="showcase-metric-lbl">Accuracy</div>
+          <!-- Three Feature Highlights with Professional Icons -->
+          <div class="hero-features-list">
+            <div class="hero-feature-item">
+              <div class="hero-feature-icon">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="20" x2="18" y2="10"></line>
+                  <line x1="12" y1="20" x2="12" y2="4"></line>
+                  <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+              </div>
+              <div>
+                <div class="hero-feature-title">Academic Progress Tracking</div>
+                <div class="hero-feature-desc">Monitor semester CGPA, lab milestones, and live academic performance analytics.</div>
+              </div>
+            </div>
+
+            <div class="hero-feature-item">
+              <div class="hero-feature-icon">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+                </svg>
+              </div>
+              <div>
+                <div class="hero-feature-title">AI-Powered Placement Prediction</div>
+                <div class="hero-feature-desc">Supervised classification estimating recruitment readiness and tailored targets.</div>
+              </div>
+            </div>
+
+            <div class="hero-feature-item">
+              <div class="hero-feature-icon">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                  <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+                </svg>
+              </div>
+              <div>
+                <div class="hero-feature-title">Skills &amp; Career Development</div>
+                <div class="hero-feature-desc">Targeted skill gap audits, ATS-ready resume scoring, and campus drive alerts.</div>
+              </div>
+            </div>
           </div>
-          <div class="showcase-metric-box">
-            <div class="showcase-metric-val">892</div>
-            <div class="showcase-metric-lbl">Placed</div>
-          </div>
-          <div class="showcase-metric-box">
-            <div class="showcase-metric-val">71.5%</div>
-            <div class="showcase-metric-lbl">Recruited</div>
+
+          <!-- Subtle Educational Illustration (Laptop Dashboard + Books + AI Graphics) -->
+          <div class="hero-illustration-box" aria-hidden="true">
+            <svg viewBox="0 0 360 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Glow backdrop -->
+              <ellipse cx="180" cy="80" rx="140" ry="45" fill="rgba(37,99,235,0.2)" />
+              
+              <!-- Educational Books Stack (Left) -->
+              <g transform="translate(42, 62)">
+                <!-- Book 1 (Bottom) -->
+                <rect x="0" y="32" width="76" height="14" rx="2" fill="rgba(255,255,255,0.25)" stroke="rgba(255,255,255,0.4)" stroke-width="1.2" />
+                <rect x="2" y="34" width="72" height="2" fill="rgba(255,255,255,0.4)" />
+                <!-- Book 2 (Middle) -->
+                <rect x="6" y="18" width="68" height="14" rx="2" fill="rgba(37,99,235,0.45)" stroke="rgba(255,255,255,0.5)" stroke-width="1.2" />
+                <line x1="12" y1="24" x2="48" y2="24" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" stroke-linecap="round" />
+                <!-- Book 3 (Top) -->
+                <rect x="12" y="4" width="60" height="14" rx="2" fill="rgba(13,148,136,0.5)" stroke="rgba(255,255,255,0.6)" stroke-width="1.2" />
+                <path d="M28 4 L28 12 L33 9 L38 12 L38 4" fill="rgba(255,255,255,0.8)" />
+              </g>
+
+              <!-- Modern Laptop Dashboard (Center) -->
+              <g transform="translate(132, 28)">
+                <!-- Laptop Screen Frame -->
+                <rect x="0" y="0" width="140" height="84" rx="6" fill="#0B132B" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" />
+                <!-- Screen Glass / Display -->
+                <rect x="6" y="6" width="128" height="72" rx="3" fill="#14213D" />
+                <!-- Dashboard Top Nav Bar in Screen -->
+                <rect x="10" y="10" width="120" height="8" rx="2" fill="rgba(255,255,255,0.12)" />
+                <circle cx="16" cy="14" r="1.8" fill="#EF4444" />
+                <circle cx="22" cy="14" r="1.8" fill="#F59E0B" />
+                <circle cx="28" cy="14" r="1.8" fill="#10B981" />
+                <!-- Mini Metric Card A -->
+                <rect x="10" y="22" width="36" height="22" rx="3" fill="rgba(37,99,235,0.3)" stroke="rgba(37,99,235,0.6)" stroke-width="0.8" />
+                <rect x="14" y="26" width="16" height="3" rx="1" fill="#93C5FD" />
+                <rect x="14" y="32" width="26" height="7" rx="1" fill="#FFFFFF" />
+                <!-- Mini Metric Card B -->
+                <rect x="50" y="22" width="36" height="22" rx="3" fill="rgba(13,148,136,0.25)" stroke="rgba(13,148,136,0.6)" stroke-width="0.8" />
+                <rect x="54" y="26" width="16" height="3" rx="1" fill="#5EEAD4" />
+                <rect x="54" y="32" width="22" height="7" rx="1" fill="#FFFFFF" />
+                <!-- Mini Metric Card C (Placement Readiness) -->
+                <rect x="90" y="22" width="40" height="22" rx="3" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.25)" stroke-width="0.8" />
+                <circle cx="110" cy="33" r="7" stroke="rgba(255,255,255,0.25)" stroke-width="2" />
+                <path d="M110 26 A 7 7 0 1 1 104 36" stroke="#38BDF8" stroke-width="2" fill="none" stroke-linecap="round" />
+                <!-- Bar Chart on Screen -->
+                <line x1="12" y1="70" x2="128" y2="70" stroke="rgba(255,255,255,0.2)" stroke-width="1" />
+                <rect x="18" y="58" width="6" height="12" rx="1" fill="rgba(255,255,255,0.4)" />
+                <rect x="28" y="52" width="6" height="18" rx="1" fill="rgba(255,255,255,0.6)" />
+                <rect x="38" y="48" width="6" height="22" rx="1" fill="#60A5FA" />
+                <rect x="48" y="55" width="6" height="15" rx="1" fill="rgba(255,255,255,0.5)" />
+                <rect x="58" y="44" width="6" height="26" rx="1" fill="#3B82F6" />
+                <!-- Trend Sparkline -->
+                <path d="M72 64 Q82 52 94 58 T118 46" fill="none" stroke="#34D399" stroke-width="1.8" stroke-linecap="round" />
+                <!-- Laptop Base -->
+                <path d="M-14 84 L154 84 L142 92 L-2 92 Z" fill="#E2E8F0" opacity="0.9" />
+                <rect x="56" y="85" width="28" height="2.5" rx="1" fill="#94A3B8" />
+              </g>
+
+              <!-- Abstract AI Graphics & Neural Vertices (Right & Top) -->
+              <g transform="translate(285, 20)">
+                <!-- Connected Neural Nodes -->
+                <line x1="15" y1="20" x2="42" y2="12" stroke="rgba(147,197,253,0.5)" stroke-width="1.2" stroke-dasharray="2 2" />
+                <line x1="15" y1="20" x2="28" y2="48" stroke="rgba(147,197,253,0.5)" stroke-width="1.2" stroke-dasharray="2 2" />
+                <line x1="42" y1="12" x2="56" y2="35" stroke="rgba(147,197,253,0.5)" stroke-width="1.2" stroke-dasharray="2 2" />
+                <line x1="28" y1="48" x2="56" y2="35" stroke="rgba(147,197,253,0.5)" stroke-width="1.2" />
+
+                <!-- Nodes -->
+                <circle cx="15" cy="20" r="4" fill="#38BDF8" stroke="#FFFFFF" stroke-width="1.2" />
+                <circle cx="42" cy="12" r="3.5" fill="#818CF8" stroke="#FFFFFF" stroke-width="1" />
+                <circle cx="28" cy="48" r="3.5" fill="#34D399" stroke="#FFFFFF" stroke-width="1" />
+                <circle cx="56" cy="35" r="5" fill="#60A5FA" stroke="#FFFFFF" stroke-width="1.4" />
+                
+                <!-- Floating AI Sparkles -->
+                <path d="M2 38 L4 44 L10 46 L4 48 L2 54 L0 48 L-6 46 L0 44 Z" fill="#FCD34D" opacity="0.85" />
+                <path d="M52 2 L53 6 L57 7 L53 8 L52 12 L51 8 L47 7 L51 6 Z" fill="#FCD34D" opacity="0.9" />
+              </g>
+            </svg>
           </div>
         </div>
 
-        <div class="showcase-testimonial-box">
-          <div class="testimonial-quote">
-            "The What-If Simulator helped me target a 75+ Aptitude score. I was successfully placed in TCS Digital during campus recruitment!"
+        <!-- ==============================================
+             LEFT VIEW B: SIGN IN HERO (ORIGINAL METRICS)
+             ============================================== -->
+        <div id="showcase-view-signin">
+          <h2 class="showcase-heading">Empowering Campus Careers with Machine Learning.</h2>
+          <p class="showcase-subtext">A supervised classification platform evaluating academic profiles, skill proficiencies, and aptitude metrics to guide students toward placement success.</p>
+
+          <div class="showcase-metrics-row">
+            <div class="showcase-metric-box">
+              <div class="showcase-metric-val">89.2%</div>
+              <div class="showcase-metric-lbl">Accuracy</div>
+            </div>
+            <div class="showcase-metric-box">
+              <div class="showcase-metric-val">892</div>
+              <div class="showcase-metric-lbl">Placed</div>
+            </div>
+            <div class="showcase-metric-box">
+              <div class="showcase-metric-val">71.5%</div>
+              <div class="showcase-metric-lbl">Recruited</div>
+            </div>
           </div>
-          <div class="testimonial-author">
-            <div class="author-avatar">PN</div>
-            <div>
-              <div class="author-info-name">Priya Nair</div>
-              <div class="author-info-role">CSE Final Year • Placed at TCS</div>
+
+          <div class="showcase-testimonial-box">
+            <div class="testimonial-quote">
+              "The What-If Simulator helped me target a 75+ Aptitude score. I was successfully placed in TCS Digital during campus recruitment!"
+            </div>
+            <div class="testimonial-author">
+              <div class="author-avatar">PN</div>
+              <div>
+                <div class="author-info-name">Priya Nair</div>
+                <div class="author-info-role">CSE Final Year • Placed at TCS</div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div style="font-size: 11px; color: rgba(255, 255, 255, 0.65);">
-        🔒 SQLite Database • Node.js Backend • Role Enforcement
+        <!-- Footer -->
+        <div class="showcase-footer" id="showcase-footer">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          <span id="showcase-footer-text">Secure Authentication • SQLite Database • Role-Based Access</span>
+        </div>
+
       </div>
     </div>
 
-    <!-- Right Login / Register Panel -->
+    <!-- ======================================================================
+         RIGHT PANEL - AUTHENTICATION CARD (CREATE ACCOUNT & SIGN IN)
+         ====================================================================== -->
     <div class="auth-form-panel">
+      <!-- Top Action Bar -->
       <div class="top-action-bar">
         <a href="landing.html" class="top-back-link">
-          <span>←</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
           <span>Back to Home</span>
         </a>
         <button type="button" class="btn-config-gear" onclick="openSupabaseModal()" title="View SQLite Database Status">
@@ -736,52 +1166,350 @@
         </button>
       </div>
 
-      <div class="auth-brand-logo">
-        <div style="width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, #16803C 0%, #123B22 100%); color: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(22,128,60,0.25);">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <!-- Centered StudyFlow AI Brand Header -->
+      <div class="auth-brand-center">
+        <div class="brand-logo-badge">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
             <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
           </svg>
         </div>
-        <span style="font-weight: 800; font-size: 16px; color: #17231A;">StudyFlow <span style="color: #16803C;">AI</span></span>
+        <div class="brand-title-text">StudyFlow <span>AI</span></div>
       </div>
 
-      <!-- Mode Switcher Tabs: Sign In / Create Account -->
-      <div class="auth-mode-tabs">
-        <button type="button" class="auth-mode-btn active" id="tab-btn-signin" onclick="switchAuthMode('signin')">
-          <span>🔐</span>
-          <span>Sign In</span>
-        </button>
-        <button type="button" class="auth-mode-btn" id="tab-btn-register" onclick="switchAuthMode('register')">
-          <span>📝</span>
-          <span>Create Account</span>
-        </button>
-      </div>
-
-      <!-- Header Titles (Dynamic) -->
-      <h1 class="auth-header-title" id="auth-main-title">Welcome Back</h1>
-      <p class="auth-header-subtitle" id="auth-main-subtitle">Sign in to access your placement dashboard and predictive insights.</p>
+      <!-- Main Heading & Subtitle (Dynamic based on mode) -->
+      <h1 class="auth-card-title" id="auth-main-title">Create Your Account</h1>
+      <p class="auth-card-subtitle" id="auth-main-subtitle">Join StudyFlow AI and take control of your academic and career journey.</p>
 
       <!-- Alert Notification Banner -->
-      <div class="login-alert" id="login-alert-box"></div>
+      <div class="login-alert" id="login-alert-box" role="alert"></div>
 
-      <!-- ==========================================
-           FORM 1: SIGN IN (WITH PASSWORD VERIFICATION)
-           ========================================== -->
-      <div id="section-signin">
-        <!-- Role Switcher Tabs for Sign In -->
-        <div class="role-tabs-wrap">
-          <button type="button" class="role-tab-btn active" data-role="student" onclick="setSignInRole('student')">
-            <span>👨‍🎓</span>
+      <!-- ====================================================================
+           SECTION 1: CREATE ACCOUNT (REGISTRATION FLOW)
+           ==================================================================== -->
+      <div id="section-register">
+        <!-- 3 Role Tabs: Student, Faculty, T&P Officer -->
+        <div class="role-tabs-wrap" role="tablist">
+          <button type="button" class="role-tab-btn active" id="tab-reg-student" onclick="setRegisterRole('student')" role="tab" aria-selected="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+              <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+            </svg>
             <span>Student</span>
           </button>
-          <button type="button" class="role-tab-btn" data-role="faculty" onclick="setSignInRole('faculty')">
-            <span>👨‍🏫</span>
-            <span>Faculty Mentor</span>
+          <button type="button" class="role-tab-btn" id="tab-reg-faculty" onclick="setRegisterRole('faculty')" role="tab" aria-selected="false">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            <span>Faculty</span>
           </button>
-          <button type="button" class="role-tab-btn" data-role="officer" onclick="setSignInRole('officer')">
-            <span>🏛️</span>
-            <span>T&P Officer</span>
+          <button type="button" class="role-tab-btn" id="tab-reg-officer" onclick="setRegisterRole('officer')" role="tab" aria-selected="false">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 21h18"></path>
+              <path d="M5 21V7l7-4 7 4v14"></path>
+              <path d="M9 10h1"></path>
+              <path d="M9 14h1"></path>
+              <path d="M9 18h1"></path>
+              <path d="M14 10h1"></path>
+              <path d="M14 14h1"></path>
+              <path d="M14 18h1"></path>
+            </svg>
+            <span>T&amp;P Officer</span>
+          </button>
+        </div>
+
+        <!-- Registration Form -->
+        <form class="auth-form" id="register-form" onsubmit="handleRegisterSubmit(event)" novalidate>
+          
+          <!-- STUDENT FIELDS -->
+          <div id="fields-role-student">
+            <div class="input-row-2">
+              <div class="input-group">
+                <label class="input-label" for="reg-fullname">Full Name</label>
+                <div class="input-field-wrap">
+                  <span class="input-field-icon">👤</span>
+                  <input type="text" id="reg-fullname" class="auth-input" placeholder="e.g. Rahul Sharma" autocomplete="name" required>
+                </div>
+                <span class="field-error-hint" id="err-reg-fullname">Please enter your full name.</span>
+              </div>
+              <div class="input-group">
+                <label class="input-label" for="reg-email">College Email Address</label>
+                <div class="input-field-wrap">
+                  <span class="input-field-icon">✉</span>
+                  <input type="email" id="reg-email" class="auth-input" placeholder="student@college.edu" autocomplete="email" required>
+                </div>
+                <span class="field-error-hint" id="err-reg-email">Please enter a valid email address.</span>
+              </div>
+            </div>
+
+            <div class="input-row-2" style="margin-top: 10px;">
+              <div class="input-group">
+                <label class="input-label" for="reg-rollno">Roll Number</label>
+                <div class="input-field-wrap">
+                  <span class="input-field-icon">#</span>
+                  <input type="text" id="reg-rollno" class="auth-input" placeholder="e.g. 21CSE115" autocomplete="off" required>
+                </div>
+                <span class="field-error-hint" id="err-reg-rollno">Please enter your institutional roll number.</span>
+              </div>
+              <div class="input-group">
+                <label class="input-label" for="reg-dept">Department / Branch</label>
+                <div class="input-field-wrap">
+                  <span class="input-field-icon">🏛</span>
+                  <select id="reg-dept" class="auth-select" required>
+                    <option value="Computer Science & Engineering">Computer Science &amp; Eng. (CSE)</option>
+                    <option value="Information Technology">Information Technology (IT)</option>
+                    <option value="Electronics & Communication">Electronics &amp; Comm. (ECE)</option>
+                    <option value="Electrical & Electronics">Electrical &amp; Electronics (EEE)</option>
+                    <option value="Mechanical Engineering">Mechanical Eng. (MECH)</option>
+                    <option value="Civil Engineering">Civil Eng. (CIVIL)</option>
+                    <option value="AI & Data Science">AI &amp; Data Science (AI &amp; DS)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="input-row-2" style="margin-top: 10px;">
+              <div class="input-group">
+                <label class="input-label" for="reg-year">Current Academic Year</label>
+                <div class="input-field-wrap">
+                  <span class="input-field-icon">📅</span>
+                  <select id="reg-year" class="auth-select" required>
+                    <option value="1st Year">1st Year</option>
+                    <option value="2nd Year">2nd Year</option>
+                    <option value="3rd Year" selected>3rd Year</option>
+                    <option value="4th Year">4th Year</option>
+                  </select>
+                </div>
+              </div>
+              <div class="input-group">
+                <label class="input-label" for="reg-semester">Current Semester</label>
+                <div class="input-field-wrap">
+                  <span class="input-field-icon">🎓</span>
+                  <select id="reg-semester" class="auth-select" required>
+                    <option value="1st Semester">1st Semester</option>
+                    <option value="2nd Semester">2nd Semester</option>
+                    <option value="3rd Semester">3rd Semester</option>
+                    <option value="4th Semester">4th Semester</option>
+                    <option value="5th Semester">5th Semester</option>
+                    <option value="6th Semester" selected>6th Semester</option>
+                    <option value="7th Semester">7th Semester</option>
+                    <option value="8th Semester">8th Semester</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- FACULTY FIELDS -->
+          <div id="fields-role-faculty" style="display: none;">
+            <div class="input-row-2">
+              <div class="input-group">
+                <label class="input-label" for="reg-fac-fullname">Full Name</label>
+                <div class="input-field-wrap">
+                  <span class="input-field-icon">👤</span>
+                  <input type="text" id="reg-fac-fullname" class="auth-input" placeholder="e.g. Dr. Rajesh Sharma" autocomplete="name">
+                </div>
+              </div>
+              <div class="input-group">
+                <label class="input-label" for="reg-fac-email">Official College Email</label>
+                <div class="input-field-wrap">
+                  <span class="input-field-icon">✉</span>
+                  <input type="email" id="reg-fac-email" class="auth-input" placeholder="dr.rajesh.mentor@college.edu" autocomplete="email">
+                </div>
+              </div>
+            </div>
+
+            <div class="input-row-2" style="margin-top: 10px;">
+              <div class="input-group">
+                <label class="input-label" for="reg-fac-id">Faculty ID / Staff ID</label>
+                <div class="input-field-wrap">
+                  <span class="input-field-icon">🪪</span>
+                  <input type="text" id="reg-fac-id" class="auth-input" placeholder="e.g. FAC-CSE-2026">
+                </div>
+              </div>
+              <div class="input-group">
+                <label class="input-label" for="reg-fac-dept">Department / Subject</label>
+                <div class="input-field-wrap">
+                  <span class="input-field-icon">🏛</span>
+                  <select id="reg-fac-dept" class="auth-select">
+                    <option value="Computer Science & Engineering">Computer Science &amp; Eng. (CSE)</option>
+                    <option value="Information Technology">Information Technology (IT)</option>
+                    <option value="Electronics & Communication">Electronics &amp; Comm. (ECE)</option>
+                    <option value="Electrical & Electronics">Electrical &amp; Electronics (EEE)</option>
+                    <option value="Mechanical Engineering">Mechanical Eng. (MECH)</option>
+                    <option value="Civil Engineering">Civil Eng. (CIVIL)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Institutional Faculty Passcode Protection Box -->
+            <div class="role-security-box" style="margin-top: 10px;">
+              <div class="role-security-header">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                <span>Institutional Faculty Passcode Required</span>
+              </div>
+              <p class="role-security-desc">To prevent unauthorized faculty registration and protect student mentoring records, enter your institutional verification passcode (Default demo key: <code>FACULTY2026</code>).</p>
+              <div class="input-field-wrap">
+                <span class="input-field-icon">🔑</span>
+                <input type="password" id="reg-fac-key" class="auth-input" placeholder="Enter Institutional Passcode (e.g. FACULTY2026)">
+              </div>
+            </div>
+          </div>
+
+          <!-- T&P OFFICER FIELDS -->
+          <div id="fields-role-officer" style="display: none;">
+            <div class="input-row-2">
+              <div class="input-group">
+                <label class="input-label" for="reg-tpo-fullname">Full Name</label>
+                <div class="input-field-wrap">
+                  <span class="input-field-icon">👤</span>
+                  <input type="text" id="reg-tpo-fullname" class="auth-input" placeholder="e.g. Prof. Anand Varma" autocomplete="name">
+                </div>
+              </div>
+              <div class="input-group">
+                <label class="input-label" for="reg-tpo-email">Official Email Address</label>
+                <div class="input-field-wrap">
+                  <span class="input-field-icon">✉</span>
+                  <input type="email" id="reg-tpo-email" class="auth-input" placeholder="placement.cell@college.edu" autocomplete="email">
+                </div>
+              </div>
+            </div>
+
+            <div class="input-row-2" style="margin-top: 10px;">
+              <div class="input-group">
+                <label class="input-label" for="reg-tpo-id">Authorized Staff ID</label>
+                <div class="input-field-wrap">
+                  <span class="input-field-icon">🪪</span>
+                  <input type="text" id="reg-tpo-id" class="auth-input" placeholder="e.g. TPO-OFFICER-01">
+                </div>
+              </div>
+              <div class="input-group">
+                <label class="input-label" for="reg-tpo-dept">Department / Office</label>
+                <div class="input-field-wrap">
+                  <span class="input-field-icon">🏛</span>
+                  <input type="text" id="reg-tpo-dept" class="auth-input" value="Training &amp; Placement Cell" readonly>
+                </div>
+              </div>
+            </div>
+
+            <!-- Institutional TPO Passcode Protection Box -->
+            <div class="role-security-box" style="margin-top: 10px;">
+              <div class="role-security-header">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+                <span>Restricted Administrative Access</span>
+              </div>
+              <p class="role-security-desc">Training &amp; Placement Officer privileges include managing campus drives and institution-wide placement analytics. Enter verification passcode (Default key: <code>CAMPUS-FACULTY-2026</code>).</p>
+              <div class="input-field-wrap">
+                <span class="input-field-icon">🔑</span>
+                <input type="password" id="reg-tpo-key" class="auth-input" placeholder="Enter Administrative Passcode">
+              </div>
+            </div>
+          </div>
+
+          <!-- PASSWORD AND CONFIRM PASSWORD (COMMON TO ALL REGISTRATION ROLES) -->
+          <div class="input-row-2" style="margin-top: 10px;">
+            <div class="input-group">
+              <label class="input-label" for="reg-password">Password</label>
+              <div class="input-field-wrap">
+                <span class="input-field-icon">🔒</span>
+                <input type="password" id="reg-password" class="auth-input" placeholder="Min. 6 characters" required minlength="6" oninput="handlePasswordInput()">
+                <button type="button" class="toggle-pwd-btn" onclick="togglePasswordVisibility('reg-password')" aria-label="Toggle password visibility">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="input-group">
+              <label class="input-label" for="reg-confirm-password">Confirm Password</label>
+              <div class="input-field-wrap">
+                <span class="input-field-icon">🔒</span>
+                <input type="password" id="reg-confirm-password" class="auth-input" placeholder="Re-enter password" required minlength="6" oninput="handlePasswordInput()">
+                <button type="button" class="toggle-pwd-btn" onclick="togglePasswordVisibility('reg-confirm-password')" aria-label="Toggle confirm password visibility">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Real-Time Password Feedback Chips -->
+          <div class="password-feedback-box">
+            <span class="pwd-check-chip" id="chip-pwd-length">
+              <span id="icon-pwd-length">○</span>
+              <span>Min. 6 characters</span>
+            </span>
+            <span class="pwd-check-chip" id="chip-pwd-match">
+              <span id="icon-pwd-match">○</span>
+              <span>Passwords match</span>
+            </span>
+          </div>
+
+          <!-- Terms of Service & Privacy Policy Checkbox -->
+          <div class="terms-row">
+            <input type="checkbox" id="reg-terms-check" style="margin-top: 2px; accent-color: var(--primary-blue);" required checked>
+            <label class="terms-label" for="reg-terms-check">
+              I agree to the <a href="javascript:void(0)" onclick="openTermsModal(event)">Terms of Service</a> and <a href="javascript:void(0)" onclick="openPrivacyModal(event)">Privacy Policy</a>.
+            </label>
+          </div>
+
+          <!-- Primary Submit Button -->
+          <button type="submit" class="btn-primary-action" id="btn-submit-register">
+            <span id="btn-reg-text">Create Account</span>
+            <svg id="btn-reg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </button>
+        </form>
+
+        <!-- Navigation back to existing Login Page -->
+        <div class="auth-bottom-nav">
+          <span>Already have an account? </span>
+          <a href="javascript:void(0)" onclick="switchAuthMode('signin')">Sign In</a>
+        </div>
+      </div>
+
+      <!-- ====================================================================
+           SECTION 2: SIGN IN (EXISTING LOGIN FLOW)
+           ==================================================================== -->
+      <div id="section-signin" style="display: none;">
+        <!-- Role Switcher Tabs for Sign In -->
+        <div class="role-tabs-wrap" role="tablist">
+          <button type="button" class="role-tab-btn active" data-role="student" onclick="setSignInRole('student')" role="tab">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+              <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+            </svg>
+            <span>Student</span>
+          </button>
+          <button type="button" class="role-tab-btn" data-role="faculty" onclick="setSignInRole('faculty')" role="tab">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            <span>Faculty</span>
+          </button>
+          <button type="button" class="role-tab-btn" data-role="officer" onclick="setSignInRole('officer')" role="tab">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 21h18"></path>
+              <path d="M5 21V7l7-4 7 4v14"></path>
+            </svg>
+            <span>T&amp;P Officer</span>
           </button>
         </div>
 
@@ -791,7 +1519,7 @@
             <label class="input-label" for="login-email">College Email or Roll Number</label>
             <div class="input-field-wrap">
               <span class="input-field-icon">✉</span>
-              <input type="email" id="login-email" class="auth-input" placeholder="student@college.edu" required>
+              <input type="text" id="login-email" class="auth-input" placeholder="student@college.edu" autocomplete="username" required>
             </div>
           </div>
 
@@ -799,21 +1527,29 @@
             <label class="input-label" for="login-password">Password</label>
             <div class="input-field-wrap">
               <span class="input-field-icon">🔒</span>
-              <input type="password" id="login-password" class="auth-input" placeholder="••••••••••••" required>
-              <button type="button" class="toggle-pwd-btn" onclick="togglePasswordVisibility('login-password')" aria-label="Toggle password">👁</button>
+              <input type="password" id="login-password" class="auth-input" placeholder="••••••••••••" autocomplete="current-password" required>
+              <button type="button" class="toggle-pwd-btn" onclick="togglePasswordVisibility('login-password')" aria-label="Toggle password">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </button>
             </div>
           </div>
 
           <div class="form-options-row">
             <label class="remember-me-label">
-              <input type="checkbox" id="remember-me-check" checked>
+              <input type="checkbox" id="remember-me-check" checked style="accent-color: var(--primary-blue);">
               <span>Remember me</span>
             </label>
-            <a href="#" class="forgot-pwd-link" onclick="handleForgotPassword(event)">Forgot password?</a>
+            <a href="javascript:void(0)" class="forgot-pwd-link" onclick="handleForgotPassword(event)">Forgot password?</a>
           </div>
 
-          <button type="submit" class="btn-submit-login" id="btn-submit-signin">
-            <span id="btn-signin-icon">➔</span>
+          <button type="submit" class="btn-primary-action" id="btn-submit-signin">
+            <svg id="btn-signin-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
             <span id="btn-signin-text">Sign In with Verified Credentials</span>
           </button>
         </form>
@@ -826,121 +1562,11 @@
           <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
           <span>University Google Workspace / SSO</span>
         </button>
-      </div>
 
-      <!-- ==========================================
-           FORM 2: CREATE ACCOUNT (WITH FACULTY PROTECTION)
-           ========================================== -->
-      <div id="section-register" style="display: none;">
-        <!-- Register Form -->
-        <form class="auth-form" id="register-form" onsubmit="handleRegisterSubmit(event)">
-          
-          <div class="input-row-2">
-            <div class="input-group">
-              <label class="input-label" for="reg-fullname">Full Name</label>
-              <div class="input-field-wrap">
-                <span class="input-field-icon">👤</span>
-                <input type="text" id="reg-fullname" class="auth-input" placeholder="e.g. Rahul Sharma" required>
-              </div>
-            </div>
-            <div class="input-group">
-              <label class="input-label" for="reg-email">College Email</label>
-              <div class="input-field-wrap">
-                <span class="input-field-icon">✉</span>
-                <input type="email" id="reg-email" class="auth-input" placeholder="rahul@college.edu" required>
-              </div>
-            </div>
-          </div>
-
-          <div class="input-row-2">
-            <div class="input-group">
-              <label class="input-label" for="reg-rollno">Roll No. / ID</label>
-              <div class="input-field-wrap">
-                <span class="input-field-icon">#</span>
-                <input type="text" id="reg-rollno" class="auth-input" placeholder="e.g. 21CSE115" required>
-              </div>
-            </div>
-            <div class="input-group">
-              <label class="input-label" for="reg-dept">Department</label>
-              <select id="reg-dept" class="auth-select">
-                <option value="CSE">Computer Science & Eng. (CSE)</option>
-                <option value="IT">Information Technology (IT)</option>
-                <option value="ECE">Electronics & Comm. (ECE)</option>
-                <option value="EEE">Electrical & Electronics (EEE)</option>
-                <option value="MECH">Mechanical Eng. (MECH)</option>
-                <option value="CIVIL">Civil Eng. (CIVIL)</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Role Selection (Default Student; Faculty is Protected) -->
-          <div class="input-group">
-            <label class="input-label">Account Role</label>
-            <div class="role-tabs-wrap" style="margin-bottom: 4px;">
-              <button type="button" class="role-tab-btn active" id="btn-reg-role-student" onclick="setRegisterRole('student')">
-                <span>👨‍🎓</span>
-                <span>Student (Open)</span>
-              </button>
-              <button type="button" class="role-tab-btn" id="btn-reg-role-faculty" onclick="setRegisterRole('faculty')">
-                <span>👨‍🏫</span>
-                <span>Faculty Mentor 🔒</span>
-              </button>
-              <button type="button" class="role-tab-btn" id="btn-reg-role-officer" onclick="setRegisterRole('officer')">
-                <span>🏛️</span>
-                <span>T&P Officer 🔒</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Dynamic Protected Passcode Field for Faculty / Officer -->
-          <div class="faculty-protection-box" id="box-faculty-key">
-            <div class="faculty-protection-title">
-              <span>🔒</span>
-              <span id="protection-box-title">Institutional Faculty Verification Required</span>
-            </div>
-            <p class="faculty-protection-desc" id="protection-box-desc">
-              To prevent unauthorized faculty registration, enter your department's Institutional Verification Passcode (Default demo key: <code>FACULTY2026</code>).
-            </p>
-            <div class="input-field-wrap">
-              <span class="input-field-icon">🔑</span>
-              <input type="password" id="reg-faculty-key" class="auth-input" placeholder="Enter Institutional Passcode (e.g. FACULTY2026)">
-            </div>
-          </div>
-
-          <div class="input-row-2">
-            <div class="input-group">
-              <label class="input-label" for="reg-password">Password</label>
-              <div class="input-field-wrap">
-                <span class="input-field-icon">🔒</span>
-                <input type="password" id="reg-password" class="auth-input" placeholder="Min. 6 chars" required minlength="6">
-                <button type="button" class="toggle-pwd-btn" onclick="togglePasswordVisibility('reg-password')" aria-label="Toggle password">👁</button>
-              </div>
-            </div>
-            <div class="input-group">
-              <label class="input-label" for="reg-confirm-password">Confirm Password</label>
-              <div class="input-field-wrap">
-                <span class="input-field-icon">🔒</span>
-                <input type="password" id="reg-confirm-password" class="auth-input" placeholder="Re-enter password" required minlength="6">
-              </div>
-            </div>
-          </div>
-
-          <div class="form-options-row">
-            <label class="remember-me-label">
-              <input type="checkbox" id="reg-terms-check" required checked>
-              <span style="font-size: 11.5px;">I agree to institutional placement terms and policies</span>
-            </label>
-          </div>
-
-          <button type="submit" class="btn-submit-login" id="btn-submit-register">
-            <span id="btn-reg-icon">📝</span>
-            <span id="btn-reg-text">Create Authenticated Account</span>
-          </button>
-        </form>
-
-        <div class="guest-access-link" style="margin-top: 14px;">
-          <span>Already have an account? </span>
-          <a href="javascript:void(0)" onclick="switchAuthMode('signin')">Sign In here &rarr;</a>
+        <!-- Navigation to Create Account -->
+        <div class="auth-bottom-nav">
+          <span>Don't have an account? </span>
+          <a href="javascript:void(0)" onclick="switchAuthMode('register')">Create Account</a>
         </div>
       </div>
 
@@ -948,16 +1574,16 @@
 
   </div>
 
-  <!-- ==========================================
-       SQLITE DATABASE STATUS MODAL
-       ========================================== -->
+  <!-- ======================================================================
+       MODAL 1: SQLITE DATABASE STATUS MODAL
+       ====================================================================== -->
   <div class="modal-overlay" id="modal-supabase-config" onclick="if(event.target === this) closeSupabaseModal()">
     <div class="modal-card">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="font-size: 22px;">⚡</span>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 36px; height: 36px; border-radius: 10px; background: #EFF6FF; color: #2563EB; display: flex; align-items: center; justify-content: center; font-size: 18px;">⚡</div>
           <div>
-            <h3 style="font-size: 17px; font-weight: 800; color: #0F172A;">SQLite Database Architecture</h3>
+            <h3 style="font-size: 16px; font-weight: 800; color: #0F172A;">SQLite Database Architecture</h3>
             <p style="font-size: 11.5px; color: #64748B;">Persistent single source of truth managed by Node.js &amp; Express</p>
           </div>
         </div>
@@ -965,7 +1591,7 @@
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 14px;">
-        <div style="padding: 12px 14px; background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; font-size: 12px; color: #166534; line-height: 1.5;">
+        <div style="padding: 12px 14px; background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 10px; font-size: 12px; color: #166534; line-height: 1.5;">
           <strong>Database Engine:</strong> SQLite 3 (WAL Mode, Foreign Key Enforcement Enabled)<br>
           <strong>File Location:</strong> <code>data/studyflow.db</code><br>
           <strong>Authentication:</strong> Bcrypt password hashing + token-based server session verification.
@@ -974,25 +1600,85 @@
         <div class="input-group">
           <label class="input-label">Institutional Faculty Passcode</label>
           <input type="text" id="input-faculty-passcode" class="auth-input" placeholder="FACULTY2026" value="FACULTY2026">
-          <span style="font-size: 11px; color: #64748B;">Used to verify authorized faculty and T&amp;P officer registrations.</span>
+          <span style="font-size: 11px; color: #64748B; margin-top: 3px;">Used to verify authorized faculty and T&amp;P officer registrations.</span>
         </div>
 
         <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px;">
-          <button type="button" class="btn-demo-chip" style="padding: 8px 14px; font-size: 12px;" onclick="testSupabaseConnection()">⚡ Test SQLite Connection</button>
-          <button type="button" class="btn-submit-login" style="margin-top: 0; padding: 0 16px; height: 38px; font-size: 12.5px;" onclick="saveSupabaseConfig()">Save Settings</button>
+          <button type="button" class="btn-sso-login" style="padding: 0 14px; font-size: 12px; height: 38px;" onclick="testSupabaseConnection()">⚡ Test SQLite Connection</button>
+          <button type="button" class="btn-primary-action" style="margin-top: 0; padding: 0 16px; height: 38px; font-size: 12.5px;" onclick="saveSupabaseConfig()">Save Settings</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- APPLICATION SCRIPTS -->
+  <!-- ======================================================================
+       MODAL 2: TERMS OF SERVICE MODAL
+       ====================================================================== -->
+  <div class="modal-overlay" id="modal-terms" onclick="if(event.target === this) closeTermsModal()">
+    <div class="modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 36px; height: 36px; border-radius: 10px; background: #EFF6FF; color: #2563EB; display: flex; align-items: center; justify-content: center; font-size: 18px;">📜</div>
+          <div>
+            <h3 style="font-size: 16px; font-weight: 800; color: #0F172A;">Terms of Service</h3>
+            <p style="font-size: 11.5px; color: #64748B;">StudyFlow AI Institutional Placement Platform</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeTermsModal()" style="border: none; background: none; font-size: 18px; cursor: pointer; color: #64748B;">✕</button>
+      </div>
+
+      <div style="font-size: 12.5px; color: #334155; line-height: 1.6; display: flex; flex-direction: column; gap: 12px;">
+        <p><strong>1. Academic Integrity:</strong> By creating an account on StudyFlow AI, you affirm that all academic credentials, roll numbers, marks, and profile details provided are accurate and reflect your official collegiate record.</p>
+        <p><strong>2. Role Authorization:</strong> Student accounts are open to enrolled campus students. Faculty Mentor and Training &amp; Placement Officer accounts require valid institutional authorization passcodes.</p>
+        <p><strong>3. Placement Prediction Usage:</strong> Predictive metrics generated by the machine learning engine are intended for academic guidance and targeted readiness preparation.</p>
+        <p><strong>4. Local Data Security:</strong> All user records are persistently managed via SQLite database architecture with salted bcrypt password hashing and tokenized session controls.</p>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; margin-top: 18px;">
+        <button type="button" class="btn-primary-action" style="margin-top: 0; padding: 0 20px; height: 36px; font-size: 12.5px;" onclick="closeTermsModal()">I Understand</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       MODAL 3: PRIVACY POLICY MODAL
+       ====================================================================== -->
+  <div class="modal-overlay" id="modal-privacy" onclick="if(event.target === this) closePrivacyModal()">
+    <div class="modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 36px; height: 36px; border-radius: 10px; background: #ECFDF5; color: #059669; display: flex; align-items: center; justify-content: center; font-size: 18px;">🛡️</div>
+          <div>
+            <h3 style="font-size: 16px; font-weight: 800; color: #0F172A;">Privacy Policy</h3>
+            <p style="font-size: 11.5px; color: #64748B;">Confidentiality and student academic data protection</p>
+          </div>
+        </div>
+        <button type="button" onclick="closePrivacyModal()" style="border: none; background: none; font-size: 18px; cursor: pointer; color: #64748B;">✕</button>
+      </div>
+
+      <div style="font-size: 12.5px; color: #334155; line-height: 1.6; display: flex; flex-direction: column; gap: 12px;">
+        <p><strong>1. Data Confidentiality:</strong> Your academic scores, resume drafts, and skill metrics are only accessible to authorized institutional mentors and placement officers.</p>
+        <p><strong>2. Password Protection:</strong> StudyFlow AI never stores plain-text passwords. All credentials are hashed using industry-standard bcrypt encryption.</p>
+        <p><strong>3. SQLite Database Storage:</strong> Academic profile data is persisted in a local SQLite database (<code>data/studyflow.db</code>) with full relational integrity and foreign-key constraints.</p>
+        <p><strong>4. Role Isolation:</strong> Server-side role enforcement guarantees that students, faculty, and administrators only access permitted views and endpoints.</p>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; margin-top: 18px;">
+        <button type="button" class="btn-primary-action" style="margin-top: 0; padding: 0 20px; height: 36px; font-size: 12.5px;" onclick="closePrivacyModal()">Accept &amp; Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       APPLICATION JAVASCRIPT CONTROLLER
+       ====================================================================== -->
   <script>
-    let activeAuthMode = 'signin';
+    let activeAuthMode = 'register'; // Default to register view for modern create account experience
     let currentSignInRole = 'student';
     let currentRegisterRole = 'student';
 
     const rolePlaceholders = {
-      student: 'student@college.edu',
+      student: 'student@college.edu or Roll Number',
       faculty: 'dr.rajesh.mentor@college.edu',
       officer: 'placement.cell@college.edu'
     };
@@ -1000,19 +1686,24 @@
     document.addEventListener('DOMContentLoaded', () => {
       updateCloudStatusIndicator();
 
-      // Support deep linking to register or sign-in modes and preselected roles
+      // Deep linking support for mode and role parameters
       const params = new URLSearchParams(window.location.search);
       const hash = (window.location.hash || '').toLowerCase();
 
-      if (params.get('mode') === 'register' || hash === '#register') {
-        switchAuthMode('register');
-      } else if (params.get('mode') === 'signin' || hash === '#signin') {
+      if (params.get('mode') === 'signin' || hash === '#signin') {
         switchAuthMode('signin');
+      } else {
+        // Default or explicit ?mode=register
+        switchAuthMode('register');
       }
 
       const roleParam = params.get('role');
       if (roleParam && ['student', 'faculty', 'officer'].includes(roleParam)) {
-        setSignInRole(roleParam);
+        if (activeAuthMode === 'signin') {
+          setSignInRole(roleParam);
+        } else {
+          setRegisterRole(roleParam);
+        }
       }
     });
 
@@ -1023,37 +1714,61 @@
       if (text) text.textContent = 'SQLite Active';
     }
 
+    // Switch between Sign In and Create Account modes
     function switchAuthMode(mode) {
       activeAuthMode = mode;
-      const tabSignIn = document.getElementById('tab-btn-signin');
-      const tabRegister = document.getElementById('tab-btn-register');
-      const secSignIn = document.getElementById('section-signin');
-      const secRegister = document.getElementById('section-register');
-      const title = document.getElementById('auth-main-title');
-      const subtitle = document.getElementById('auth-main-subtitle');
       clearAlert();
 
+      const secSignIn = document.getElementById('section-signin');
+      const secRegister = document.getElementById('section-register');
+      const showcaseSignIn = document.getElementById('showcase-view-signin');
+      const showcaseRegister = document.getElementById('showcase-view-register');
+      const showcaseBadgeText = document.getElementById('showcase-badge-text');
+      const showcaseBrand = document.getElementById('showcase-brand');
+      const showcaseFooterText = document.getElementById('showcase-footer-text');
+      const title = document.getElementById('auth-main-title');
+      const subtitle = document.getElementById('auth-main-subtitle');
+
       if (mode === 'signin') {
-        tabSignIn?.classList.add('active');
-        tabRegister?.classList.remove('active');
+        document.title = 'Sign In | StudyFlow AI';
         if (secSignIn) secSignIn.style.display = 'block';
         if (secRegister) secRegister.style.display = 'none';
+        if (showcaseSignIn) showcaseSignIn.style.display = 'block';
+        if (showcaseRegister) showcaseRegister.style.display = 'none';
+        if (showcaseBrand) showcaseBrand.style.display = 'none';
+        if (showcaseBadgeText) showcaseBadgeText.textContent = 'AI Placement Engine v2.4';
+        if (showcaseFooterText) showcaseFooterText.textContent = 'SQLite Database • Node.js Backend • Role Enforcement';
         if (title) title.textContent = 'Welcome Back';
         if (subtitle) subtitle.textContent = 'Sign in to access your placement dashboard and predictive insights.';
+
+        if (window.history && window.history.replaceState) {
+          window.history.replaceState(null, '', 'login.html?mode=signin');
+        }
       } else {
-        tabSignIn?.classList.remove('active');
-        tabRegister?.classList.add('active');
+        document.title = 'Create Account | StudyFlow AI';
         if (secSignIn) secSignIn.style.display = 'none';
         if (secRegister) secRegister.style.display = 'block';
-        if (title) title.textContent = 'Create Authenticated Account';
-        if (subtitle) subtitle.textContent = 'Register with your college details to start your placement readiness track.';
+        if (showcaseSignIn) showcaseSignIn.style.display = 'none';
+        if (showcaseRegister) showcaseRegister.style.display = 'block';
+        if (showcaseBrand) showcaseBrand.style.display = 'flex';
+        if (showcaseBadgeText) showcaseBadgeText.textContent = 'Institutional Academic Suite';
+        if (showcaseFooterText) showcaseFooterText.textContent = 'Secure Authentication • SQLite Database • Role-Based Access';
+        if (title) title.textContent = 'Create Your Account';
+        if (subtitle) subtitle.textContent = 'Join StudyFlow AI and take control of your academic and career journey.';
+
+        if (window.history && window.history.replaceState) {
+          window.history.replaceState(null, '', 'login.html?mode=register');
+        }
       }
     }
 
+    // Switch Role in Sign In mode
     function setSignInRole(role) {
       currentSignInRole = role;
       document.querySelectorAll('#section-signin .role-tab-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.getAttribute('data-role') === role);
+        const isCurrent = btn.getAttribute('data-role') === role;
+        btn.classList.toggle('active', isCurrent);
+        btn.setAttribute('aria-selected', isCurrent ? 'true' : 'false');
       });
 
       const emailInput = document.getElementById('login-email');
@@ -1062,39 +1777,76 @@
       }
     }
 
+    // Switch Role in Create Account mode
     function setRegisterRole(role) {
       currentRegisterRole = role;
-      const btnStudent = document.getElementById('btn-reg-role-student');
-      const btnFaculty = document.getElementById('btn-reg-role-faculty');
-      const btnOfficer = document.getElementById('btn-reg-role-officer');
-      const boxFacultyKey = document.getElementById('box-faculty-key');
-      const keyTitle = document.getElementById('protection-box-title');
-      const keyDesc = document.getElementById('protection-box-desc');
+      clearAlert();
 
-      btnStudent?.classList.toggle('active', role === 'student');
-      btnFaculty?.classList.toggle('active', role === 'faculty');
-      btnOfficer?.classList.toggle('active', role === 'officer');
+      const tabStudent = document.getElementById('tab-reg-student');
+      const tabFaculty = document.getElementById('tab-reg-faculty');
+      const tabOfficer = document.getElementById('tab-reg-officer');
 
-      if (role === 'student') {
-        boxFacultyKey?.classList.remove('active');
-      } else {
-        boxFacultyKey?.classList.add('active');
-        if (role === 'faculty') {
-          if (keyTitle) keyTitle.textContent = 'Institutional Faculty Verification Required';
-          if (keyDesc) keyDesc.innerHTML = 'To prevent unauthorized faculty registration, enter your department Institutional Passcode (Demo key: <code>FACULTY2026</code>).';
-        } else {
-          if (keyTitle) keyTitle.textContent = 'T&P Officer Administrative Key Required';
-          if (keyDesc) keyDesc.innerHTML = 'Restricted administrative role. Enter the T&P Cell verification passcode (Demo key: <code>CAMPUS-FACULTY-2026</code>).';
-        }
-      }
+      tabStudent?.classList.toggle('active', role === 'student');
+      tabFaculty?.classList.toggle('active', role === 'faculty');
+      tabOfficer?.classList.toggle('active', role === 'officer');
+
+      tabStudent?.setAttribute('aria-selected', role === 'student' ? 'true' : 'false');
+      tabFaculty?.setAttribute('aria-selected', role === 'faculty' ? 'true' : 'false');
+      tabOfficer?.setAttribute('aria-selected', role === 'officer' ? 'true' : 'false');
+
+      const fieldsStudent = document.getElementById('fields-role-student');
+      const fieldsFaculty = document.getElementById('fields-role-faculty');
+      const fieldsOfficer = document.getElementById('fields-role-officer');
+
+      if (fieldsStudent) fieldsStudent.style.display = role === 'student' ? 'block' : 'none';
+      if (fieldsFaculty) fieldsFaculty.style.display = role === 'faculty' ? 'block' : 'none';
+      if (fieldsOfficer) fieldsOfficer.style.display = role === 'officer' ? 'block' : 'none';
     }
 
-
-
+    // Show / Hide Password Toggle
     function togglePasswordVisibility(fieldId) {
       const field = document.getElementById(fieldId);
       if (field) {
         field.type = (field.type === 'password') ? 'text' : 'password';
+      }
+    }
+
+    // Real-time password requirement and confirmation feedback
+    function handlePasswordInput() {
+      const pwd = document.getElementById('reg-password')?.value || '';
+      const confirmPwd = document.getElementById('reg-confirm-password')?.value || '';
+
+      const chipLength = document.getElementById('chip-pwd-length');
+      const iconLength = document.getElementById('icon-pwd-length');
+      const chipMatch = document.getElementById('chip-pwd-match');
+      const iconMatch = document.getElementById('icon-pwd-match');
+
+      // Check min length
+      if (pwd.length >= 6) {
+        chipLength?.classList.add('valid');
+        chipLength?.classList.remove('invalid');
+        if (iconLength) iconLength.textContent = '✓';
+      } else {
+        chipLength?.classList.remove('valid');
+        chipLength?.classList.remove('invalid');
+        if (iconLength) iconLength.textContent = '○';
+      }
+
+      // Check matching
+      if (confirmPwd.length > 0) {
+        if (pwd === confirmPwd) {
+          chipMatch?.classList.add('valid');
+          chipMatch?.classList.remove('invalid');
+          if (iconMatch) iconMatch.textContent = '✓';
+        } else {
+          chipMatch?.classList.add('invalid');
+          chipMatch?.classList.remove('valid');
+          if (iconMatch) iconMatch.textContent = '✕';
+        }
+      } else {
+        chipMatch?.classList.remove('valid');
+        chipMatch?.classList.remove('invalid');
+        if (iconMatch) iconMatch.textContent = '○';
       }
     }
 
@@ -1104,6 +1856,7 @@
         alertBox.textContent = msg;
         alertBox.className = `login-alert ${type}`;
         alertBox.style.display = 'block';
+        alertBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }
     }
 
@@ -1115,18 +1868,171 @@
       }
     }
 
-    // ==========================================
-    // SIGN IN SUBMISSION (STRICT PASSWORD CHECK)
-    // ==========================================
+    // ========================================================================
+    // CREATE ACCOUNT SUBMISSION
+    // ========================================================================
+    async function handleRegisterSubmit(e) {
+      e.preventDefault();
+      clearAlert();
+
+      let fullName = '';
+      let email = '';
+      let rollNo = '';
+      let department = 'CSE';
+      let currentYear = '3rd Year';
+      let semester = '6th Semester';
+      let facultyKey = '';
+
+      if (currentRegisterRole === 'student') {
+        fullName = document.getElementById('reg-fullname').value.trim();
+        email = document.getElementById('reg-email').value.trim();
+        rollNo = document.getElementById('reg-rollno').value.trim();
+        department = document.getElementById('reg-dept').value;
+        currentYear = document.getElementById('reg-year').value;
+        semester = document.getElementById('reg-semester').value;
+
+        if (!fullName) {
+          showAlert('Please enter your full name.', 'error');
+          document.getElementById('reg-fullname')?.focus();
+          return;
+        }
+        if (!email || !email.includes('@')) {
+          showAlert('Please enter a valid college email address.', 'error');
+          document.getElementById('reg-email')?.focus();
+          return;
+        }
+        if (!rollNo) {
+          showAlert('Please enter your institutional Roll Number.', 'error');
+          document.getElementById('reg-rollno')?.focus();
+          return;
+        }
+      } else if (currentRegisterRole === 'faculty') {
+        fullName = document.getElementById('reg-fac-fullname').value.trim();
+        email = document.getElementById('reg-fac-email').value.trim();
+        rollNo = document.getElementById('reg-fac-id').value.trim();
+        department = document.getElementById('reg-fac-dept').value;
+        facultyKey = document.getElementById('reg-fac-key').value.trim();
+
+        if (!fullName || !email) {
+          showAlert('Please enter full name and official college email.', 'error');
+          return;
+        }
+        if (!facultyKey) {
+          showAlert('Access Denied: Institutional Faculty Passcode is required (Demo key: FACULTY2026).', 'error');
+          document.getElementById('reg-fac-key')?.focus();
+          return;
+        }
+      } else if (currentRegisterRole === 'officer') {
+        fullName = document.getElementById('reg-tpo-fullname').value.trim();
+        email = document.getElementById('reg-tpo-email').value.trim();
+        rollNo = document.getElementById('reg-tpo-id').value.trim();
+        department = 'Training & Placement Cell';
+        facultyKey = document.getElementById('reg-tpo-key').value.trim();
+
+        if (!fullName || !email) {
+          showAlert('Please enter full name and official email address.', 'error');
+          return;
+        }
+        if (!facultyKey) {
+          showAlert('Access Denied: T&P Administrative Verification Passcode is required (Demo key: CAMPUS-FACULTY-2026).', 'error');
+          document.getElementById('reg-tpo-key')?.focus();
+          return;
+        }
+      }
+
+      const password = document.getElementById('reg-password').value;
+      const confirmPassword = document.getElementById('reg-confirm-password').value;
+      const termsChecked = document.getElementById('reg-terms-check').checked;
+
+      if (!password) {
+        showAlert('Please enter a password.', 'error');
+        document.getElementById('reg-password')?.focus();
+        return;
+      }
+
+      if (password.length < 6) {
+        showAlert('Password must be at least 6 characters long.', 'error');
+        document.getElementById('reg-password')?.focus();
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        showAlert('Passwords do not match. Please verify both password fields.', 'error');
+        document.getElementById('reg-confirm-password')?.focus();
+        return;
+      }
+
+      if (!termsChecked) {
+        showAlert('You must agree to the Terms of Service and Privacy Policy to create an account.', 'error');
+        return;
+      }
+
+      const submitBtn = document.getElementById('btn-submit-register');
+      const submitText = document.getElementById('btn-reg-text');
+      const submitIcon = document.getElementById('btn-reg-icon');
+
+      submitBtn.disabled = true;
+      submitText.textContent = 'Creating Account...';
+      if (submitIcon) submitIcon.style.display = 'none';
+
+      try {
+        const result = await window.SupabaseAuth.signUp({
+          fullName,
+          email,
+          rollNo,
+          department,
+          role: currentRegisterRole,
+          password,
+          facultyKey,
+          currentYear,
+          semester
+        });
+
+        if (!result.success) {
+          showAlert(`Registration Failed: ${result.error}`, 'error');
+          submitBtn.disabled = false;
+          submitText.textContent = 'Create Account';
+          if (submitIcon) submitIcon.style.display = 'inline-block';
+          return;
+        }
+
+        showAlert(result.message || '✓ Account created successfully! Please sign in with your verified credentials.', 'success');
+
+        // Smooth transition to Sign In mode with prefilled credentials
+        setTimeout(() => {
+          switchAuthMode('signin');
+          const loginEmail = document.getElementById('login-email');
+          const loginPass = document.getElementById('login-password');
+          if (loginEmail) loginEmail.value = email;
+          if (loginPass) loginPass.value = password;
+          setSignInRole(currentRegisterRole);
+          showAlert(`✓ Account ready for ${fullName} (${currentRegisterRole.toUpperCase()}). Click Sign In to enter.`, 'success');
+          
+          submitBtn.disabled = false;
+          submitText.textContent = 'Create Account';
+          if (submitIcon) submitIcon.style.display = 'inline-block';
+        }, 1200);
+
+      } catch (err) {
+        showAlert(`Registration Error: ${err.message}`, 'error');
+        submitBtn.disabled = false;
+        submitText.textContent = 'Create Account';
+        if (submitIcon) submitIcon.style.display = 'inline-block';
+      }
+    }
+
+    // ========================================================================
+    // SIGN IN SUBMISSION (STRICT CREDENTIAL VERIFICATION)
+    // ========================================================================
     async function handleLoginSubmit(e) {
       e.preventDefault();
       clearAlert();
 
-      const email = document.getElementById('login-email').value;
+      const email = document.getElementById('login-email').value.trim();
       const pwd = document.getElementById('login-password').value;
 
       if (!email || !pwd) {
-        showAlert('Please provide both email and password.', 'error');
+        showAlert('Please provide both email/roll number and password.', 'error');
         return;
       }
 
@@ -1136,7 +2042,6 @@
 
       submitBtn.disabled = true;
       submitText.textContent = 'Verifying Credentials...';
-      submitIcon.textContent = '⏳';
 
       try {
         const result = await window.SupabaseAuth.signIn(email, pwd, currentSignInRole);
@@ -1145,7 +2050,6 @@
           showAlert(`Authentication Failed: ${result.error}`, 'error');
           submitBtn.disabled = false;
           submitText.textContent = 'Sign In with Verified Credentials';
-          submitIcon.textContent = '➔';
           return;
         }
 
@@ -1174,115 +2078,24 @@
         showAlert(`Error during authentication: ${err.message}`, 'error');
         submitBtn.disabled = false;
         submitText.textContent = 'Sign In with Verified Credentials';
-        submitIcon.textContent = '➔';
-      }
-    }
-
-    // ==========================================
-    // REGISTER SUBMISSION (FACULTY PROTECTED)
-    // ==========================================
-    async function handleRegisterSubmit(e) {
-      e.preventDefault();
-      clearAlert();
-
-      const fullName = document.getElementById('reg-fullname').value;
-      const email = document.getElementById('reg-email').value;
-      const rollNo = document.getElementById('reg-rollno').value;
-      const department = document.getElementById('reg-dept').value;
-      const password = document.getElementById('reg-password').value;
-      const confirmPassword = document.getElementById('reg-confirm-password').value;
-      const facultyKey = document.getElementById('reg-faculty-key').value;
-
-      if (!fullName || !email || !password) {
-        showAlert('Please fill in all required fields.', 'error');
-        return;
-      }
-
-      if (password !== confirmPassword) {
-        showAlert('Passwords do not match. Please verify both password fields.', 'error');
-        return;
-      }
-
-      if (password.length < 6) {
-        showAlert('Password must be at least 6 characters.', 'error');
-        return;
-      }
-
-      // Security check: Check Faculty Key upfront
-      if (currentRegisterRole !== 'student' && !facultyKey) {
-        showAlert(`Access Denied: You must provide an Institutional Passcode to register as ${currentRegisterRole === 'faculty' ? 'Faculty Mentor' : 'T&P Officer'}.`, 'error');
-        return;
-      }
-
-      const submitBtn = document.getElementById('btn-submit-register');
-      const submitText = document.getElementById('btn-reg-text');
-      const submitIcon = document.getElementById('btn-reg-icon');
-
-      submitBtn.disabled = true;
-      submitText.textContent = 'Registering Account...';
-      submitIcon.textContent = '⏳';
-
-      try {
-        const result = await window.SupabaseAuth.signUp({
-          fullName,
-          email,
-          rollNo,
-          department,
-          role: currentRegisterRole,
-          password,
-          facultyKey
-        });
-
-        if (!result.success) {
-          showAlert(`Registration Failed: ${result.error}`, 'error');
-          submitBtn.disabled = false;
-          submitText.textContent = 'Create Authenticated Account';
-          submitIcon.textContent = '📝';
-          return;
-        }
-
-        showAlert(result.message || '✓ Account created successfully! Please sign in.', 'success');
-
-        // Reset and prefill sign in
-        setTimeout(() => {
-          switchAuthMode('signin');
-          document.getElementById('login-email').value = email;
-          document.getElementById('login-password').value = password;
-          setSignInRole(currentRegisterRole);
-          showAlert(`✓ Account ready for ${fullName} (${currentRegisterRole.toUpperCase()}). Click Sign In to enter.`, 'success');
-        }, 1200);
-
-      } catch (err) {
-        showAlert(`Registration Error: ${err.message}`, 'error');
-        submitBtn.disabled = false;
-        submitText.textContent = 'Create Authenticated Account';
-        submitIcon.textContent = '📝';
       }
     }
 
     function handleForgotPassword(e) {
       e.preventDefault();
       const email = document.getElementById('login-email').value || 'your registered email';
-      showAlert(`Password reset request submitted for ${email}. Check your inbox for reset instructions.`, 'info');
+      showAlert(`Password reset request submitted for ${email}. Check your registered college inbox.`, 'info');
     }
 
     function handleSSOLogin() {
-      showAlert('Institutional Google Workspace SSO is restricted to enrolled campus students and faculty.', 'info');
+      showAlert('Institutional Google Workspace SSO is restricted to pre-enrolled campus students and faculty.', 'info');
     }
 
-    // ==========================================
-    // SUPABASE MODAL & CONFIG
-    // ==========================================
+    // Modals
     function openSupabaseModal() {
       const modal = document.getElementById('modal-supabase-config');
-      const inputUrl = document.getElementById('input-supabase-url');
-      const inputKey = document.getElementById('input-supabase-key');
       const inputPasscode = document.getElementById('input-faculty-passcode');
-
-      if (inputUrl) inputUrl.value = localStorage.getItem('spp_supabase_url') || '';
-      if (inputKey) inputKey.value = localStorage.getItem('spp_supabase_anon_key') || '';
       if (inputPasscode) inputPasscode.value = localStorage.getItem('spp_faculty_passcode') || 'FACULTY2026';
-
       if (modal) modal.classList.add('active');
     }
 
@@ -1313,6 +2126,24 @@
       updateCloudStatusIndicator();
       closeSupabaseModal();
       showAlert('✓ SQLite database active and synchronized with Node.js backend.', 'success');
+    }
+
+    function openTermsModal(e) {
+      if (e) e.preventDefault();
+      document.getElementById('modal-terms')?.classList.add('active');
+    }
+
+    function closeTermsModal() {
+      document.getElementById('modal-terms')?.classList.remove('active');
+    }
+
+    function openPrivacyModal(e) {
+      if (e) e.preventDefault();
+      document.getElementById('modal-privacy')?.classList.add('active');
+    }
+
+    function closePrivacyModal() {
+      document.getElementById('modal-privacy')?.classList.remove('active');
     }
   </script>
 </body>

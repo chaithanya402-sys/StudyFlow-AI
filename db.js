@@ -509,6 +509,16 @@ function ensureFacultySubjectAssignments() {
     `).run('fac_002', 'anita.rao@college.edu', facHash2, 'faculty', 'Prof. Anita Rao', 'FAC-CSE-002', 'Computer Science & Engineering', '+91 98111 55667', 'AR');
   }
 
+  // Ensure T&P Officer tpo_001 exists
+  const tpo1 = db.prepare('SELECT id FROM users WHERE id = ? OR role = ?').get('tpo_001', 'officer');
+  if (!tpo1) {
+    const tpoHash = bcrypt.hashSync('placement2026', 10);
+    db.prepare(`
+      INSERT INTO users (id, email, password_hash, role, full_name, roll_no, department, phone, avatar)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run('tpo_001', 'placement.cell@college.edu', tpoHash, 'officer', 'Prof. S. K. Nair', 'TPO-HEAD-01', 'Training & Placement Cell', '+91 98222 33445', 'SN');
+  }
+
   const insertAssignment = db.prepare(`
     INSERT OR IGNORE INTO faculty_subject_assignments (id, faculty_id, faculty_name, subject, department)
     VALUES (?, ?, ?, ?, ?)

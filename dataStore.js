@@ -76,20 +76,20 @@
         }
       },
       faculty: {
-        id: 'fac_001',
-        name: 'Dr. Rajesh Sharma',
-        email: 'dr.rajesh.mentor@college.edu',
+        id: null,
+        name: '',
+        email: '',
         role: 'faculty',
-        department: 'Computer Science & Engineering',
-        avatar: 'RS'
+        department: '',
+        avatar: 'FM'
       },
       officer: {
-        id: 'tpo_001',
-        name: 'Prof. S. K. Nair',
-        email: 'placement.cell@college.edu',
+        id: null,
+        name: '',
+        email: '',
         role: 'officer',
-        department: 'Training & Placement Cell',
-        avatar: 'SN'
+        department: '',
+        avatar: 'TO'
       }
     },
     students: [],
@@ -115,6 +115,7 @@
 
     const res = await fetch(url, {
       method,
+      credentials: 'same-origin',
       headers,
       ...(body ? { body: JSON.stringify(body) } : {})
     });
@@ -164,7 +165,10 @@
         const headers = { 'Content-Type': 'application/json' };
         if (token) headers['Authorization'] = `Bearer ${token}`;
 
-        const res = await fetch('/api/student/profile', { headers });
+        const res = await fetch('/api/student/profile', {
+          credentials: 'same-origin',
+          headers
+        });
         if (!res.ok) return null;
         const json = await res.json();
         if (json.success && (json.profile || json.data)) {
@@ -193,7 +197,24 @@
         const headers = { 'Content-Type': 'application/json' };
         if (token) headers['Authorization'] = `Bearer ${token}`;
 
-        const res = await fetch('/api/state', { headers });
+        const res = await fetch('/api/state', {
+          credentials: 'same-origin',
+          headers
+        });
+        if (res.status === 401) {
+          this.isLoaded = true;
+          // Unauthenticated or expired session on protected pages
+          const isAppPage = typeof window !== 'undefined' && window.location && (
+            window.location.pathname.endsWith('index.html') ||
+            window.location.pathname === '/' ||
+            window.location.pathname.endsWith('/index.html')
+          );
+          if (isAppPage) {
+            console.warn('[DataStore] Session expired or invalid. Redirecting to login.');
+            window.location.href = 'login.html';
+          }
+          return;
+        }
         if (!res.ok) {
           this.isLoaded = true;
           return;
@@ -392,8 +413,8 @@
           student.placedPackage = app.offerPackage || 8.0;
         }
 
-        // Also update role profile if it's the demo student
-        if (this.data.roles.student.id === app.studentId) {
+        // Also update role profile if it matches the current student
+        if (this.data.roles?.student && this.data.roles.student.id === app.studentId) {
           this.data.roles.student.placementStatus = 'Placed';
           this.data.roles.student.placedCompany = app.company;
           this.data.roles.student.placedPackage = app.offerPackage || 8.0;
@@ -415,40 +436,70 @@
     }
 
     getStudentTasks(studentId = this.data.roles.student?.id) {
-      if (!studentId) return [];
-      return this.data.mentorTasks.filter(t => t.studentId === studentId);
+      if (!Array.isArray(this.data.mentorTasks)) return [];
+      if (!studentId) return this.data.mentorTasks;
+      return this.data.mentorTasks.filter(t => t.studentId === studentId || !t.studentId);
     }
 
     assignTask(taskObj) {
-      const student = this.getStudentById(taskObj.studentId) || this.data.roles.student;
+      const student = (taskObj.studentId && this.getStudentById(taskObj.studentId)) 
+        || this.data.roles?.student;
+
+      if (!student || !student.id) {
+        console.error('[DataStore] assignTask requires a valid target student');
+        return null;
+      }
+
+      const newId = taskObj.id || ('tsk_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6));
       const newTask = {
-        id: 'tsk_' + Date.now().toString(36),
-        mentorId: taskObj.mentorId || 'fac_001',
-        studentId: student.id,
-        studentName: student.name,
+        id: newId,
+        mentorId: taskObj.mentorId || student.mentorId || 'fac_001',
+        studentId: taskObj.studentId || student.id,
+        studentName: student.name || 'Student',
         title: taskObj.title || 'Placement Preparation Task',
-        dueDate: taskObj.dueDate || '2026-10-30',
+        dueDate: taskObj.dueDate || new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
         priority: taskObj.priority || 'Medium',
-        status: 'Pending',
-        assignedDate: new Date().toISOString().split('T')[0],
+        status: taskObj.status || 'Pending',
+        assignedDate: taskObj.assignedDate || new Date().toISOString().split('T')[0],
         notes: taskObj.notes || ''
       };
 
+      if (!Array.isArray(this.data.mentorTasks)) this.data.mentorTasks = [];
       this.data.mentorTasks.unshift(newTask);
-      this.addAudit(`Faculty Mentor assigned task to ${student.name}: "${newTask.title}"`);
+      this.addAudit(`Task assigned to ${newTask.studentName}: "${newTask.title}"`);
       this.save();
-      sendBackendMutation('/api/tasks', 'POST', newTask);
+      sendBackendMutation('/api/tasks', 'POST', newTask).catch(err => {
+        console.warn('[DataStore] Task creation server mutation warning:', err);
+      });
       return newTask;
     }
 
+    deleteTask(taskId) {
+      if (!Array.isArray(this.data.mentorTasks)) return false;
+      const idx = this.data.mentorTasks.findIndex(t => t.id === taskId);
+      if (idx !== -1) {
+        const removed = this.data.mentorTasks.splice(idx, 1)[0];
+        this.addAudit(`Task "${removed.title}" removed.`);
+        this.save();
+        sendBackendMutation(`/api/tasks/${taskId}`, 'DELETE').catch(err => {
+          console.warn('[DataStore] Task deletion failed on server:', err);
+        });
+        return true;
+      }
+      return false;
+    }
+
     toggleTaskStatus(taskId) {
+      if (!Array.isArray(this.data.mentorTasks)) return false;
       const task = this.data.mentorTasks.find(t => t.id === taskId);
       if (!task) return false;
 
       task.status = (task.status === 'Completed') ? 'Pending' : 'Completed';
-      this.addAudit(`Student ${task.studentName} marked task "${task.title}" as ${task.status}.`);
+      this.addAudit(`Student ${task.studentName || 'Student'} marked task "${task.title}" as ${task.status}.`);
       this.save();
-      sendBackendMutation(`/api/tasks/${taskId}/status`, 'PUT', { status: task.status });
+      sendBackendMutation(`/api/tasks/${taskId}/status`, 'PUT', { status: task.status }).catch(err => {
+        console.warn('[DataStore] Status update failed on server:', err);
+      });
       return task.status;
     }
 

@@ -57,6 +57,7 @@
       try {
         const response = await fetch('/api/auth/login', {
           method: 'POST',
+          credentials: 'same-origin',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: cleanEmail, password: cleanPassword, roleHint })
         });
@@ -105,11 +106,16 @@
     /**
      * Register New Account in SQLite Database with Institutional Passcode Validation
      */
-    async signUp({ email, password, fullName, role = 'student', rollNo = '', department = 'CSE', facultyKey = '', phone = '' }) {
+    async signUp({ email, password, fullName, role = 'student', rollNo = '', department = 'CSE', facultyKey = '', phone = '', currentYear = '1st Year', semester = '1st Semester' }) {
       const cleanEmail = (email || '').trim().toLowerCase();
       const cleanPassword = (password || '').trim();
       const cleanRole = (role || 'student').toLowerCase();
       const cleanKey = (facultyKey || '').trim();
+      const cleanRollNo = (rollNo || '').trim();
+      const cleanDept = (department || 'CSE').trim();
+      const cleanPhone = (phone || '').trim();
+      const cleanYear = (currentYear || '1st Year').trim();
+      const cleanSem = (semester || '1st Semester').trim();
 
       if (!cleanEmail || !cleanPassword || !fullName) {
         return { success: false, error: 'Full name, email, and password are required.' };
@@ -122,16 +128,19 @@
       try {
         const response = await fetch('/api/auth/register', {
           method: 'POST',
+          credentials: 'same-origin',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             email: cleanEmail,
             password: cleanPassword,
             fullName: fullName.trim(),
             role: cleanRole,
-            rollNo: rollNo.trim(),
-            department: department.trim(),
+            rollNo: cleanRollNo,
+            department: cleanDept,
             facultyKey: cleanKey,
-            phone: phone.trim()
+            phone: cleanPhone,
+            currentYear: cleanYear,
+            semester: cleanSem
           })
         });
 
@@ -155,6 +164,7 @@
 
         return {
           success: true,
+          token: data.token,
           user: data.user,
           role: data.role,
           name: data.name,
@@ -175,12 +185,11 @@
     async signOut() {
       try {
         const token = this.getToken();
-        if (token) {
-          await fetch('/api/auth/logout', {
-            method: 'POST',
-            headers: this.getAuthHeaders()
-          });
-        }
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: this.getAuthHeaders()
+        });
       } catch (err) {
         console.warn('[SQLiteAuth] Logout network error:', err);
       }
@@ -194,42 +203,54 @@
     }
 
     /**
-     * Get Current Active User & Profile from SQLite
+     * Get Current Active User & Profile from Verified Server Session
      */
     async getCurrentUser() {
-      const email = localStorage.getItem(this.emailKey) || '';
-      const role = localStorage.getItem(this.roleKey) || 'student';
-      const name = localStorage.getItem(this.nameKey) || 'Student';
       const token = this.getToken();
 
-      if (token) {
-        try {
-          const res = await fetch('/api/auth/me', {
-            headers: this.getAuthHeaders()
-          });
-          if (res.ok) {
-            const data = await res.json();
-            if (data.success && data.user) {
-              return {
-                user: data.user,
-                role: data.role || data.user.role || role,
-                name: data.user.fullName || name,
-                email: data.user.email || email,
-                profile: data.profile || null
-              };
-            }
+      try {
+        const res = await fetch('/api/auth/me', {
+          credentials: 'same-origin',
+          headers: this.getAuthHeaders()
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.user) {
+            // Update local caches from verified server session
+            if (data.token) this.setToken(data.token);
+            localStorage.setItem(this.emailKey, data.user.email);
+            localStorage.setItem(this.roleKey, data.role || data.user.role);
+            localStorage.setItem(this.nameKey, data.user.fullName || data.name);
+            localStorage.setItem('spp_user_id', data.user.id);
+
+            return {
+              user: data.user,
+              role: data.role || data.user.role,
+              name: data.user.fullName || data.name,
+              email: data.user.email,
+              profile: data.profile || null,
+              verified: true
+            };
           }
-        } catch (e) {
-          console.warn('[SQLiteAuth] Error checking active session:', e);
         }
+      } catch (e) {
+        console.warn('[SQLiteAuth] Error checking verified session:', e);
       }
 
+      // If server session is invalid or expired, clear local credentials and return null
+      this.setToken('');
+      localStorage.removeItem(this.emailKey);
+      localStorage.removeItem(this.roleKey);
+      localStorage.removeItem(this.nameKey);
+      localStorage.removeItem('spp_user_id');
+
       return {
-        user: email ? { email, id: localStorage.getItem('spp_user_id') || '' } : null,
-        role,
-        name: name || 'Student',
-        email,
-        profile: null
+        user: null,
+        role: null,
+        name: null,
+        email: null,
+        profile: null,
+        verified: false
       };
     }
 

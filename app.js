@@ -4,13 +4,35 @@
  * Navy (#172B4D) • Primary Blue (#2563EB) • Teal (#0D9488) • Canvas (#F5F7FB)
  */
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const store = window.PlacementDataStore;
   window.store = store;
   if (!store) {
     console.error('PlacementDataStore not found!');
     return;
   }
+
+  // Derive logged-in user and role strictly from verified server session
+  let verifiedSession = null;
+  if (window.StudyFlowAuth && typeof window.StudyFlowAuth.getCurrentUser === 'function') {
+    try {
+      verifiedSession = await window.StudyFlowAuth.getCurrentUser();
+    } catch (err) {
+      console.warn('[StudyFlow] Verified session check failed:', err);
+    }
+  }
+
+  // Enforce session presence - unauthenticated users must login
+  if (!verifiedSession || !verifiedSession.user) {
+    console.warn('[StudyFlow] No authenticated session found. Redirecting to login.html');
+    window.location.href = 'login.html';
+    return;
+  }
+
+  // Lock active role strictly to the server-verified role
+  const verifiedRole = (verifiedSession.role || verifiedSession.user.role || 'student').toLowerCase();
+  window._verifiedRole = verifiedRole;
+  store.setActiveRole(verifiedRole);
 
   // Lucide-style outline SVG icon map matching design screenshot
   const icons = {
@@ -80,8 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
     { type: 'item', title: 'Companies & Drives', route: '/student/companies', icon: icons.companies },
     { type: 'item', title: 'My Applications', route: '/student/applications', icon: icons.applications },
     { type: 'item', title: 'Skills & Skill Gaps', route: '/student/skill-gaps', icon: icons.skillsGraduation },
-    { type: 'item', title: 'Notifications', route: '/student/notifications', icon: icons.notifications },
-    { type: 'item', title: 'Profile', route: '/student/profile', icon: icons.profileUser }
+    { type: 'item', title: 'Notifications', route: '/student/notifications', icon: icons.notifications }
   ];
 
   // Faculty Navigation: Exact 9 Main Navigation Items with expandable Submissions & Grading
@@ -315,7 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (item.type === 'item') {
           html += `
             <li>
-              <a href="#${item.route}" class="nav-link" data-route="${item.route}">
+              <a href="#${item.route}" class="nav-link" data-route="${item.route}" data-tooltip="${item.title}" title="${item.title}">
                 <div class="nav-link-left">
                   ${item.icon}
                   <span>${item.title}</span>
@@ -326,8 +347,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (item.type === 'parent') {
           const isOpen = sidebarExpandedState[item.id] !== false;
           html += `
-            <li class="nav-parent-group">
-              <button type="button" class="nav-parent-btn ${isOpen ? 'parent-open' : 'parent-collapsed'}" id="parent-btn-${item.id}" onclick="toggleSidebarSubmenu('${item.id}')">
+            <li class="nav-parent-group" id="parent-group-${item.id}">
+              <button type="button" class="nav-parent-btn ${isOpen ? 'parent-open' : 'parent-collapsed'}" id="parent-btn-${item.id}" onclick="toggleSidebarSubmenu('${item.id}')" data-tooltip="${item.title}" title="${item.title}">
                 <div class="nav-link-left">
                   ${item.icon}
                   <span>${item.title}</span>
@@ -335,9 +356,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 ${icons.chevron}
               </button>
               <ul class="nav-submenu ${isOpen ? '' : 'collapsed'}" id="submenu-${item.id}">
+                <li class="nav-submenu-header" aria-hidden="true">
+                  ${item.icon}
+                  <span class="nav-submenu-title">${item.title}</span>
+                </li>
                 ${item.children.map(child => `
                   <li>
-                    <a href="#${child.route}" class="nav-link" data-route="${child.route}">
+                    <a href="#${child.route}" class="nav-link" data-route="${child.route}" data-tooltip="${child.title}">
                       <div class="nav-link-left">
                         ${child.icon}
                         <span>${child.title}</span>
@@ -351,11 +376,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
     } else {
-      html += `<div class="nav-group-title">${role.toUpperCase()} MENU</div>`;
       config.links.forEach(item => {
         html += `
           <li>
-            <a href="#${item.route}" class="nav-link" data-route="${item.route}">
+            <a href="#${item.route}" class="nav-link" data-route="${item.route}" data-tooltip="${item.title}" title="${item.title}">
               <div class="nav-link-left">
                 ${item.icon}
                 <span>${item.title}</span>
@@ -371,7 +395,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     linksContainer.querySelectorAll('.nav-link').forEach(link => {
       link.addEventListener('click', () => {
-        if (window.innerWidth < 992) {
+        if (window.innerWidth <= 992) {
           closeMobileSidebar();
         }
       });
@@ -382,7 +406,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const badgeEl = document.getElementById('sidebar-role-badge');
     if (titleEl) {
       if (config.portalTitle.includes('AI')) {
-        titleEl.innerHTML = config.portalTitle.replace('AI', `<span style="color: var(--primary-green);">AI</span>`);
+        titleEl.innerHTML = config.portalTitle.replace('AI', `<span style="color: var(--primary-blue);">AI</span>`);
       } else {
         titleEl.textContent = config.portalTitle;
       }
@@ -395,6 +419,18 @@ document.addEventListener('DOMContentLoaded', () => {
       contextBox.style.display = (role === 'student') ? 'none' : 'block';
     }
   }
+
+  // User Profile Click in Sidebar
+  window.handleSidebarUserClick = function() {
+    const role = store.getActiveRole();
+    if (role === 'student') {
+      window.navigateToRoute('/student/profile');
+    } else if (role === 'faculty') {
+      window.navigateToRoute('/faculty/profile');
+    } else {
+      window.navigateToRoute('/officer/overview');
+    }
+  };
 
   // Sign Out Handler
   window.handleLogout = async function() {
@@ -409,22 +445,35 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   function updateUserProfileHeader(role) {
-    const profile = store.getUserProfile(role);
-    const customName = localStorage.getItem('spp_user_name');
-    const customEmail = localStorage.getItem('spp_user_email');
-    const assignedRole = localStorage.getItem('spp_user_role') || role;
+    const verifiedRole = window._verifiedRole || role || store.getActiveRole() || 'student';
+    const profile = store.getUserProfile(verifiedRole);
+    const verifiedUser = (window.StudyFlowAuth && typeof window.StudyFlowAuth.getUser === 'function' && window.StudyFlowAuth.getUser()) || {};
+    const customName = localStorage.getItem('spp_user_name') || verifiedUser.fullName || verifiedUser.name;
+    const customEmail = localStorage.getItem('spp_user_email') || verifiedUser.email;
 
     const nameLabel = document.getElementById('user-name-label');
     const emailLabel = document.getElementById('user-email-label');
     const avatarPill = document.getElementById('user-avatar-pill');
     const roleBadgePill = document.getElementById('user-role-badge-pill');
     const topAvatarCircle = document.getElementById('top-avatar-circle');
+    const roleDisplayText = document.getElementById('header-role-display-text');
     const roleSelect = document.getElementById('header-role-select');
+    const userFooter = document.getElementById('sidebar-user-footer');
 
-    if (role === 'student') {
+    let displayName = 'User';
+    let roleBadge = 'User';
+
+    if (roleDisplayText) {
+      if (verifiedRole === 'student') roleDisplayText.textContent = 'Student Portal';
+      else if (verifiedRole === 'faculty') roleDisplayText.textContent = 'Faculty Mentor';
+      else if (verifiedRole === 'officer') roleDisplayText.textContent = 'T&P Officer';
+    }
+
+    if (verifiedRole === 'student') {
       const activeStudent = store.data.roles?.student || {};
-      const displayName = (activeStudent.name && activeStudent.name !== 'Student Profile') ? activeStudent.name : (customName || 'Student');
-      const email = activeStudent.email || customEmail || 'Student Account';
+      displayName = verifiedUser.fullName || (activeStudent.name && activeStudent.name !== 'Student Profile' ? activeStudent.name : customName) || 'Student';
+      const email = verifiedUser.email || activeStudent.email || customEmail || 'student@college.edu';
+      roleBadge = 'Student';
       if (activeStudent.name && activeStudent.name !== 'Student Profile') {
         localStorage.setItem('spp_user_name', activeStudent.name);
       }
@@ -448,43 +497,59 @@ document.addEventListener('DOMContentLoaded', () => {
           badgeStatus.textContent = 'Student Portal Active';
         }
       }
-    } else if (role === 'faculty') {
-      const displayName = customName || profile.name;
+    } else if (verifiedRole === 'faculty') {
+      displayName = verifiedUser.fullName || customName || profile.name || 'Faculty Mentor';
+      const email = verifiedUser.email || 'faculty@college.edu';
+      roleBadge = 'Faculty';
       if (nameLabel) nameLabel.textContent = displayName;
-      if (emailLabel) emailLabel.textContent = 'Faculty account';
-      if (avatarPill) avatarPill.textContent = 'F';
+      if (emailLabel) emailLabel.textContent = email;
+      if (avatarPill) avatarPill.textContent = displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'FM';
       if (roleBadgePill) roleBadgePill.textContent = 'Faculty';
-    } else if (role === 'officer') {
-      const displayName = customName || profile.name;
+    } else if (verifiedRole === 'officer') {
+      displayName = verifiedUser.fullName || customName || profile.name || 'T&P Officer';
+      const email = verifiedUser.email || 'officer@college.edu';
+      roleBadge = 'Admin';
       if (nameLabel) nameLabel.textContent = displayName;
-      if (emailLabel) emailLabel.textContent = 'Officer account';
-      if (avatarPill) avatarPill.textContent = 'T';
+      if (emailLabel) emailLabel.textContent = email;
+      if (avatarPill) avatarPill.textContent = displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'TO';
       if (roleBadgePill) roleBadgePill.textContent = 'TPO Admin';
+    }
+
+    if (userFooter) {
+      userFooter.setAttribute('data-tooltip', `${displayName} (${roleBadge}) — View Profile`);
+      userFooter.setAttribute('title', `${displayName} (${roleBadge})`);
     }
 
     if (topAvatarCircle) {
       let initials = 'US';
-      if (role === 'student') {
+      if (verifiedRole === 'student') {
         const activeStudent = store.data.roles?.student || {};
         const name = (activeStudent.name && activeStudent.name !== 'Student Profile') ? activeStudent.name : customName;
         initials = name ? name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : (activeStudent.avatar || 'ST');
       } else {
-        initials = (assignedRole === role && customName) ? customName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : (profile.avatar || 'US');
+        initials = (displayName && displayName !== 'User') ? displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : (profile.avatar || 'US');
       }
       topAvatarCircle.textContent = initials;
     }
-    if (roleSelect && roleSelect.value !== role) {
-      roleSelect.value = role;
+    if (roleSelect && roleSelect.value !== verifiedRole) {
+      roleSelect.value = verifiedRole;
     }
   }
 
   window.switchActiveRole = function(role) {
-    localStorage.setItem('spp_user_role', role);
-    store.setActiveRole(role);
-    renderSidebarNav(role);
-    updateUserProfileHeader(role);
+    const verifiedRole = window._verifiedRole || store.getActiveRole();
+    if (role && role !== verifiedRole) {
+      console.warn(`[Security] Unauthorized role switch blocked. Authenticated account is locked to ${verifiedRole}.`);
+      if (typeof showToastNotification === 'function') {
+        showToastNotification(`Role is locked to your verified institutional account (${verifiedRole.toUpperCase()})`, 'warning');
+      }
+      return;
+    }
+    store.setActiveRole(verifiedRole);
+    renderSidebarNav(verifiedRole);
+    updateUserProfileHeader(verifiedRole);
 
-    const targetRoute = roleNavConfig[role]?.defaultRoute || '/student/dashboard';
+    const targetRoute = roleNavConfig[verifiedRole]?.defaultRoute || '/student/dashboard';
     if (window.location.hash === '#' + targetRoute || window.location.hash === targetRoute) {
       updateRouting();
     } else {
@@ -496,24 +561,37 @@ document.addEventListener('DOMContentLoaded', () => {
     const parsed = parseCurrentHash();
     let currentRoute = parsed.path;
 
-    let detectedRole = store.getActiveRole();
+    const verifiedRole = window._verifiedRole || store.getActiveRole() || 'student';
+
+    // Route authorization validation: ensure users cannot access other role panels by changing URL hash
+    let requiredRole = null;
     if (currentRoute.startsWith('/student/')) {
-      detectedRole = 'student';
+      requiredRole = 'student';
     } else if (currentRoute.startsWith('/faculty/')) {
-      detectedRole = 'faculty';
+      requiredRole = 'faculty';
     } else if (currentRoute.startsWith('/officer/')) {
-      detectedRole = 'officer';
-    } else if (currentRoute === '/dashboard' || currentRoute === '/') {
-      currentRoute = roleNavConfig[detectedRole]?.defaultRoute || '/student/dashboard';
+      requiredRole = 'officer';
+    }
+
+    if (currentRoute === '/dashboard' || currentRoute === '/') {
+      currentRoute = roleNavConfig[verifiedRole]?.defaultRoute || '/student/dashboard';
       window.location.hash = currentRoute;
       return;
     }
 
-    localStorage.setItem('spp_user_role', detectedRole);
-
-    if (detectedRole !== store.getActiveRole()) {
-      store.setActiveRole(detectedRole);
+    // Role Guard: Student cannot access faculty/officer routes; Faculty cannot access officer routes; etc.
+    if (requiredRole && requiredRole !== verifiedRole) {
+      console.warn(`[Security] Route access denied for ${verifiedRole} to ${currentRoute} (requires ${requiredRole})`);
+      const fallbackRoute = roleNavConfig[verifiedRole]?.defaultRoute || '/student/dashboard';
+      window.location.hash = fallbackRoute;
+      if (typeof showToastNotification === 'function') {
+        showToastNotification(`Access Denied: You do not have permission for the ${requiredRole.toUpperCase()} portal`, 'danger');
+      }
+      return;
     }
+
+    const detectedRole = verifiedRole;
+    store.setActiveRole(verifiedRole);
 
     if (detectedRole === 'student') {
       const activeStudent = store.data.roles?.student;
@@ -585,6 +663,15 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.sidebar .nav-link').forEach(link => {
       const linkRoute = link.getAttribute('data-route') || link.getAttribute('href')?.replace(/^#/, '');
       link.classList.toggle('active', linkRoute === currentRoute);
+    });
+
+    // Highlight parent group icon in collapsed mode if any child route is active
+    document.querySelectorAll('.nav-parent-group').forEach(group => {
+      const hasActiveChild = group.querySelector('.nav-submenu .nav-link.active') !== null;
+      const parentBtn = group.querySelector('.nav-parent-btn');
+      if (parentBtn) {
+        parentBtn.classList.toggle('parent-has-active-child', hasActiveChild);
+      }
     });
 
     // Toggle active pane
@@ -1795,7 +1882,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const listEl = document.getElementById('student-tasks-full-list');
     if (!listEl) return;
 
-    let tasks = store.getStudentTasks(student.id);
+    const currentStudent = student || store.data.roles?.student || {};
+    let tasks = store.getStudentTasks(currentStudent.id);
     const filter = window._currentTaskFilter || 'all';
     if (filter === 'pending') {
       tasks = tasks.filter(t => t.status === 'Pending');
@@ -1803,8 +1891,9 @@ document.addEventListener('DOMContentLoaded', () => {
       tasks = tasks.filter(t => t.status === 'Completed');
     }
 
-    const allCount = store.getStudentTasks(student.id).length;
-    const pendingCount = store.getStudentTasks(student.id).filter(t => t.status === 'Pending').length;
+    const allTasks = store.getStudentTasks(currentStudent.id);
+    const allCount = allTasks.length;
+    const pendingCount = allTasks.filter(t => t.status === 'Pending').length;
     const completedCount = allCount - pendingCount;
 
     const countAllEl = document.getElementById('task-count-all');
@@ -1816,32 +1905,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (tasks.length === 0) {
       listEl.innerHTML = `
-        <div class="empty-state-card" style="padding: 30px;">
-          <div class="empty-state-icon">✓</div>
-          <div class="empty-state-title">No tasks found</div>
-          <div class="empty-state-desc">There are no tasks matching the "${filter}" filter.</div>
+        <div class="empty-state-card" style="padding: 40px 24px; text-align: center; background: #FFFFFF; border: 1px dashed #CBD5E1; border-radius: 14px;">
+          <div class="empty-state-icon" style="font-size: 38px; margin-bottom: 10px;">📋</div>
+          <div class="empty-state-title" style="font-size: 16px; font-weight: 700; color: #0F172A; margin-bottom: 6px;">No tasks found</div>
+          <div class="empty-state-desc" style="font-size: 13px; color: #64748B; max-width: 480px; margin: 0 auto 16px auto; line-height: 1.5;">
+            There are no tasks matching the "${filter}" filter. Track your placement prep, coding targets, and coursework deliverables in one place.
+          </div>
+          <button class="btn-primary" onclick="openAddTaskModal()" style="display: inline-flex; align-items: center; gap: 6px; margin: 0 auto;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <span>Add Study Goal</span>
+          </button>
         </div>
       `;
       return;
     }
 
     listEl.innerHTML = tasks.map(t => `
-      <div class="task-item-card">
-        <div class="task-checkbox-wrap">
+      <div class="task-item-card" style="display: flex; align-items: flex-start; gap: 14px; padding: 16px 18px; background: #FFFFFF; border: 1px solid var(--border-subtle); border-radius: 12px; margin-bottom: 12px; transition: all 0.2s ease;">
+        <div class="task-checkbox-wrap" style="margin-top: 2px;">
           <button class="task-custom-checkbox ${t.status === 'Completed' ? 'checked' : ''}" onclick="toggleTaskStatus('${t.id}')" title="Mark as ${t.status === 'Completed' ? 'Pending' : 'Completed'}">
             ${t.status === 'Completed' ? '✓' : ''}
           </button>
         </div>
-        <div class="task-content-col">
-          <div class="task-title-text ${t.status === 'Completed' ? 'completed' : ''}">${t.title}</div>
-          <div class="task-meta-row">
+        <div class="task-content-col" style="flex: 1; min-width: 0;">
+          <div class="task-title-text ${t.status === 'Completed' ? 'completed' : ''}" style="font-size: 14.5px; font-weight: 600; color: #0F172A; margin-bottom: 6px; ${t.status === 'Completed' ? 'text-decoration: line-through; opacity: 0.6;' : ''}">${t.title}</div>
+          <div class="task-meta-row" style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-size: 12px; color: #64748B;">
             <span><strong>Due:</strong> ${t.dueDate}</span>
-            <span><strong>Assigned:</strong> ${t.assignedDate || '2026-10-08'}</span>
-            <span class="badge-status ${t.priority === 'High' ? 'error' : t.priority === 'Medium' ? 'warning' : 'blue'}">${t.priority} Priority</span>
-            <span class="badge-status ${t.status === 'Completed' ? 'success' : 'teal'}">${t.status}</span>
+            <span><strong>Assigned:</strong> ${t.assignedDate || 'Recent'}</span>
+            <span class="badge-status ${t.priority === 'High' ? 'error' : t.priority === 'Medium' ? 'warning' : 'blue'}" style="font-size: 10.5px; padding: 2px 8px; border-radius: 9999px;">${t.priority} Priority</span>
+            <span class="badge-status ${t.status === 'Completed' ? 'success' : 'teal'}" style="font-size: 10.5px; padding: 2px 8px; border-radius: 9999px;">${t.status}</span>
           </div>
-          ${t.notes ? `<div style="margin-top: 6px; font-size: 12px; color: var(--text-secondary); background: #F8FAFC; padding: 6px 10px; border-radius: var(--radius-sm); border-left: 2px solid var(--primary-blue);"><strong>Mentor Note:</strong> ${t.notes}</div>` : ''}
+          ${t.notes ? `<div style="margin-top: 8px; font-size: 12px; color: var(--text-secondary); background: #F8FAFC; padding: 6px 12px; border-radius: var(--radius-sm); border-left: 3px solid var(--primary-blue); line-height: 1.4;"><strong>Note:</strong> ${t.notes}</div>` : ''}
         </div>
+        <button class="btn-icon-subtle" onclick="deleteTaskItem('${t.id}')" title="Delete Task" style="background: transparent; border: none; cursor: pointer; color: #94A3B8; padding: 6px; border-radius: 6px; font-size: 15px; transition: color 0.15s ease;" onmouseover="this.style.color='#EF4444'" onmouseout="this.style.color='#94A3B8'">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        </button>
       </div>
     `).join('');
   }
@@ -5458,9 +5556,71 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  window.openAddTaskModal = function() {
+    const modal = document.getElementById('modal-add-task');
+    if (modal) {
+      const dueInput = document.getElementById('student-task-input-due');
+      if (dueInput && !dueInput.value) {
+        const d = new Date();
+        d.setDate(d.getDate() + 7);
+        dueInput.value = d.toISOString().split('T')[0];
+      }
+      modal.style.display = 'flex';
+    }
+  };
+
+  window.handleCreateStudentTaskSubmit = function(e) {
+    e.preventDefault();
+    const titleInput = document.getElementById('student-task-input-title');
+    const categorySelect = document.getElementById('student-task-select-category');
+    const prioritySelect = document.getElementById('student-task-select-priority');
+    const dueInput = document.getElementById('student-task-input-due');
+    const notesInput = document.getElementById('student-task-input-notes');
+
+    const title = titleInput?.value?.trim();
+    if (!title) {
+      window.showToast?.('Please enter a goal title.', 'error');
+      return;
+    }
+
+    const priority = prioritySelect?.value || 'Medium';
+    const dueDate = dueInput?.value || new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
+    const category = categorySelect?.value || 'General Milestone';
+    const rawNotes = notesInput?.value?.trim() || '';
+    const notes = rawNotes ? `[${category}] ${rawNotes}` : `[${category}]`;
+
+    const student = store.data.roles?.student || {};
+    const taskObj = {
+      title,
+      priority,
+      dueDate,
+      notes,
+      studentId: student.id
+    };
+
+    store.assignTask(taskObj);
+    closeModal('modal-add-task');
+
+    if (titleInput) titleInput.value = '';
+    if (notesInput) notesInput.value = '';
+
+    window.showToast?.(`✓ Study Goal "${title}" created!`, 'success');
+    renderStudentMyTasks(store.data.roles?.student);
+  };
+
+  window.deleteTaskItem = function(taskId) {
+    if (!confirm('Are you sure you want to delete this study goal/task?')) return;
+    const ok = store.deleteTask(taskId);
+    if (ok) {
+      window.showToast?.('Task deleted successfully.', 'info');
+      renderStudentMyTasks(store.data.roles?.student);
+    }
+  };
+
   window.toggleTaskStatus = function(taskId) {
     const newStatus = store.toggleTaskStatus(taskId);
     window.showToast?.(newStatus === 'Completed' ? '✓ Task marked as Completed!' : 'Task marked as Pending.', 'success');
+    renderStudentMyTasks(store.data.roles?.student);
   };
 
   window.switchStudentDriveTab = function(tab) {
@@ -6748,11 +6908,13 @@ document.addEventListener('DOMContentLoaded', () => {
   function openMobileSidebar() {
     sidebarEl?.classList.add('mobile-open');
     backdropEl?.classList.add('active');
+    document.body.style.overflow = 'hidden';
   }
 
   function closeMobileSidebar() {
     sidebarEl?.classList.remove('mobile-open');
     backdropEl?.classList.remove('active');
+    document.body.style.overflow = '';
   }
 
   function handleSidebarToggle() {
@@ -6774,9 +6936,43 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.classList.add('sidebar-collapsed');
   }
 
+  // Main dashboard header hamburger button toggles the sidebar (expanded/collapsed on desktop, drawer on mobile)
   document.getElementById('btn-toggle-sidebar')?.addEventListener('click', handleSidebarToggle);
   document.getElementById('btn-close-sidebar')?.addEventListener('click', closeMobileSidebar);
   backdropEl?.addEventListener('click', closeMobileSidebar);
+
+  // When sidebar is collapsed on desktop, clicking the compact brand icon expands it
+  document.getElementById('sidebar-brand-icon')?.addEventListener('click', (e) => {
+    if (window.innerWidth > 992 && document.body.classList.contains('sidebar-collapsed')) {
+      e.preventDefault();
+      document.body.classList.remove('sidebar-collapsed');
+      localStorage.setItem('spp_sidebar_collapsed', 'false');
+    }
+  });
+
+  // Keyboard accessibility: Ctrl+B or Cmd+B to toggle sidebar, Escape to close mobile drawer
+  window.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+      e.preventDefault();
+      handleSidebarToggle();
+    }
+    if (e.key === 'Escape') {
+      if (sidebarEl?.classList.contains('mobile-open')) {
+        closeMobileSidebar();
+      }
+    }
+  });
+
+  // Handle window resizing
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 992) {
+      closeMobileSidebar();
+      const isCollapsed = localStorage.getItem('spp_sidebar_collapsed') === 'true';
+      document.body.classList.toggle('sidebar-collapsed', isCollapsed);
+    } else {
+      document.body.classList.remove('sidebar-collapsed');
+    }
+  });
 
   updateRouting();
   renderAllViews();

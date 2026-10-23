@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Student Placement Prediction — Campus Placement Analytics Platform</title>
+  <title>StudyFlow AI — Academic Management & Placement Intelligence Platform</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,13 +14,13 @@
   <div class="app-layout">
 
     <!-- ========================================================
-         SIDEBAR: FIXED 250PX INDEPENDENT-SCROLLING PANEL
+         SIDEBAR: FIXED 280PX INDEPENDENT-SCROLLING PANEL
          ======================================================== -->
     <aside class="sidebar" id="app-sidebar">
       
-      <!-- Fixed Sidebar Header matching light portal mockup -->
+      <!-- Fixed Sidebar Header matching Lenovo Vantage & light portal mockup -->
       <div class="sidebar-brand">
-        <a href="landing.html" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit;" title="Return to Landing Page">
+        <a href="landing.html" class="sidebar-brand-link" title="Return to Landing Page">
           <div class="brand-icon-wrap" id="sidebar-brand-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
@@ -28,11 +28,13 @@
             </svg>
           </div>
           <div class="brand-title-wrap">
-            <span class="brand-title-text" id="sidebar-portal-title">StudyFlow <span style="color: var(--primary-green);">AI</span></span>
+            <span class="brand-title-text" id="sidebar-portal-title">StudyFlow <span style="color: var(--primary-blue);">AI</span></span>
             <span class="brand-role-subtitle" id="sidebar-role-badge">Student Portal</span>
           </div>
         </a>
-        <button class="sidebar-close-btn" id="btn-close-sidebar" aria-label="Close navigation">✕</button>
+
+        <!-- Mobile Drawer Close Button -->
+        <button class="sidebar-close-btn" id="btn-close-sidebar" aria-label="Close navigation" title="Close drawer">✕</button>
       </div>
 
       <!-- Scrollable Navigation Items -->
@@ -48,15 +50,20 @@
       </div>
 
       <!-- User Profile Footer Fixed at Bottom matching mockup -->
-      <div class="sidebar-user" id="sidebar-user-footer" onclick="navigateToRoute('/student/profile')" title="Student Profile & Settings">
+      <div class="sidebar-user" id="sidebar-user-footer" onclick="handleSidebarUserClick()" title="Profile & Settings">
         <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;">
           <div class="user-avatar-square" id="user-avatar-pill">S</div>
-          <div style="min-width: 0; flex: 1;">
+          <div class="user-details-wrap" style="min-width: 0; flex: 1;">
             <div class="user-name-label" id="user-name-label">Student Profile</div>
             <div class="user-sub-label" id="user-email-label">Student account</div>
           </div>
         </div>
         <span class="user-role-badge-pill" id="user-role-badge-pill">Student</span>
+        <span class="sidebar-user-chevron" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </span>
       </div>
     </aside>
 
@@ -71,7 +78,7 @@
       <!-- CLEAN COMPACT TOP HEADER -->
       <header class="top-header">
         <div class="top-header-left">
-          <button class="mobile-menu-btn" id="btn-toggle-sidebar" aria-label="Open navigation">
+          <button class="mobile-menu-btn" id="btn-toggle-sidebar" aria-label="Toggle navigation sidebar" title="Toggle navigation sidebar (Ctrl+B)">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
           </button>
           <div class="page-title-wrap">
@@ -89,14 +96,11 @@
             <input type="text" class="header-search-input" id="global-search-input" placeholder="Search students, drives, skills...">
           </div>
 
-          <!-- Role Selector Dropdown -->
-          <div class="header-role-switcher" title="Switch Portal Role">
+          <!-- Verified Institutional Portal Role Badge -->
+          <div class="header-verified-role" id="header-verified-role" title="Verified Institutional Role">
+            <span class="role-indicator-dot"></span>
             <span class="header-role-label">Portal:</span>
-            <select class="header-role-select" id="header-role-select" onchange="switchActiveRole(this.value)">
-              <option value="student">Student Portal</option>
-              <option value="faculty">Faculty Mentor (Dr. Rajesh)</option>
-              <option value="officer">T&P Officer (Prof. Nair)</option>
-            </select>
+            <span class="header-role-badge-text" id="header-role-display-text">Student Portal</span>
           </div>
 
           <!-- Theme Toggle Buttons -->
@@ -171,7 +175,7 @@
         <!-- 5 Uniform Academic Summary KPI Cards -->
         <div class="kpi-grid-5" style="margin-bottom: 20px;">
           <!-- Card 1: Predicted Final Score -->
-          <div class="kpi-card" style="border-top: 3px solid #2563EB;">
+          <div class="kpi-card">
             <div class="kpi-top-row">
               <span class="kpi-label">PREDICTED FINAL SCORE</span>
               <svg class="kpi-icon" style="color: #2563EB;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
@@ -184,7 +188,7 @@
           </div>
 
           <!-- Card 2: Overall Marks & Grade -->
-          <div class="kpi-card" style="border-top: 3px solid #059669;">
+          <div class="kpi-card">
             <div class="kpi-top-row">
               <span class="kpi-label">CURRENT MARKS AVERAGE</span>
               <svg class="kpi-icon" style="color: #059669;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
@@ -197,7 +201,7 @@
           </div>
 
           <!-- Card 3: Lecture Attendance -->
-          <div class="kpi-card" style="border-top: 3px solid #0D9488;">
+          <div class="kpi-card">
             <div class="kpi-top-row">
               <span class="kpi-label">LECTURE ATTENDANCE</span>
               <svg class="kpi-icon" style="color: #0D9488;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
@@ -210,7 +214,7 @@
           </div>
 
           <!-- Card 4: Assignment Completion -->
-          <div class="kpi-card" style="border-top: 3px solid #3B82F6;">
+          <div class="kpi-card">
             <div class="kpi-top-row">
               <span class="kpi-label">ASSIGNMENT COMPLETION</span>
               <svg class="kpi-icon" style="color: #3B82F6;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
@@ -223,7 +227,7 @@
           </div>
 
           <!-- Card 5: Quiz & Internal Exam Average -->
-          <div class="kpi-card" style="border-top: 3px solid #D97706;">
+          <div class="kpi-card">
             <div class="kpi-top-row">
               <span class="kpi-label">QUIZ &amp; INTERNAL AVG</span>
               <svg class="kpi-icon" style="color: #D97706;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line></svg>
@@ -3350,6 +3354,68 @@
           <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px;">
             <button type="button" class="btn-outline" onclick="closeModal('modal-assign-task')">Cancel</button>
             <button type="submit" class="btn-primary">Assign Task</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       MODAL: ADD STUDENT STUDY GOAL / TASK
+       ======================================================== -->
+  <div class="modal-overlay" id="modal-add-task">
+    <div class="modal-box" style="max-width: 540px;">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">Add Study Goal &amp; Task</div>
+          <p style="font-size: 12px; color: var(--text-muted); margin: 3px 0 0 0;">Create actionable goals for coding practice, coursework, or placement prep.</p>
+        </div>
+        <button class="modal-close-btn" onclick="closeModal('modal-add-task')">✕</button>
+      </div>
+      <div class="modal-body">
+        <form onsubmit="handleCreateStudentTaskSubmit(event)">
+          <div class="form-group">
+            <label class="form-label">Goal / Task Title <span style="color: var(--error-red);">*</span></label>
+            <input type="text" class="form-input" id="student-task-input-title" placeholder="e.g. Complete 20 Binary Tree problems on LeetCode" required>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <select class="form-select" id="student-task-select-category">
+                <option value="Coding & DSA">Coding &amp; DSA</option>
+                <option value="Placement Prep">Placement Prep</option>
+                <option value="Aptitude Practice">Aptitude Practice</option>
+                <option value="Coursework & Lab">Coursework &amp; Lab</option>
+                <option value="Resume & ATS">Resume &amp; ATS</option>
+                <option value="General Milestone" selected>General Milestone</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Priority</label>
+              <select class="form-select" id="student-task-select-priority">
+                <option value="High">High</option>
+                <option value="Medium" selected>Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Target Completion Date <span style="color: var(--error-red);">*</span></label>
+            <input type="date" class="form-input" id="student-task-input-due" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Personal Notes &amp; Checklist (Optional)</label>
+            <textarea class="form-textarea" id="student-task-input-notes" rows="3" placeholder="Target resources, specific chapters, or checklist items..."></textarea>
+          </div>
+
+          <div class="modal-footer" style="padding: 16px 0 0 0; border-top: 1px solid var(--border-subtle); display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px;">
+            <button type="button" class="btn-outline" onclick="closeModal('modal-add-task')">Cancel</button>
+            <button type="submit" class="btn-primary" id="btn-submit-student-task">
+              <span>Save Study Goal</span>
+            </button>
           </div>
         </form>
       </div>

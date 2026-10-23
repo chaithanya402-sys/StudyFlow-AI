@@ -39,12 +39,121 @@ function openLandingPage(port) {
 }
 
 // -----------------------------------------------------------------------------
-// Authentication & Session Middleware
+// Authentication, Session & Security Middleware
 // -----------------------------------------------------------------------------
 const FACULTY_PASSCODES = ['FACULTY2026', 'CAMPUS-FACULTY-2026', 'TPO-ADMIN-2026'];
+const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+$/;
+
+// Cookie management helpers
+function parseCookies(req) {
+  const list = {};
+  const cookieHeader = req.headers && req.headers.cookie;
+  if (cookieHeader) {
+    cookieHeader.split(';').forEach(cookie => {
+      const parts = cookie.split('=');
+      const key = parts.shift().trim();
+      const val = parts.join('=').trim();
+      if (key) {
+        try {
+          list[key] = decodeURIComponent(val);
+        } catch (e) {
+          list[key] = val;
+        }
+      }
+    });
+  }
+  return list;
+}
+
+function setSessionCookie(res, token) {
+  const isProd = process.env.NODE_ENV === 'production';
+  const cookieParts = [
+    `spp_session=${encodeURIComponent(token)}`,
+    'Path=/',
+    'HttpOnly',
+    'SameSite=Lax',
+    `Max-Age=${30 * 24 * 60 * 60}`
+  ];
+  if (isProd) {
+    cookieParts.push('Secure');
+  }
+  res.setHeader('Set-Cookie', cookieParts.join('; '));
+}
+
+function clearSessionCookie(res) {
+  res.setHeader('Set-Cookie', 'spp_session=; Path=/; HttpOnly; SameSite=Lax; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0');
+}
+
+// In-Memory Login Rate Limiter (5 attempts / 15 minutes window)
+const LOGIN_ATTEMPTS_LIMIT = 5;
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const loginAttempts = new Map();
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, record] of loginAttempts.entries()) {
+    if (now > record.resetTime) {
+      loginAttempts.delete(key);
+    }
+  }
+}, 5 * 60 * 1000).unref();
+
+function getRateLimitKey(ip, email) {
+  const cleanIp = (ip || 'unknown').replace(/[^a-zA-Z0-9.:_-]/g, '');
+  const cleanEmail = (email || '').toLowerCase().trim();
+  return `${cleanIp}__${cleanEmail}`;
+}
+
+function checkLoginRateLimit(ip, email) {
+  const key = getRateLimitKey(ip, email);
+  const now = Date.now();
+  const record = loginAttempts.get(key);
+
+  if (!record || now > record.resetTime) {
+    return { limited: false, remaining: LOGIN_ATTEMPTS_LIMIT };
+  }
+
+  if (record.count >= LOGIN_ATTEMPTS_LIMIT) {
+    const retryAfterSec = Math.max(1, Math.ceil((record.resetTime - now) / 1000));
+    return { limited: true, retryAfterSec };
+  }
+
+  return { limited: false, remaining: LOGIN_ATTEMPTS_LIMIT - record.count };
+}
+
+function recordFailedLogin(ip, email) {
+  const key = getRateLimitKey(ip, email);
+  const now = Date.now();
+  const record = loginAttempts.get(key);
+
+  if (!record || now > record.resetTime) {
+    loginAttempts.set(key, { count: 1, resetTime: now + LOGIN_WINDOW_MS });
+  } else {
+    record.count += 1;
+  }
+}
+
+function resetFailedLogin(ip, email) {
+  const key = getRateLimitKey(ip, email);
+  loginAttempts.delete(key);
+}
+
+// Input validation helpers
+function validateEmail(email) {
+  if (!email || typeof email !== 'string') return false;
+  const clean = email.trim();
+  if (clean.length < 5 || clean.length > 120) return false;
+  return EMAIL_REGEX.test(clean);
+}
+
+function sanitizeText(str) {
+  if (!str || typeof str !== 'string') return '';
+  return str.replace(/<[^>]*>?/gm, '').trim();
+}
 
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'] || req.headers['x-auth-token'] || req.headers['x-access-token'] || req.headers['x-user-token'];
+  const cookies = parseCookies(req);
   let token = null;
 
   if (authHeader) {
@@ -53,10 +162,12 @@ function authenticateToken(req, res, next) {
     } else {
       token = authHeader.trim();
     }
+  } else if (cookies['spp_session']) {
+    token = cookies['spp_session'].trim();
   } else if (req.query && req.query.token) {
-    token = req.query.token;
+    token = req.query.token.trim();
   } else if (req.body && req.body.token) {
-    token = req.body.token;
+    token = req.body.token.trim();
   }
 
   if (!token) {
@@ -888,18 +999,24 @@ function saveStudentProfileData(userId, data) {
 // -----------------------------------------------------------------------------
 app.post(['/api/auth/register', '/api/auth/signup'], (req, res) => {
   try {
-    const { email, password, fullName, role, rollNo, department, facultyKey, phone } = req.body;
+    const { email, password, fullName, role, rollNo, department, facultyKey, phone, currentYear, semester } = req.body;
 
     const cleanEmail = (email || '').trim().toLowerCase();
     const cleanPass = (password || '').trim();
     const cleanRole = (role || 'student').trim().toLowerCase();
-    const cleanName = (fullName || cleanEmail.split('@')[0]).trim();
+    const cleanName = sanitizeText(fullName || cleanEmail.split('@')[0]);
 
     if (!cleanEmail || !cleanPass) {
       return res.status(400).json({ success: false, error: 'Email and password are required.' });
     }
-    if (cleanPass.length < 6) {
-      return res.status(400).json({ success: false, error: 'Password must be at least 6 characters.' });
+    if (!validateEmail(cleanEmail)) {
+      return res.status(400).json({ success: false, error: 'Please enter a valid email address.' });
+    }
+    if (cleanPass.length < 6 || cleanPass.length > 128) {
+      return res.status(400).json({ success: false, error: 'Password must be between 6 and 128 characters.' });
+    }
+    if (!['student', 'faculty', 'officer'].includes(cleanRole)) {
+      return res.status(400).json({ success: false, error: 'Invalid institutional role specified.' });
     }
 
     // Role enforcement with Institutional Passcode
@@ -917,6 +1034,14 @@ app.post(['/api/auth/register', '/api/auth/signup'], (req, res) => {
     const existingUser = db.prepare('SELECT id FROM users WHERE email = ?').get(cleanEmail);
     if (existingUser) {
       return res.status(409).json({ success: false, error: 'An account with this email address already exists.' });
+    }
+
+    if (assignedRole === 'student' && rollNo && rollNo.trim()) {
+      const cleanRollNo = rollNo.trim();
+      const existingRoll = db.prepare('SELECT id FROM users WHERE LOWER(roll_no) = LOWER(?)').get(cleanRollNo);
+      if (existingRoll) {
+        return res.status(409).json({ success: false, error: `An account with Roll Number "${cleanRollNo}" already exists.` });
+      }
     }
 
     const newId = (assignedRole === 'student' ? 'std_' : (assignedRole === 'faculty' ? 'fac_' : 'tpo_')) + Date.now().toString(36);
@@ -945,8 +1070,8 @@ app.post(['/api/auth/register', '/api/auth/signup'], (req, res) => {
           'B.Tech',
           department || 'Computer Science & Engineering',
           department || 'CSE',
-          '1st Semester',
-          '1st Year',
+          semester || '1st Semester',
+          currentYear || '1st Year',
           new Date().getFullYear() - 3,
           new Date().getFullYear() + 1,
           'Hyderabad',
@@ -992,6 +1117,9 @@ app.post(['/api/auth/register', '/api/auth/signup'], (req, res) => {
 
     const token = insertTx();
 
+    // Set secure HttpOnly session cookie
+    setSessionCookie(res, token);
+
     res.status(201).json({
       success: true,
       message: 'Account created successfully',
@@ -1023,6 +1151,21 @@ app.post('/api/auth/login', (req, res) => {
       return res.status(400).json({ success: false, error: 'Email and password are required.' });
     }
 
+    // Rate Limiting Check
+    const rateCheck = checkLoginRateLimit(req.ip, cleanEmail);
+    if (rateCheck.limited) {
+      return res.status(429).json({
+        success: false,
+        error: `Too many failed login attempts. Please try again after ${rateCheck.retryAfterSec} seconds.`,
+        retryAfter: rateCheck.retryAfterSec
+      });
+    }
+
+    if (!validateEmail(cleanEmail)) {
+      recordFailedLogin(req.ip, cleanEmail);
+      return res.status(401).json({ success: false, error: 'Invalid email or password. Please check your credentials.' });
+    }
+
     const user = db.prepare(`
       SELECT id, email, password_hash, role, full_name, roll_no, department, phone, avatar
       FROM users
@@ -1030,17 +1173,21 @@ app.post('/api/auth/login', (req, res) => {
     `).get(cleanEmail);
 
     if (!user) {
-      return res.status(401).json({ success: false, error: 'Account not found. Please verify your email or register.' });
+      recordFailedLogin(req.ip, cleanEmail);
+      return res.status(401).json({ success: false, error: 'Invalid email or password. Please check your credentials.' });
     }
 
     const passwordValid = bcrypt.compareSync(cleanPass, user.password_hash);
     if (!passwordValid) {
-      return res.status(401).json({ success: false, error: 'Invalid password. Please check your credentials.' });
+      recordFailedLogin(req.ip, cleanEmail);
+      return res.status(401).json({ success: false, error: 'Invalid email or password. Please check your credentials.' });
     }
+
+    // Login succeeded: reset failed attempts
+    resetFailedLogin(req.ip, cleanEmail);
 
     // Role verification: If user specifically selected a different role tab that doesn't match their database role
     if (roleHint && roleHint !== user.role) {
-      // Allow login but enforce actual role from database
       console.log(`[Auth Login] User ${user.email} logged in with role hint ${roleHint}, enforcing assigned DB role: ${user.role}`);
     }
 
@@ -1051,6 +1198,9 @@ app.post('/api/auth/login', (req, res) => {
       INSERT INTO sessions (token, user_id, role, expires_at)
       VALUES (?, ?, ?, ?)
     `).run(token, user.id, user.role, expiresAt);
+
+    // Set secure HttpOnly session cookie
+    setSessionCookie(res, token);
 
     // Fetch student profile if applicable
     let profile = null;
@@ -1106,6 +1256,7 @@ app.post('/api/auth/logout', (req, res) => {
   if (req.sessionToken) {
     db.prepare('DELETE FROM sessions WHERE token = ?').run(req.sessionToken);
   }
+  clearSessionCookie(res);
   res.json({ success: true, message: 'Logged out successfully' });
 });
 
@@ -1113,6 +1264,9 @@ app.post('/api/auth/logout', (req, res) => {
 // 3. Complete Application State Endpoint (/api/state)
 // -----------------------------------------------------------------------------
 app.get('/api/state', (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ success: false, error: 'Authentication required. Please log in.' });
+  }
   try {
     // 1. Load users & student profiles
     const users = db.prepare('SELECT id, email, role, full_name, roll_no, department, phone, avatar FROM users').all();
@@ -1440,7 +1594,11 @@ app.get('/api/state', (req, res) => {
       nextMeeting: n.next_meeting
     }));
 
-    const facultyInterventions = db.prepare('SELECT * FROM faculty_interventions').all().map(i => ({
+    let interventionsRows = db.prepare('SELECT * FROM faculty_interventions').all();
+    if (currentStudentId) {
+      interventionsRows = interventionsRows.filter(i => i.student_id === currentStudentId);
+    }
+    const facultyInterventions = interventionsRows.map(i => ({
       id: i.id,
       studentId: i.student_id,
       studentName: i.student_name,
@@ -1456,7 +1614,11 @@ app.get('/api/state', (req, res) => {
     }));
 
     // 5. Notifications & Audit
-    const notifications = db.prepare('SELECT * FROM notifications ORDER BY created_at DESC').all().map(n => ({
+    let notifsRows = db.prepare('SELECT * FROM notifications ORDER BY created_at DESC').all();
+    if (currentStudentId) {
+      notifsRows = notifsRows.filter(n => n.user_id === currentStudentId || n.target_role === 'student' || n.target_role === 'all');
+    }
+    const notifications = notifsRows.map(n => ({
       id: n.id,
       userId: n.user_id,
       category: n.category,
@@ -1468,7 +1630,11 @@ app.get('/api/state', (req, res) => {
       actionUrl: n.action_url
     }));
 
-    const auditLog = db.prepare('SELECT * FROM audit_logs ORDER BY timestamp DESC LIMIT 50').all().map(a => ({
+    let auditRows = db.prepare('SELECT * FROM audit_logs ORDER BY timestamp DESC LIMIT 50').all();
+    if (currentStudentId) {
+      auditRows = auditRows.filter(a => a.target === req.user.email || (a.user_role === 'student' && a.user_name === req.user.fullName));
+    }
+    const auditLog = auditRows.map(a => ({
       id: a.id,
       action: a.action,
       userRole: a.user_role,
@@ -1510,7 +1676,16 @@ app.get('/api/state', (req, res) => {
       data: {
         roles: {
           student: rolesStudent,
-          faculty: {
+          faculty: (req.user && req.user.role === 'faculty') ? {
+            id: req.user.id,
+            name: req.user.fullName,
+            department: req.user.department || 'Computer Science & Engineering',
+            email: req.user.email,
+            role: 'faculty',
+            designation: 'Faculty Mentor',
+            menteeCount: formattedStudents.length,
+            avatar: req.user.avatar || 'FM'
+          } : {
             id: 'fac_001',
             name: 'Dr. Rajesh Sharma',
             department: 'Computer Science & Engineering',
@@ -1520,7 +1695,15 @@ app.get('/api/state', (req, res) => {
             menteeCount: formattedStudents.length,
             avatar: 'RS'
           },
-          officer: {
+          officer: (req.user && req.user.role === 'officer') ? {
+            id: req.user.id,
+            name: req.user.fullName,
+            department: req.user.department || 'Training & Placement Cell',
+            email: req.user.email,
+            role: 'officer',
+            designation: 'Training & Placement Officer',
+            avatar: req.user.avatar || 'TO'
+          } : {
             id: 'tpo_001',
             name: 'Prof. S. K. Nair',
             department: 'Training & Placement Cell',
@@ -1576,7 +1759,7 @@ const MIME_TYPES = {
   '.cpp': 'text/plain; charset=utf-8'
 };
 
-app.post('/api/upload', (req, res) => {
+app.post('/api/upload', requireRole(['student', 'faculty', 'officer']), (req, res) => {
   try {
     const { fileName, fileType, fileData } = req.body;
     if (!fileName || !fileData) {
@@ -1653,7 +1836,7 @@ app.get('/api/files/:filename', (req, res) => {
 // -----------------------------------------------------------------------------
 // 5. Assignments & Submissions CRUD Endpoints (/api/records & /api/assignments)
 // -----------------------------------------------------------------------------
-app.get(['/api/records/:type', '/api/assignments/:type'], (req, res) => {
+app.get(['/api/records/:type', '/api/assignments/:type'], requireRole(['student', 'faculty', 'officer']), (req, res) => {
   try {
     const type = req.params.type.toLowerCase();
     const queryId = req.query.id;
@@ -1663,7 +1846,10 @@ app.get(['/api/records/:type', '/api/assignments/:type'], (req, res) => {
       if (!assignment) {
         return res.status(404).json({ success: false, error: `Record '${queryId}' not found.` });
       }
-      const submissions = db.prepare('SELECT * FROM submissions WHERE assignment_id = ?').all(queryId);
+      let submissions = db.prepare('SELECT * FROM submissions WHERE assignment_id = ?').all(queryId);
+      if (req.user.role === 'student') {
+        submissions = submissions.filter(s => s.student_id === req.user.id);
+      }
       return res.json({ success: true, type, id: queryId, data: { ...assignment, submissions } });
     }
 
@@ -1679,9 +1865,12 @@ app.get(['/api/records/:type', '/api/assignments/:type'], (req, res) => {
     const data = assignments.map(a => {
       let meta = {};
       try { meta = JSON.parse(a.meta_json || '{}'); } catch (e) {}
-      const subs = subMap[a.id] || [];
+      const rawSubs = subMap[a.id] || [];
       const currentUserId = req.user ? req.user.id : null;
-      const primarySub = currentUserId ? subs.find(s => s.student_id === currentUserId) : (subs[0] || null);
+      const primarySub = currentUserId ? rawSubs.find(s => s.student_id === currentUserId) : (rawSubs[0] || null);
+      const subs = (req.user && req.user.role === 'student')
+        ? rawSubs.filter(s => s.student_id === currentUserId)
+        : rawSubs;
 
       return {
         ...meta,
@@ -1743,14 +1932,17 @@ app.get(['/api/records/:type', '/api/assignments/:type'], (req, res) => {
 });
 
 // Single assignment GET
-app.get(['/api/records/:type/:id', '/api/assignments/:type/:id'], (req, res) => {
+app.get(['/api/records/:type/:id', '/api/assignments/:type/:id'], requireRole(['student', 'faculty', 'officer']), (req, res) => {
   try {
     const { type, id } = req.params;
     const assignment = db.prepare('SELECT * FROM assignments WHERE type = ? AND id = ?').get(type.toLowerCase(), id);
     if (!assignment) {
       return res.status(404).json({ success: false, error: `Assignment '${id}' not found.` });
     }
-    const submissions = db.prepare('SELECT * FROM submissions WHERE assignment_id = ?').all(id);
+    let submissions = db.prepare('SELECT * FROM submissions WHERE assignment_id = ?').all(id);
+    if (req.user.role === 'student') {
+      submissions = submissions.filter(s => s.student_id === req.user.id);
+    }
     res.json({ success: true, type, id, data: { ...assignment, submissions } });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -2079,7 +2271,7 @@ app.delete(['/api/records/:type/:id', '/api/assignments/:type/:id'], requireRole
 // -----------------------------------------------------------------------------
 // 6. Students & Profiles Endpoints (/api/students)
 // -----------------------------------------------------------------------------
-app.get('/api/students', (req, res) => {
+app.get('/api/students', requireRole(['faculty', 'officer']), (req, res) => {
   try {
     const students = db.prepare(`
       SELECT sp.*, u.full_name, u.email, u.roll_no, u.department, u.phone, u.avatar
@@ -2316,9 +2508,16 @@ function seedExistingStudentTasks() {
 }
 seedExistingStudentTasks();
 
-app.get('/api/tasks', (req, res) => {
+app.get('/api/tasks', requireRole(['student', 'faculty', 'officer']), (req, res) => {
   try {
-    const studentId = req.query.studentId || (req.user && req.user.role === 'student' ? req.user.id : null);
+    let studentId = req.query.studentId;
+    if (req.user.role === 'student') {
+      if (studentId && studentId !== req.user.id) {
+        return res.status(403).json({ success: false, error: 'Access denied: Students cannot access tasks of other students.' });
+      }
+      studentId = req.user.id;
+    }
+
     if (studentId) {
       ensureDefaultStudentTasks(studentId);
     }
@@ -2405,7 +2604,7 @@ app.post('/api/tasks', requireRole(['student', 'faculty', 'officer']), (req, res
   }
 });
 
-app.put('/api/tasks/:id/status', (req, res) => {
+app.put('/api/tasks/:id/status', requireRole(['student', 'faculty', 'officer']), (req, res) => {
   try {
     const { id } = req.params;
     const task = db.prepare('SELECT * FROM mentor_tasks WHERE id = ?').get(id);
@@ -2426,7 +2625,7 @@ app.put('/api/tasks/:id/status', (req, res) => {
   }
 });
 
-app.delete('/api/tasks/:id', (req, res) => {
+app.delete('/api/tasks/:id', requireRole(['student', 'faculty', 'officer']), (req, res) => {
   try {
     const { id } = req.params;
     const task = db.prepare('SELECT * FROM mentor_tasks WHERE id = ?').get(id);
@@ -2445,7 +2644,7 @@ app.delete('/api/tasks/:id', (req, res) => {
   }
 });
 
-app.get('/api/mentor-notes', (req, res) => {
+app.get('/api/mentor-notes', requireRole(['faculty', 'officer']), (req, res) => {
   try {
     const notes = db.prepare('SELECT * FROM mentor_notes ORDER BY date DESC').all();
     res.json({ success: true, count: notes.length, data: notes });
@@ -2475,7 +2674,7 @@ app.post('/api/mentor-notes', requireRole(['faculty', 'officer']), (req, res) =>
 // -----------------------------------------------------------------------------
 // 8. Faculty Interventions Endpoints (/api/interventions)
 // -----------------------------------------------------------------------------
-app.get('/api/interventions', (req, res) => {
+app.get('/api/interventions', requireRole(['faculty', 'officer']), (req, res) => {
   try {
     const interventions = db.prepare('SELECT * FROM faculty_interventions ORDER BY date DESC').all();
     res.json({ success: true, count: interventions.length, data: interventions });
@@ -2628,9 +2827,15 @@ app.post('/api/drives', requireRole(['officer']), (req, res) => {
   }
 });
 
-app.get('/api/applications', (req, res) => {
+app.get('/api/applications', requireRole(['student', 'faculty', 'officer']), (req, res) => {
   try {
-    const studentId = req.query.studentId || (req.user && req.user.role === 'student' ? req.user.id : null);
+    let studentId = req.query.studentId;
+    if (req.user.role === 'student') {
+      if (studentId && studentId !== req.user.id) {
+        return res.status(403).json({ success: false, error: 'Access denied: Students cannot access applications of other students.' });
+      }
+      studentId = req.user.id;
+    }
     const sql = `
       SELECT 
         da.id, da.drive_id as driveId, da.student_id as studentId, da.student_name as studentName,
@@ -2650,14 +2855,9 @@ app.get('/api/applications', (req, res) => {
   }
 });
 
-app.post('/api/applications', (req, res) => {
+app.post('/api/applications', requireRole(['student']), (req, res) => {
   try {
     const { driveId } = req.body;
-
-    // SECURITY: Require authentication - no fallback to body parameters
-    if (!req.user) {
-      return res.status(401).json({ success: false, error: 'Authentication required to apply for campus placement drives.' });
-    }
 
     // SECURITY: Students can only apply for themselves
     if (req.user.role === 'student' && req.body.studentId && req.body.studentId !== req.user.id) {
@@ -3062,9 +3262,12 @@ app.post('/api/ml/predict-placement', (req, res) => {
   }
 });
 
-app.get('/api/ml/history/:studentId', (req, res) => {
+app.get('/api/ml/history/:studentId', requireRole(['student', 'faculty', 'officer']), (req, res) => {
   try {
     const studentId = req.params.studentId;
+    if (req.user.role === 'student' && req.user.id !== studentId) {
+      return res.status(403).json({ success: false, error: 'Access denied: Students can only view their own ML prediction history.' });
+    }
     const history = db.prepare('SELECT * FROM ml_predictions WHERE student_id = ? ORDER BY created_at DESC').all(studentId);
 
     const data = history.map(h => ({
@@ -3088,7 +3291,7 @@ app.get('/api/ml/history/:studentId', (req, res) => {
 // -----------------------------------------------------------------------------
 // 12. Dynamic Database-Driven KPI Analytics (/api/stats)
 // -----------------------------------------------------------------------------
-app.get('/api/stats', (req, res) => {
+app.get('/api/stats', requireRole(['student', 'faculty', 'officer']), (req, res) => {
   try {
     const totalStudents = db.prepare("SELECT COUNT(*) as count FROM users WHERE role = 'student'").get().count;
     const placedStudents = db.prepare("SELECT COUNT(*) as count FROM student_profiles WHERE placement_status = 'Placed'").get().count;
@@ -3123,7 +3326,7 @@ app.get('/api/stats', (req, res) => {
 // -----------------------------------------------------------------------------
 // 13. Student Report Card Upload & Extractor Endpoint (/api/student/marksheet/upload)
 // -----------------------------------------------------------------------------
-app.post('/api/student/marksheet/upload', (req, res) => {
+app.post('/api/student/marksheet/upload', requireRole(['student']), (req, res) => {
   try {
     const { fileName, fileData, semester, academicYear } = req.body;
 
@@ -3217,9 +3420,9 @@ app.post('/api/student/marksheet/upload', (req, res) => {
 });
 
 // POST /api/student/marksheet/verify - Student confirms reviewed extracted marks
-app.post('/api/student/marksheet/verify', (req, res) => {
+app.post('/api/student/marksheet/verify', requireRole(['student']), (req, res) => {
   try {
-    const studentId = req.user ? req.user.id : (req.body.studentId || null);
+    const studentId = req.user.id;
     if (!studentId) {
       return res.status(401).json({ success: false, error: 'Authentication required. Please log in.' });
     }
@@ -3301,10 +3504,7 @@ app.post('/api/student/marksheet/verify', (req, res) => {
 // -----------------------------------------------------------------------------
 // 14. Student Academic Profile Setup (/api/student/academic-profile)
 // -----------------------------------------------------------------------------
-app.get('/api/student/academic-profile', (req, res) => {
-  if (!req.user) {
-    return res.status(401).json({ success: false, error: 'Authentication required. Please log in.' });
-  }
+app.get('/api/student/academic-profile', requireRole(['student']), (req, res) => {
   try {
     const profile = getFormattedStudentProfile(req.user.id);
     res.json({ success: true, profile, data: profile });
@@ -3313,12 +3513,9 @@ app.get('/api/student/academic-profile', (req, res) => {
   }
 });
 
-app.post('/api/student/academic-profile', (req, res) => {
+app.post('/api/student/academic-profile', requireRole(['student']), (req, res) => {
   try {
-    const studentId = req.user ? req.user.id : req.body.studentId;
-    if (!studentId) {
-      return res.status(401).json({ success: false, error: 'Authentication required. Please log in.' });
-    }
+    const studentId = req.user.id;
 
     const {
       year,
@@ -3442,7 +3639,7 @@ app.post('/api/student/academic-profile', (req, res) => {
 // -----------------------------------------------------------------------------
 
 // 1. Get subjects & assigned faculty
-app.get('/api/faculty/subjects', (req, res) => {
+app.get('/api/faculty/subjects', requireRole(['student', 'faculty', 'officer']), (req, res) => {
   try {
     const subjects = db.prepare('SELECT id, faculty_id, faculty_name, subject, department FROM faculty_subject_assignments ORDER BY subject ASC').all();
     const faculty = db.prepare("SELECT id, full_name, email, department, avatar FROM users WHERE role = 'faculty' ORDER BY full_name ASC").all();
@@ -3455,7 +3652,7 @@ app.get('/api/faculty/subjects', (req, res) => {
 // 2. Get eligible students for group formation (defined earlier above /api/students/:id to prevent parameter shadow)
 
 // 3. Create Group Project (Student)
-app.post('/api/projects', (req, res) => {
+app.post('/api/projects', requireRole(['student']), (req, res) => {
   try {
     const currentUser = req.user;
     if (!currentUser) {
