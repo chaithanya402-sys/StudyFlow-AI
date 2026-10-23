@@ -71,6 +71,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Student Navigation: Exact 10 Main Navigation Items Hierarchy
   const studentNavStructure = [
     { type: 'item', title: 'Dashboard', route: '/student/dashboard', icon: icons.dashboard },
+    { type: 'item', title: 'My Profile', route: '/student/profile', icon: icons.studentProfile },
     { type: 'item', title: 'My Tasks', route: '/student/tasks', icon: icons.tasks },
     { type: 'item', title: 'Group Projects', route: '/student/projects', icon: icons.projects },
     {
@@ -420,9 +421,79 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  // Header Profile Dropdown Controls
+  window.toggleUserDropdown = function(event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    const dropdown = document.getElementById('top-user-dropdown');
+    const btn = document.getElementById('top-avatar-btn');
+    if (!dropdown) return;
+    const isVisible = dropdown.style.display === 'block';
+    dropdown.style.display = isVisible ? 'none' : 'block';
+    if (btn) btn.setAttribute('aria-expanded', !isVisible);
+  };
+
+  window.closeUserDropdown = function() {
+    const dropdown = document.getElementById('top-user-dropdown');
+    const btn = document.getElementById('top-avatar-btn');
+    if (dropdown) dropdown.style.display = 'none';
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+  };
+
+  window.handleUserProfileNavigate = function() {
+    window.closeUserDropdown();
+    const verifiedRole = window._verifiedRole || store.getActiveRole() || 'student';
+    if (verifiedRole === 'student') {
+      window.navigateToRoute('/student/profile');
+    } else if (verifiedRole === 'faculty') {
+      window.navigateToRoute('/faculty/profile');
+    } else {
+      window.navigateToRoute('/officer/overview');
+    }
+  };
+
+  window.handleEditProfileFromDropdown = function() {
+    window.closeUserDropdown();
+    const verifiedRole = window._verifiedRole || store.getActiveRole() || 'student';
+    if (verifiedRole === 'student') {
+      if (typeof window.openEditProfileModal === 'function') {
+        window.openEditProfileModal();
+      } else {
+        window.navigateToRoute('/student/profile');
+      }
+    } else if (verifiedRole === 'faculty') {
+      window.navigateToRoute('/faculty/profile');
+    } else {
+      window.navigateToRoute('/officer/overview');
+    }
+  };
+
+  window.handleQuickDashboardNavigate = function() {
+    window.closeUserDropdown();
+    const verifiedRole = window._verifiedRole || store.getActiveRole() || 'student';
+    const targetRoute = roleNavConfig[verifiedRole]?.defaultRoute || '/student/dashboard';
+    window.navigateToRoute(targetRoute);
+  };
+
+  // Close dropdown on outside click or escape key
+  document.addEventListener('click', (e) => {
+    const wrap = document.getElementById('header-user-menu-wrap');
+    if (wrap && !wrap.contains(e.target)) {
+      window.closeUserDropdown();
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      window.closeUserDropdown();
+    }
+  });
+
   // User Profile Click in Sidebar
   window.handleSidebarUserClick = function() {
-    const role = store.getActiveRole();
+    const role = window._verifiedRole || store.getActiveRole() || 'student';
     if (role === 'student') {
       window.navigateToRoute('/student/profile');
     } else if (role === 'faculty') {
@@ -432,14 +503,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   };
 
-  // Sign Out Handler
+  // Comprehensive Sign Out Handler
   window.handleLogout = async function() {
-    if (window.SupabaseAuth) {
-      await window.SupabaseAuth.signOut();
-    } else {
+    try {
+      if (window.StudyFlowAuth && typeof window.StudyFlowAuth.signOut === 'function') {
+        await window.StudyFlowAuth.signOut();
+        return;
+      }
+      if (window.SupabaseAuth && typeof window.SupabaseAuth.signOut === 'function') {
+        await window.SupabaseAuth.signOut();
+        return;
+      }
+      // Direct session termination API
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' }
+      }).catch(() => {});
+    } catch (err) {
+      console.warn('[Logout] Error during sign out:', err);
+    } finally {
+      localStorage.removeItem('spp_auth_token');
       localStorage.removeItem('spp_user_email');
       localStorage.removeItem('spp_user_role');
       localStorage.removeItem('spp_user_name');
+      localStorage.removeItem('spp_user_id');
       window.location.href = 'login.html';
     }
   };
@@ -530,6 +618,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         initials = (displayName && displayName !== 'User') ? displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : (profile.avatar || 'US');
       }
       topAvatarCircle.textContent = initials;
+
+      // Update interactive dropdown user header
+      const dropAvatar = document.getElementById('dropdown-avatar-circle');
+      const dropName = document.getElementById('dropdown-user-name');
+      const dropEmail = document.getElementById('dropdown-user-email');
+      const dropBadge = document.getElementById('dropdown-role-badge');
+      if (dropAvatar) dropAvatar.textContent = initials;
+      if (dropName) dropName.textContent = displayName;
+      if (dropEmail) dropEmail.textContent = emailLabel?.textContent || (verifiedRole === 'student' ? 'student@college.edu' : (verifiedRole === 'faculty' ? 'faculty@college.edu' : 'officer@college.edu'));
+      if (dropBadge) {
+        dropBadge.textContent = verifiedRole === 'student' ? 'Student Portal' : (verifiedRole === 'faculty' ? 'Faculty Mentor' : 'T&P Officer');
+      }
     }
     if (roleSelect && roleSelect.value !== verifiedRole) {
       roleSelect.value = verifiedRole;

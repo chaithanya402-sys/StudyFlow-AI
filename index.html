@@ -50,7 +50,7 @@
       </div>
 
       <!-- User Profile Footer Fixed at Bottom matching mockup -->
-      <div class="sidebar-user" id="sidebar-user-footer" onclick="handleSidebarUserClick()" title="Profile & Settings">
+      <div class="sidebar-user" id="sidebar-user-footer" onclick="handleSidebarUserClick()" title="View Profile">
         <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;">
           <div class="user-avatar-square" id="user-avatar-pill">S</div>
           <div class="user-details-wrap" style="min-width: 0; flex: 1;">
@@ -59,11 +59,13 @@
           </div>
         </div>
         <span class="user-role-badge-pill" id="user-role-badge-pill">Student</span>
-        <span class="sidebar-user-chevron" aria-hidden="true">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="9 18 15 12 9 6"></polyline>
+        <button type="button" class="sidebar-logout-btn" id="sidebar-logout-btn" onclick="event.stopPropagation(); handleLogout()" title="Sign Out" aria-label="Sign Out">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
           </svg>
-        </span>
+        </button>
       </div>
     </aside>
 
@@ -125,8 +127,77 @@
             </svg>
           </button>
 
-          <!-- User Avatar Pill -->
-          <div class="user-avatar-circle" id="top-avatar-circle" style="width: 32px; height: 32px; font-size: 11px;">ST</div>
+          <!-- Header User Profile & Dropdown Trigger -->
+          <div class="header-user-menu-wrap" id="header-user-menu-wrap">
+            <button type="button" class="btn-avatar-trigger" id="top-avatar-btn" onclick="toggleUserDropdown(event)" aria-haspopup="true" aria-expanded="false" title="Account & Profile Menu">
+              <div class="user-avatar-circle" id="top-avatar-circle" style="width: 32px; height: 32px; font-size: 11px;">ST</div>
+              <svg class="avatar-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+
+            <!-- Interactive Profile Dropdown Menu -->
+            <div class="header-profile-dropdown" id="top-user-dropdown" style="display: none;">
+              <div class="dropdown-user-header">
+                <div class="dropdown-avatar-circle" id="dropdown-avatar-circle">ST</div>
+                <div class="dropdown-user-info">
+                  <div class="dropdown-user-name" id="dropdown-user-name">Student Account</div>
+                  <div class="dropdown-user-email" id="dropdown-user-email">student@college.edu</div>
+                  <span class="dropdown-role-badge" id="dropdown-role-badge">Student Portal</span>
+                </div>
+              </div>
+
+              <div class="dropdown-divider"></div>
+
+              <div class="dropdown-menu-list">
+                <button type="button" class="dropdown-menu-item" onclick="handleUserProfileNavigate()">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                  <span>My Profile</span>
+                </button>
+
+                <button type="button" class="dropdown-menu-item" onclick="handleEditProfileFromDropdown()">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                  <span>Edit Profile</span>
+                </button>
+
+                <button type="button" class="dropdown-menu-item" onclick="handleQuickDashboardNavigate()">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>
+                  </svg>
+                  <span>Dashboard Overview</span>
+                </button>
+              </div>
+
+              <div class="dropdown-divider"></div>
+
+              <div class="dropdown-menu-list">
+                <button type="button" class="dropdown-menu-item signout-item" onclick="handleLogout()">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                  </svg>
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Standalone Visible Header Sign Out Button -->
+          <button type="button" class="btn-header-signout" id="btn-header-signout" onclick="handleLogout()" title="Sign Out of StudyFlow AI">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+            <span class="signout-label">Sign Out</span>
+          </button>
         </div>
       </header>
 
