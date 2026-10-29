@@ -150,6 +150,7 @@ function initSchema() {
       is_revision_requested INTEGER DEFAULT 0,
       published INTEGER DEFAULT 1,
       graded_date TEXT,
+      updated_at TEXT DEFAULT (datetime('now')),
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       UNIQUE(assignment_id, student_id)
     );
@@ -483,6 +484,50 @@ function initSchema() {
       }
     }
   }
+
+  // Assignment cohort targeting. Keep the legacy target_class value and infer a
+  // year where possible so existing records remain usable after migration.
+  const assignmentCols = db.prepare('PRAGMA table_info(assignments)').all().map(c => c.name);
+  for (const col of [
+    { name: 'target_year', def: 'TEXT DEFAULT NULL' },
+    { name: 'created_by', def: 'TEXT DEFAULT NULL' },
+    { name: 'attachments_json', def: "TEXT NOT NULL DEFAULT '[]'" }
+  ]) {
+    if (!assignmentCols.includes(col.name)) {
+      try { db.exec(`ALTER TABLE assignments ADD COLUMN ${col.name} ${col.def}`); } catch (e) {}
+    }
+  }
+  db.exec(`
+    UPDATE assignments SET target_year = CASE
+      WHEN LOWER(target_class) LIKE '%first year%' OR LOWER(target_class) LIKE '%1st year%' THEN '1st Year'
+      WHEN LOWER(target_class) LIKE '%second year%' OR LOWER(target_class) LIKE '%2nd year%' THEN '2nd Year'
+      WHEN LOWER(target_class) LIKE '%third year%' OR LOWER(target_class) LIKE '%3rd year%' THEN '3rd Year'
+      WHEN LOWER(target_class) LIKE '%fourth year%' OR LOWER(target_class) LIKE '%4th year%' OR LOWER(target_class) LIKE '%final year%' THEN '4th Year'
+      ELSE target_year END
+    WHERE target_year IS NULL
+  `);
+
+  // Safe runtime column migration for submissions
+  const existingSubCols = db.prepare('PRAGMA table_info(submissions)').all().map(c => c.name);
+  if (!existingSubCols.includes('updated_at')) {
+    try {
+      db.exec("ALTER TABLE submissions ADD COLUMN updated_at TEXT DEFAULT NULL");
+      db.exec("UPDATE submissions SET updated_at = submitted_date WHERE updated_at IS NULL");
+    } catch (e) {}
+  }
+
+  // Ensure assignments table stores clean template data without leaking specific student submissions
+  try {
+    db.exec(`
+      UPDATE assignments SET
+        student_status = 'Assigned',
+        student_marks = NULL,
+        submission_url = NULL,
+        submitted_date = NULL,
+        student_remarks = NULL
+      WHERE student_status != 'Assigned' OR submission_url IS NOT NULL OR student_remarks IS NOT NULL;
+    `);
+  } catch (e) {}
 
   // Ensure standard Faculty accounts and subject assignments are seeded
   ensureFacultySubjectAssignments();

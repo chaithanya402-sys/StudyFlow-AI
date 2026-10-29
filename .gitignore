@@ -19,5 +19,8 @@ backup_pre_sqlite/
 # Uploads
 uploads/rc_*
 uploads/sub_*
+uploads/
+data/
+.env
 
 

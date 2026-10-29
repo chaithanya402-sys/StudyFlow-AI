@@ -8,6 +8,17 @@ const { exec } = require('child_process');
 const { db } = require('./db.js');
 const { predictFinalExamScore, predictPlacementOutcome, getPlacementModelBenchmark, EXAM_METRICS, PLACEMENT_METRICS } = require('./mlEngine.js');
 
+// Load local development settings without requiring a runtime dependency.
+const envFile = path.join(__dirname, '.env');
+if (fs.existsSync(envFile)) {
+  for (const line of fs.readFileSync(envFile, 'utf8').split(/\r?\n/)) {
+    const match = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$/);
+    if (match && process.env[match[1]] === undefined) {
+      process.env[match[1]] = match[2].replace(/^(['"])(.*)\1$/, '$2');
+    }
+  }
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DIR = __dirname;
@@ -19,9 +30,15 @@ if (!fs.existsSync(UPLOADS_DIR)) {
 }
 
 // Middleware
-app.use(cors());
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,http://127.0.0.1:3000,http://localhost:8080,http://127.0.0.1:8080')
+  .split(',').map(origin => origin.trim()).filter(Boolean);
+app.use(cors({ origin: (origin, callback) => callback(null, !origin || allowedOrigins.includes(origin)), credentials: true }));
+app.use((req, res, next) => {
+  if (req.path === '/api/upload') return next();
+  return express.json({ limit: '1mb' })(req, res, next);
+});
+app.use('/api/upload', express.json({ limit: '35mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 // Helper: Open landing page on server start
 function openLandingPage(port) {
@@ -41,7 +58,7 @@ function openLandingPage(port) {
 // -----------------------------------------------------------------------------
 // Authentication, Session & Security Middleware
 // -----------------------------------------------------------------------------
-const FACULTY_PASSCODES = ['FACULTY2026', 'CAMPUS-FACULTY-2026', 'TPO-ADMIN-2026'];
+const FACULTY_PASSCODES = (process.env.FACULTY_PASSCODES || '').split(',').map(value => value.trim()).filter(Boolean);
 const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+$/;
 
 // Cookie management helpers
@@ -88,6 +105,23 @@ function clearSessionCookie(res) {
 const LOGIN_ATTEMPTS_LIMIT = 5;
 const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 const loginAttempts = new Map();
+const authRequestAttempts = new Map();
+function authRequestRateLimit(req, res, next) {
+  const bucket = req.path.includes('register') || req.path.includes('signup') ? 'register' : 'login';
+  const key = `${bucket}:${(req.ip || 'unknown').replace(/[^a-zA-Z0-9.:_-]/g, '')}`;
+  const now = Date.now();
+  let record = authRequestAttempts.get(key);
+  if (!record || now >= record.resetTime) {
+    record = { count: 0, resetTime: now + LOGIN_WINDOW_MS };
+    authRequestAttempts.set(key, record);
+  }
+  if (record.count >= 60) {
+    res.setHeader('Retry-After', Math.ceil((record.resetTime - now) / 1000));
+    return res.status(429).json({ success: false, error: 'Too many authentication attempts. Try again later.' });
+  }
+  record.count += 1;
+  next();
+}
 
 setInterval(() => {
   const now = Date.now();
@@ -95,6 +129,9 @@ setInterval(() => {
     if (now > record.resetTime) {
       loginAttempts.delete(key);
     }
+  }
+  for (const [key, record] of authRequestAttempts.entries()) {
+    if (now > record.resetTime) authRequestAttempts.delete(key);
   }
 }, 5 * 60 * 1000).unref();
 
@@ -152,7 +189,7 @@ function sanitizeText(str) {
 }
 
 function authenticateToken(req, res, next) {
-  const authHeader = req.headers['authorization'] || req.headers['x-auth-token'] || req.headers['x-access-token'] || req.headers['x-user-token'];
+  const authHeader = req.headers['authorization'];
   const cookies = parseCookies(req);
   let token = null;
 
@@ -164,10 +201,6 @@ function authenticateToken(req, res, next) {
     }
   } else if (cookies['spp_session']) {
     token = cookies['spp_session'].trim();
-  } else if (req.query && req.query.token) {
-    token = req.query.token.trim();
-  } else if (req.body && req.body.token) {
-    token = req.body.token.trim();
   }
 
   if (!token) {
@@ -226,9 +259,56 @@ function formatAssignment(a, subs = [], currentUserId = null) {
   if (!a) return null;
   let meta = {};
   try { meta = JSON.parse(a.meta_json || '{}'); } catch (e) {}
+
+  const normalizedSubs = subs.map(s => ({
+    id: s.id,
+    submissionId: s.id,
+    assignmentId: s.assignment_id || s.assignmentId || a.id,
+    assignmentType: s.assignment_type || s.assignmentType || a.type,
+    studentId: s.studentId || s.student_id,
+    studentName: s.studentName || s.student_name,
+    rollNo: s.rollNo || s.roll_no,
+    submittedDate: s.submittedDate || s.submitted_date,
+    updatedAt: s.updated_at || s.updatedAt || s.submittedDate || s.submitted_date,
+    status: s.status,
+    isLate: Boolean(s.isLate || s.is_late),
+    fileUrl: s.fileUrl || s.file_url || '',
+    fileName: s.fileName || s.file_name || (s.fileUrl || s.file_url ? (s.fileUrl || s.file_url).split('/').pop() : ''),
+    fileSize: s.fileSize || s.file_size || 0,
+    remarks: s.remarks !== undefined ? s.remarks : (s.studentRemarks || ''),
+    marks: s.marks !== undefined ? s.marks : null,
+    feedback: s.feedback || '',
+    strengths: s.strengths || '',
+    improvements: s.improvements || '',
+    nextSteps: s.nextSteps || s.next_steps || '',
+    isRevisionRequested: Boolean(s.isRevisionRequested || s.is_revision_requested),
+    published: s.published !== undefined ? Boolean(s.published) : true,
+    gradedDate: s.gradedDate || s.graded_date || null
+  }));
+
   const primarySub = currentUserId
-    ? subs.find(s => (s.studentId || s.student_id) === currentUserId)
-    : (subs[0] || null);
+    ? normalizedSubs.find(s => s.studentId === currentUserId)
+    : (normalizedSubs[0] || null);
+
+  const userSubs = currentUserId
+    ? normalizedSubs.filter(s => s.studentId === currentUserId)
+    : normalizedSubs;
+
+  const hasSub = Boolean(primarySub);
+  const effectiveStatus = hasSub ? primarySub.status : (currentUserId ? 'Assigned' : (a.student_status || 'Assigned'));
+  const effectiveMarks = hasSub && primarySub.marks !== null && primarySub.marks !== undefined ? primarySub.marks : (currentUserId ? null : a.student_marks);
+  const effectiveFileUrl = hasSub ? primarySub.fileUrl : (currentUserId ? null : a.submission_url);
+  const effectiveSubmittedDate = hasSub ? primarySub.submittedDate : (currentUserId ? null : a.submitted_date);
+  const effectiveUpdatedAt = hasSub ? primarySub.updatedAt : null;
+  const effectiveRemarks = hasSub ? primarySub.remarks : (currentUserId ? '' : (a.student_remarks || ''));
+  const effectiveFeedback = hasSub ? primarySub.feedback : (currentUserId ? '' : (a.feedback || ''));
+
+  const submittedFile = (hasSub && primarySub.fileUrl) ? {
+    originalName: primarySub.fileName || primarySub.fileUrl.split('/').pop(),
+    fileName: primarySub.fileName || primarySub.fileUrl.split('/').pop(),
+    downloadUrl: primarySub.fileUrl,
+    size: primarySub.fileSize || 0
+  } : null;
 
   return {
     ...meta,
@@ -240,6 +320,8 @@ function formatAssignment(a, subs = [], currentUserId = null) {
     professor: a.professor,
     department: a.department,
     targetClass: a.target_class,
+    targetYear: a.target_year || null,
+    attachments: (() => { try { return JSON.parse(a.attachments_json || '[]'); } catch (e) { return []; } })(),
     description: a.description,
     instructions: a.instructions,
     dueDate: a.due_date,
@@ -248,39 +330,74 @@ function formatAssignment(a, subs = [], currentUserId = null) {
     status: a.status,
     maxMarks: a.max_marks,
     marks: a.marks,
-    feedback: a.feedback,
-    studentStatus: primarySub ? (primarySub.status || primarySub.studentStatus) : (a.student_status || 'Assigned'),
-    studentMarks: primarySub && primarySub.marks !== null && primarySub.marks !== undefined ? primarySub.marks : a.student_marks,
-    submissionUrl: primarySub ? (primarySub.fileUrl || primarySub.file_url) : a.submission_url,
-    submittedDate: primarySub ? (primarySub.submittedDate || primarySub.submitted_date) : a.submitted_date,
-    studentRemarks: primarySub ? (primarySub.remarks || primarySub.studentRemarks) : a.student_remarks,
-    strengths: primarySub ? primarySub.strengths : a.strengths,
-    improvements: primarySub ? primarySub.improvements : a.improvements,
-    nextSteps: primarySub ? (primarySub.nextSteps || primarySub.next_steps) : a.next_steps,
-    isRevisionRequested: primarySub ? Boolean(primarySub.isRevisionRequested || primarySub.is_revision_requested) : Boolean(a.is_revision_requested),
-    gradedDate: primarySub ? (primarySub.gradedDate || primarySub.graded_date) : a.graded_date,
-    submissions: subs.map(s => ({
-      id: s.id,
-      studentId: s.studentId || s.student_id,
-      studentName: s.studentName || s.student_name,
-      rollNo: s.rollNo || s.roll_no,
-      submittedDate: s.submittedDate || s.submitted_date,
-      status: s.status,
-      isLate: Boolean(s.isLate || s.is_late),
-      fileUrl: s.fileUrl || s.file_url,
-      fileName: s.fileName || s.file_name,
-      fileSize: s.fileSize || s.file_size,
-      remarks: s.remarks,
-      marks: s.marks,
-      feedback: s.feedback,
-      strengths: s.strengths,
-      improvements: s.improvements,
-      nextSteps: s.nextSteps || s.next_steps,
-      isRevisionRequested: Boolean(s.isRevisionRequested || s.is_revision_requested),
-      published: s.published !== undefined ? Boolean(s.published) : true,
-      gradedDate: s.gradedDate || s.graded_date
-    }))
+    feedback: effectiveFeedback,
+    studentStatus: effectiveStatus,
+    studentMarks: effectiveMarks,
+    submissionUrl: effectiveFileUrl,
+    submittedFile,
+    submittedDate: effectiveSubmittedDate,
+    updatedAt: effectiveUpdatedAt,
+    studentRemarks: effectiveRemarks,
+    submissionId: primarySub ? primarySub.id : null,
+    strengths: hasSub ? primarySub.strengths : (currentUserId ? '' : (a.strengths || '')),
+    improvements: hasSub ? primarySub.improvements : (currentUserId ? '' : (a.improvements || '')),
+    nextSteps: hasSub ? primarySub.nextSteps : (currentUserId ? '' : (a.next_steps || '')),
+    isRevisionRequested: hasSub ? Boolean(primarySub.isRevisionRequested) : (currentUserId ? false : Boolean(a.is_revision_requested)),
+    gradedDate: hasSub ? primarySub.gradedDate : (currentUserId ? null : a.graded_date),
+    submissions: userSubs
   };
+}
+
+function normalizedYear(value) {
+  const text = String(value || '').toLowerCase();
+  const match = text.match(/(1st|first|2nd|second|3rd|third|4th|fourth|final)\s*year/);
+  if (!match) return '';
+  const key = match[1];
+  return key.startsWith('1') || key === 'first' ? '1st year'
+    : key.startsWith('2') || key === 'second' ? '2nd year'
+      : key.startsWith('3') || key === 'third' ? '3rd year' : '4th year';
+}
+
+function getStudentAssignmentTarget(userId) {
+  return db.prepare(`
+    SELECT sp.current_year, sp.branch, u.department
+    FROM student_profiles sp JOIN users u ON u.id = sp.user_id
+    WHERE sp.user_id = ?
+  `).get(userId);
+}
+
+function assignmentMatchesStudent(assignment, student) {
+  if (!student) return false;
+  if (String(assignment.status || '').toLowerCase() === 'draft') return false;
+  const isTargeted = Boolean(assignment.target_year || assignment.target_class);
+  if (!isTargeted) return true;
+  const studentYear = normalizedYear(student.current_year);
+  const targetYear = normalizedYear(assignment.target_year);
+  if (targetYear && studentYear !== targetYear) return false;
+  const norm = value => {
+    const text = String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (text.includes('computer') || text === 'cse') return 'cse';
+    if (text.includes('informationtechnology') || text === 'it') return 'it';
+    if (text.includes('electronics') || text === 'ece') return 'ece';
+    if (text.includes('electrical') || text === 'eee') return 'eee';
+    if (text.includes('mechanical')) return 'mechanical';
+    if (text.includes('civil')) return 'civil';
+    return text;
+  };
+  const studentClass = norm(student.branch);
+  const studentDepartment = norm(student.department);
+  const targetClass = norm(assignment.target_class);
+  const targetDepartment = norm(assignment.department);
+  const isAllClasses = /\ball\b/i.test(String(assignment.target_class || ''));
+  if (!isAllClasses && targetClass && !(studentClass === targetClass || studentClass.startsWith(targetClass) || targetClass.startsWith(studentClass))) return false;
+  if (!isAllClasses && targetDepartment && !(studentDepartment === targetDepartment || studentDepartment.startsWith(targetDepartment) || targetDepartment.startsWith(studentDepartment))) return false;
+  return true;
+}
+
+function filterAssignmentsForStudent(assignments, userId) {
+  if (!userId) return assignments;
+  const student = getStudentAssignmentTarget(userId);
+  return assignments.filter(assignment => assignmentMatchesStudent(assignment, student));
 }
 
 // -----------------------------------------------------------------------------
@@ -997,7 +1114,7 @@ function saveStudentProfileData(userId, data) {
 // -----------------------------------------------------------------------------
 // 2. Authentication Endpoints (/api/auth)
 // -----------------------------------------------------------------------------
-app.post(['/api/auth/register', '/api/auth/signup'], (req, res) => {
+app.post(['/api/auth/register', '/api/auth/signup'], authRequestRateLimit, (req, res) => {
   try {
     const { email, password, fullName, role, rollNo, department, facultyKey, phone, currentYear, semester } = req.body;
 
@@ -1141,7 +1258,7 @@ app.post(['/api/auth/register', '/api/auth/signup'], (req, res) => {
   }
 });
 
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', authRequestRateLimit, (req, res) => {
   try {
     const { email, password, roleHint } = req.body;
     const cleanEmail = (email || '').trim().toLowerCase();
@@ -1161,16 +1278,34 @@ app.post('/api/auth/login', (req, res) => {
       });
     }
 
-    if (!validateEmail(cleanEmail)) {
-      recordFailedLogin(req.ip, cleanEmail);
-      return res.status(401).json({ success: false, error: 'Invalid email or password. Please check your credentials.' });
+    let user = null;
+    if (cleanEmail.includes('@')) {
+      if (!validateEmail(cleanEmail)) {
+        recordFailedLogin(req.ip, cleanEmail);
+        return res.status(401).json({ success: false, error: 'Invalid email or password. Please check your credentials.' });
+      }
+      user = db.prepare(`
+        SELECT id, email, password_hash, role, full_name, roll_no, department, phone, avatar
+        FROM users
+        WHERE LOWER(email) = ?
+      `).get(cleanEmail);
+    } else {
+      // Login with Roll Number or Staff ID (case-insensitive)
+      if (roleHint) {
+        user = db.prepare(`
+          SELECT id, email, password_hash, role, full_name, roll_no, department, phone, avatar
+          FROM users
+          WHERE LOWER(roll_no) = ? AND role = ?
+        `).get(cleanEmail, roleHint);
+      }
+      if (!user) {
+        user = db.prepare(`
+          SELECT id, email, password_hash, role, full_name, roll_no, department, phone, avatar
+          FROM users
+          WHERE LOWER(roll_no) = ?
+        `).get(cleanEmail);
+      }
     }
-
-    const user = db.prepare(`
-      SELECT id, email, password_hash, role, full_name, roll_no, department, phone, avatar
-      FROM users
-      WHERE email = ?
-    `).get(cleanEmail);
 
     if (!user) {
       recordFailedLogin(req.ip, cleanEmail);
@@ -1185,6 +1320,8 @@ app.post('/api/auth/login', (req, res) => {
 
     // Login succeeded: reset failed attempts
     resetFailedLogin(req.ip, cleanEmail);
+    if (user.email) resetFailedLogin(req.ip, user.email.toLowerCase());
+    if (user.roll_no) resetFailedLogin(req.ip, user.roll_no.toLowerCase());
 
     // Role verification: If user specifically selected a different role tab that doesn't match their database role
     if (roleHint && roleHint !== user.role) {
@@ -1321,7 +1458,8 @@ app.get('/api/state', (req, res) => {
       : formattedStudents;
 
     // 2. Load assignments and submissions
-    const allAssignments = db.prepare('SELECT * FROM assignments').all();
+    let allAssignments = db.prepare('SELECT * FROM assignments').all();
+    allAssignments = filterAssignmentsForStudent(allAssignments, currentStudentId);
     const allSubmissions = db.prepare('SELECT * FROM submissions').all();
 
     const subsByAssignment = {};
@@ -1350,94 +1488,10 @@ app.get('/api/state', (req, res) => {
       });
     }
 
-    function formatAssignment(a) {
-      let meta = {};
-      try { meta = JSON.parse(a.meta_json || '{}'); } catch (e) {}
-      const subs = subsByAssignment[a.id] || [];
-      const primarySub = currentStudentId
-        ? subs.find(s => s.studentId === currentStudentId)
-        : (subs[0] || null);
-
-      const studentSubmissions = currentStudentId
-        ? subs.filter(s => s.studentId === currentStudentId)
-        : subs;
-
-      let effectiveStudentStatus = primarySub ? primarySub.status : 'Assigned';
-      let effectiveStudentMarks = primarySub && primarySub.marks !== null ? primarySub.marks : null;
-      let effectiveSubmissionUrl = primarySub ? primarySub.fileUrl : null;
-      let effectiveSubmittedDate = primarySub ? primarySub.submittedDate : null;
-      let effectiveRemarks = primarySub ? primarySub.remarks : '';
-      let effectiveFeedback = primarySub ? (primarySub.feedback || a.feedback || '') : (a.feedback || '');
-      let effectiveRevision = primarySub ? Boolean(primarySub.isRevisionRequested) : Boolean(a.is_revision_requested);
-
-      // If no explicit row in submissions table for currentStudentId, but assignment table has a legacy submission
-      if (!primarySub && currentStudentId) {
-        if (a.student_status === 'Submitted' || a.student_status === 'Graded' || a.student_status === 'Revision Requested' || a.submission_url || a.submitted_date) {
-          effectiveStudentStatus = a.student_status;
-          effectiveStudentMarks = a.student_marks !== null ? a.student_marks : (parseFloat(a.marks) || null);
-          effectiveSubmissionUrl = a.submission_url;
-          effectiveSubmittedDate = a.submitted_date;
-          effectiveRemarks = a.student_remarks || '';
-          effectiveRevision = Boolean(a.is_revision_requested) || (a.student_status === 'Revision Requested');
-          
-          studentSubmissions.push({
-            id: 'sub_' + a.id + '_' + currentStudentId,
-            assignmentId: a.id,
-            studentId: currentStudentId,
-            studentName: req.user ? req.user.fullName : 'Student',
-            rollNo: req.user ? req.user.rollNo : '',
-            submittedDate: effectiveSubmittedDate || a.created_at,
-            status: effectiveStudentStatus,
-            isLate: false,
-            fileUrl: effectiveSubmissionUrl || '',
-            fileName: effectiveSubmissionUrl ? effectiveSubmissionUrl.split('/').pop() : 'submission.pdf',
-            fileSize: 0,
-            remarks: effectiveRemarks,
-            marks: effectiveStudentMarks,
-            feedback: effectiveFeedback,
-            isRevisionRequested: effectiveRevision,
-            published: true,
-            gradedDate: a.graded_date || null
-          });
-        }
-      }
-
-      return {
-        ...meta,
-        id: a.id,
-        title: a.title,
-        subject: a.subject,
-        category: a.category,
-        professor: a.professor,
-        department: a.department,
-        targetClass: a.target_class,
-        description: a.description,
-        instructions: a.instructions,
-        dueDate: a.due_date,
-        dueTime: a.due_time,
-        priority: a.priority,
-        status: a.status,
-        maxMarks: a.max_marks,
-        marks: a.marks,
-        feedback: effectiveFeedback,
-        studentStatus: effectiveStudentStatus,
-        studentMarks: effectiveStudentMarks,
-        submissionUrl: effectiveSubmissionUrl,
-        submittedDate: effectiveSubmittedDate,
-        studentRemarks: effectiveRemarks,
-        strengths: primarySub ? primarySub.strengths : (a.strengths || ''),
-        improvements: primarySub ? primarySub.improvements : (a.improvements || ''),
-        nextSteps: primarySub ? primarySub.nextSteps : (a.next_steps || ''),
-        isRevisionRequested: effectiveRevision,
-        gradedDate: primarySub ? primarySub.gradedDate : (a.graded_date || null),
-        submissions: studentSubmissions
-      };
-    }
-
-    const facultyAssignments = allAssignments.filter(a => a.type === 'faculty').map(formatAssignment);
-    const labAssignments = allAssignments.filter(a => a.type === 'lab').map(formatAssignment);
-    const learningRecords = allAssignments.filter(a => a.type === 'learning').map(formatAssignment);
-    const practiceRecords = allAssignments.filter(a => a.type === 'practice').map(formatAssignment);
+    const facultyAssignments = allAssignments.filter(a => a.type === 'faculty').map(a => formatAssignment(a, subsByAssignment[a.id] || [], currentStudentId));
+    const labAssignments = allAssignments.filter(a => a.type === 'lab').map(a => formatAssignment(a, subsByAssignment[a.id] || [], currentStudentId));
+    const learningRecords = allAssignments.filter(a => a.type === 'learning').map(a => formatAssignment(a, subsByAssignment[a.id] || [], currentStudentId));
+    const practiceRecords = allAssignments.filter(a => a.type === 'practice').map(a => formatAssignment(a, subsByAssignment[a.id] || [], currentStudentId));
 
     // Fetch persistent group projects from group_projects table
     let groupProjectsRows = [];
@@ -1754,7 +1808,7 @@ const MIME_TYPES = {
   '.tar': 'application/x-tar',
   '.gz': 'application/gzip',
   '.txt': 'text/plain; charset=utf-8',
-  '.py': 'text/plain; charset=utf-8',
+    '.py': 'text/plain; charset=utf-8',
   '.java': 'text/plain; charset=utf-8',
   '.cpp': 'text/plain; charset=utf-8'
 };
@@ -1774,7 +1828,7 @@ app.post('/api/upload', requireRole(['student', 'faculty', 'officer']), (req, re
     }
 
     const ext = path.extname(fileName).toLowerCase();
-    const allowedExts = ['.pdf', '.doc', '.docx', '.zip', '.tar', '.gz', '.png', '.jpg', '.jpeg', '.txt', '.py', '.java', '.cpp', '.js', '.html', '.css', '.json'];
+    const allowedExts = ['.pdf', '.doc', '.docx', '.zip', '.tar', '.gz', '.png', '.jpg', '.jpeg', '.txt', '.py', '.java', '.cpp'];
     if (!allowedExts.includes(ext)) {
       return res.status(400).json({ success: false, error: `File type '${ext}' is not permitted.` });
     }
@@ -1819,6 +1873,17 @@ app.get('/api/files/:filename', (req, res) => {
     return res.status(400).json({ success: false, error: 'Invalid filename' });
   }
 
+  // Security: Check if file belongs to a student submission record
+  const sub = db.prepare('SELECT student_id FROM submissions WHERE file_url LIKE ? OR file_name = ?').get('%' + filename, filename);
+  if (sub) {
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: 'Authentication required to access submission files.' });
+    }
+    if (req.user.role === 'student' && sub.student_id !== req.user.id) {
+      return res.status(403).json({ success: false, error: 'Forbidden: You do not have access to another student\'s submission file.' });
+    }
+  }
+
   const targetPath = path.join(UPLOADS_DIR, filename);
   if (!fs.existsSync(targetPath)) {
     return res.status(404).json({ success: false, error: 'File not found' });
@@ -1828,8 +1893,9 @@ app.get('/api/files/:filename', (req, res) => {
   const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
   res.setHeader('Content-Type', contentType);
+  res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-  res.setHeader('Cache-Control', 'public, max-age=86400');
+  res.setHeader('Cache-Control', 'private, max-age=86400');
   fs.createReadStream(targetPath).pipe(res);
 });
 
@@ -1840,20 +1906,23 @@ app.get(['/api/records/:type', '/api/assignments/:type'], requireRole(['student'
   try {
     const type = req.params.type.toLowerCase();
     const queryId = req.query.id;
+    const currentUserId = req.user && req.user.role === 'student' ? req.user.id : null;
 
     if (queryId) {
-      const assignment = db.prepare('SELECT * FROM assignments WHERE type = ? AND id = ?').get(type, queryId);
+      const assignment = db.prepare('SELECT * FROM assignments WHERE type = ? AND id = ?').get(type, queryId) || db.prepare('SELECT * FROM assignments WHERE id = ?').get(queryId);
       if (!assignment) {
         return res.status(404).json({ success: false, error: `Record '${queryId}' not found.` });
       }
-      let submissions = db.prepare('SELECT * FROM submissions WHERE assignment_id = ?').all(queryId);
-      if (req.user.role === 'student') {
-        submissions = submissions.filter(s => s.student_id === req.user.id);
+      if (currentUserId && !assignmentMatchesStudent(assignment, getStudentAssignmentTarget(currentUserId))) {
+        return res.status(404).json({ success: false, error: `Record '${queryId}' not found.` });
       }
-      return res.json({ success: true, type, id: queryId, data: { ...assignment, submissions } });
+      let submissions = db.prepare('SELECT * FROM submissions WHERE assignment_id = ?').all(queryId);
+      const formatted = formatAssignment(assignment, submissions, currentUserId);
+      return res.json({ success: true, type, id: queryId, data: formatted });
     }
 
-    const assignments = db.prepare('SELECT * FROM assignments WHERE type = ?').all(type);
+    let assignments = db.prepare('SELECT * FROM assignments WHERE type = ?').all(type);
+    assignments = filterAssignmentsForStudent(assignments, currentUserId);
     const allSubs = db.prepare('SELECT * FROM submissions WHERE assignment_type = ?').all(type);
 
     const subMap = {};
@@ -1862,68 +1931,7 @@ app.get(['/api/records/:type', '/api/assignments/:type'], requireRole(['student'
       subMap[s.assignment_id].push(s);
     }
 
-    const data = assignments.map(a => {
-      let meta = {};
-      try { meta = JSON.parse(a.meta_json || '{}'); } catch (e) {}
-      const rawSubs = subMap[a.id] || [];
-      const currentUserId = req.user ? req.user.id : null;
-      const primarySub = currentUserId ? rawSubs.find(s => s.student_id === currentUserId) : (rawSubs[0] || null);
-      const subs = (req.user && req.user.role === 'student')
-        ? rawSubs.filter(s => s.student_id === currentUserId)
-        : rawSubs;
-
-      return {
-        ...meta,
-        id: a.id,
-        title: a.title,
-        subject: a.subject,
-        category: a.category,
-        professor: a.professor,
-        department: a.department,
-        targetClass: a.target_class,
-        description: a.description,
-        instructions: a.instructions,
-        dueDate: a.due_date,
-        dueTime: a.due_time,
-        priority: a.priority,
-        status: a.status,
-        maxMarks: a.max_marks,
-        marks: a.marks,
-        feedback: a.feedback,
-        studentStatus: primarySub ? primarySub.status : (a.student_status || 'Assigned'),
-        studentMarks: primarySub && primarySub.marks !== null ? primarySub.marks : a.student_marks,
-        submissionUrl: primarySub ? primarySub.file_url : a.submission_url,
-        submittedDate: primarySub ? primarySub.submitted_date : a.submitted_date,
-        studentRemarks: primarySub ? primarySub.remarks : a.student_remarks,
-        strengths: primarySub ? primarySub.strengths : a.strengths,
-        improvements: primarySub ? primarySub.improvements : a.improvements,
-        nextSteps: primarySub ? primarySub.next_steps : a.next_steps,
-        isRevisionRequested: primarySub ? Boolean(primarySub.is_revision_requested) : Boolean(a.is_revision_requested),
-        gradedDate: primarySub ? primarySub.graded_date : a.graded_date,
-        submissions: subs.map(s => ({
-          id: s.id,
-          studentId: s.student_id,
-          studentName: s.student_name,
-          rollNo: s.roll_no,
-          submittedDate: s.submitted_date,
-          status: s.status,
-          isLate: Boolean(s.is_late),
-          fileUrl: s.file_url,
-          fileName: s.file_name,
-          fileSize: s.file_size,
-          remarks: s.remarks,
-          marks: s.marks,
-          feedback: s.feedback,
-          strengths: s.strengths,
-          improvements: s.improvements,
-          nextSteps: s.next_steps,
-          isRevisionRequested: Boolean(s.is_revision_requested),
-          published: Boolean(s.published),
-          gradedDate: s.graded_date
-        }))
-      };
-    });
-
+    const data = assignments.map(a => formatAssignment(a, subMap[a.id] || [], currentUserId));
     res.json({ success: true, type, count: data.length, data });
   } catch (err) {
     console.error('[Records GET Error]:', err);
@@ -1935,15 +1943,18 @@ app.get(['/api/records/:type', '/api/assignments/:type'], requireRole(['student'
 app.get(['/api/records/:type/:id', '/api/assignments/:type/:id'], requireRole(['student', 'faculty', 'officer']), (req, res) => {
   try {
     const { type, id } = req.params;
-    const assignment = db.prepare('SELECT * FROM assignments WHERE type = ? AND id = ?').get(type.toLowerCase(), id);
+    const assignment = db.prepare('SELECT * FROM assignments WHERE type = ? AND id = ?').get(type.toLowerCase(), id) || db.prepare('SELECT * FROM assignments WHERE id = ?').get(id);
     if (!assignment) {
       return res.status(404).json({ success: false, error: `Assignment '${id}' not found.` });
     }
-    let submissions = db.prepare('SELECT * FROM submissions WHERE assignment_id = ?').all(id);
-    if (req.user.role === 'student') {
-      submissions = submissions.filter(s => s.student_id === req.user.id);
+    const studentId = req.user && req.user.role === 'student' ? req.user.id : null;
+    if (studentId && !assignmentMatchesStudent(assignment, getStudentAssignmentTarget(studentId))) {
+      return res.status(404).json({ success: false, error: `Assignment '${id}' not found.` });
     }
-    res.json({ success: true, type, id, data: { ...assignment, submissions } });
+    let submissions = db.prepare('SELECT * FROM submissions WHERE assignment_id = ?').all(id);
+    const currentUserId = req.user && req.user.role === 'student' ? req.user.id : null;
+    const formatted = formatAssignment(assignment, submissions, currentUserId);
+    res.json({ success: true, type, id, data: formatted });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -1954,48 +1965,80 @@ app.post(['/api/records/:type', '/api/assignments/:type'], requireRole(['faculty
   try {
     const type = req.params.type.toLowerCase();
     const body = req.body;
+    const targetYear = String(body.targetYear || '').trim();
+    const targetClass = String(body.targetClass || '').trim();
+    const dueDate = String(body.dueDate || '').trim();
+    const maxMarks = Number(body.maxMarks);
+    if (!String(body.title || '').trim() || !String(body.subject || '').trim() || !targetYear || !targetClass || !dueDate || !Number.isFinite(maxMarks) || maxMarks <= 0) {
+      return res.status(400).json({ success: false, error: 'Title, subject, year, class, due date, and positive maximum marks are required.' });
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dueDate) || Number.isNaN(Date.parse(`${dueDate}T${body.dueTime || '23:59'}:00`))) {
+      return res.status(400).json({ success: false, error: 'A valid due date and time are required.' });
+    }
+    const asList = value => value === undefined || value === null || value === '' ? [] : (Array.isArray(value) ? value : [value]);
+    const attachmentValues = [...asList(body.attachment), ...asList(body.attachments), ...asList(body.links)].filter(Boolean);
+    for (const value of attachmentValues) {
+      const url = typeof value === 'string' ? value : (value.url || value.href || '');
+      if (typeof value !== 'string' && (!value || typeof value !== 'object' || typeof url !== 'string' || !url)) {
+        return res.status(400).json({ success: false, error: 'Each attachment must be an http or https link.' });
+      }
+      try {
+        if (url && !['http:', 'https:'].includes(new URL(url).protocol)) throw new Error('protocol');
+      } catch (_) {
+        return res.status(400).json({ success: false, error: 'Attachment links must use http or https.' });
+      }
+    }
+    const department = String(body.department || targetClass).trim();
+    const structuredAttachments = attachmentValues.map(value => typeof value === 'string' ? { url: value } : value);
     const newId = body.id || (type === 'faculty' ? 'fa_' : (type === 'lab' ? 'lab_' : 'rec_')) + Date.now().toString(36);
 
     const insertTx = db.transaction(() => {
       db.prepare(`
         INSERT INTO assignments (
-          id, type, title, subject, category, professor, department, target_class,
+          id, type, title, subject, category, professor, department, target_year, target_class, created_by, attachments_json,
           description, instructions, due_date, due_time, priority, status,
           max_marks, meta_json
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         newId,
         type,
-        body.title || 'New Assignment',
-        body.subject || 'Computer Science',
+        body.title.trim(),
+        body.subject.trim(),
         body.category || 'General Assignments',
-        req.user ? req.user.fullName : (body.professor || 'Dr. Rajesh Sharma'),
-        body.department || 'Computer Science & Engineering',
-        body.targetClass || 'CSE Final Year - Class of 2026',
+        req.user.fullName,
+        department,
+        targetYear,
+        targetClass,
+        req.user.id,
+        JSON.stringify(structuredAttachments),
         body.description || '',
         body.instructions || '',
-        body.dueDate || '2026-11-15',
+        dueDate,
         body.dueTime || '23:59',
         body.priority || 'Medium',
-        'Published',
-        body.maxMarks ? parseFloat(body.maxMarks) : 50,
-        JSON.stringify(body)
+        body.status === 'Draft' ? 'Draft' : 'Published',
+        maxMarks,
+        JSON.stringify({ attachments: structuredAttachments })
       );
 
-      // Add notification for students
-      db.prepare(`
-        INSERT INTO notifications (id, target_role, category, type, title, message, date, action_url)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(
-        'notif_' + Date.now().toString(36),
-        'student',
-        'Faculty',
-        'info',
-        `New Assignment Published: ${body.title}`,
-        `${body.subject || 'Faculty'} assignment has been published. Due on ${body.dueDate || 'Nov 15, 2026'}.`,
-        'Just now',
-        `#/student/assignments/${type}`
-      );
+      if (body.status !== 'Draft') {
+        const students = db.prepare(`
+          SELECT sp.current_year, sp.branch, u.id AS user_id, u.department
+          FROM student_profiles sp JOIN users u ON u.id = sp.user_id WHERE u.role = 'student'
+        `).all();
+        const insertNotification = db.prepare(`
+          INSERT INTO notifications (id, user_id, target_role, category, type, title, message, date, action_url)
+          VALUES (?, ?, 'student', 'Faculty', 'info', ?, ?, 'Just now', ?)
+        `);
+        students.filter(student => assignmentMatchesStudent({ target_year: targetYear, target_class: targetClass, department }, student))
+          .forEach(student => insertNotification.run(
+            `notif_${Date.now().toString(36)}_${student.user_id}`,
+            student.user_id,
+            `New Assignment Published: ${body.title}`,
+            `${body.subject} assignment has been published. Due on ${dueDate}.`,
+            `#/student/assignments/${type}`
+          ));
+      }
     });
 
     insertTx();
@@ -2007,19 +2050,14 @@ app.post(['/api/records/:type', '/api/assignments/:type'], requireRole(['faculty
 });
 
 // Student Submit Endpoint
-app.post(['/api/records/:type/:id/submit', '/api/assignments/:type/:id/submit'], (req, res) => {
+app.post(['/api/records/:type/:id/submit', '/api/assignments/:type/:id/submit'], requireRole(['student']), (req, res) => {
   try {
     const { type, id } = req.params;
     const body = req.body;
 
-    const assignment = db.prepare('SELECT * FROM assignments WHERE id = ?').get(id);
+    const assignment = db.prepare('SELECT * FROM assignments WHERE type = ? AND id = ?').get(type.toLowerCase(), id) || db.prepare('SELECT * FROM assignments WHERE id = ?').get(id);
     if (!assignment) {
       return res.status(404).json({ success: false, error: `Assignment '${id}' not found.` });
-    }
-
-    // SECURITY: Require authentication - no fallback to body parameters
-    if (!req.user) {
-      return res.status(401).json({ success: false, error: 'Authentication required. Please log in to submit coursework.' });
     }
 
     // SECURITY: Students can only submit for themselves
@@ -2029,6 +2067,9 @@ app.post(['/api/records/:type/:id/submit', '/api/assignments/:type/:id/submit'],
         error: 'Forbidden: Students cannot submit assignments on behalf of other students.'
       });
     }
+    if (!assignmentMatchesStudent(assignment, getStudentAssignmentTarget(req.user.id))) {
+      return res.status(404).json({ success: false, error: `Assignment '${id}' not found.` });
+    }
 
     // Always use authenticated user's identity
     const studentId = req.user.id;
@@ -2036,64 +2077,81 @@ app.post(['/api/records/:type/:id/submit', '/api/assignments/:type/:id/submit'],
     const rollNo = req.user.rollNo;
     const submittedDate = new Date().toISOString().replace('T', ' ').slice(0, 16);
 
-    let fileUrl = body.submissionUrl || '';
-    let fileName = 'submission.pdf';
+    const existingSub = db.prepare('SELECT * FROM submissions WHERE assignment_id = ? AND student_id = ?').get(id, studentId);
+
+    let fileUrl = '';
+    let fileName = '';
     let fileSize = 0;
+    let hasNewFile = false;
 
     if (body.file) {
-      fileUrl = body.file.downloadUrl || body.file.url || fileUrl;
-      fileName = body.file.originalName || body.file.fileName || fileName;
+      fileUrl = body.file.downloadUrl || body.file.url || '';
+      fileName = body.file.originalName || body.file.fileName || '';
       fileSize = body.file.size || 0;
+      hasNewFile = true;
     } else if (body.files && body.files[0]) {
-      fileUrl = body.files[0].downloadUrl || body.files[0].url || fileUrl;
-      fileName = body.files[0].originalName || body.files[0].fileName || fileName;
+      fileUrl = body.files[0].downloadUrl || body.files[0].url || '';
+      fileName = body.files[0].originalName || body.files[0].fileName || '';
       fileSize = body.files[0].size || 0;
+      hasNewFile = true;
+    } else if (body.submissionUrl) {
+      fileUrl = body.submissionUrl;
+      fileName = body.fileName || (fileUrl ? fileUrl.split('/').pop() : '') || 'submission.pdf';
+      fileSize = body.fileSize || 0;
+      hasNewFile = true;
     }
 
-    const remarks = body.notes || body.remarks || '';
+    if (!hasNewFile && existingSub) {
+      // Preserve existing file metadata when updating remarks only
+      fileUrl = existingSub.file_url || '';
+      fileName = existingSub.file_name || '';
+      fileSize = existingSub.file_size || 0;
+    }
+
+    if (hasNewFile && !/^\/api\/files\/[A-Za-z0-9._-]+$/.test(fileUrl)) {
+      return res.status(400).json({ success: false, error: 'Submission files must be uploaded through /api/files/.' });
+    }
+
+    const remarks = body.notes !== undefined ? body.notes : (body.remarks !== undefined ? body.remarks : (existingSub ? existingSub.remarks : ''));
+    const finalSubmittedDate = hasNewFile ? submittedDate : (existingSub ? existingSub.submitted_date : submittedDate);
+    const dueAt = assignment.due_date ? new Date(`${assignment.due_date}T${assignment.due_time || '23:59'}:00`) : null;
+    const submittedAt = hasNewFile ? new Date() : new Date(String(finalSubmittedDate).replace(' ', 'T'));
+    const isLate = Boolean(dueAt && !Number.isNaN(dueAt.getTime()) && !Number.isNaN(submittedAt.getTime()) && submittedAt > dueAt);
+    const submissionStatus = isLate ? 'Late' : 'Submitted';
 
     const submitTx = db.transaction(() => {
-      // Upsert into submissions table
-      const subId = body.submissionId || ('sub_' + Date.now().toString(36));
+      // Upsert into submissions table with accurate assignment category and timestamps
+      const subId = existingSub ? existingSub.id : (body.submissionId || ('sub_' + Date.now().toString(36)));
       db.prepare(`
         INSERT INTO submissions (
           id, assignment_id, assignment_type, student_id, student_name, roll_no,
-          submitted_date, status, is_late, file_url, file_name, file_size, remarks
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, 'Submitted', 0, ?, ?, ?, ?)
+          submitted_date, updated_at, status, is_late, file_url, file_name, file_size, remarks
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?, ?, ?, ?)
         ON CONFLICT(assignment_id, student_id) DO UPDATE SET
           submitted_date = excluded.submitted_date,
-          status = 'Submitted',
+          updated_at = datetime('now'),
+          status = excluded.status,
+          is_late = excluded.is_late,
           file_url = excluded.file_url,
           file_name = excluded.file_name,
           file_size = excluded.file_size,
           remarks = excluded.remarks
-      `).run(subId, id, type, studentId, studentName, rollNo, submittedDate, fileUrl, fileName, fileSize, remarks);
+      `).run(subId, id, assignment.type || type.toLowerCase(), studentId, studentName, rollNo, finalSubmittedDate, submissionStatus, isLate ? 1 : 0, fileUrl, fileName, fileSize, remarks);
 
-      // Update assignment table row for direct backward compatibility
-      db.prepare(`
-        UPDATE assignments SET
-          student_status = 'Submitted',
-          status = 'Submitted',
-          submission_url = ?,
-          submitted_date = ?,
-          student_remarks = ?
-        WHERE id = ?
-      `).run(fileUrl, submittedDate, remarks, id);
-
-      // Notify Faculty Mentor
-      db.prepare(`
+      // Notify the faculty member who owns this assignment.
+      if (assignment.created_by) db.prepare(`
         INSERT INTO notifications (id, user_id, target_role, category, type, title, message, date, action_url)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         'notif_' + Date.now().toString(36),
-        'fac_001',
+        assignment.created_by,
         'faculty',
         'Submissions',
         'info',
         `New Submission: ${studentName}`,
-        `${studentName} submitted "${assignment.title}" (${fileName}).`,
+        `${studentName} submitted "${assignment.title}" (${fileName || 'file'}).`,
         'Just now',
-        `#/faculty/submissions/${type === 'faculty' ? 'assignments' : type}`
+        `#/faculty/submissions/${assignment.type === 'faculty' ? 'assignments' : assignment.type}`
       );
     });
 
@@ -2101,7 +2159,7 @@ app.post(['/api/records/:type/:id/submit', '/api/assignments/:type/:id/submit'],
 
     const updated = db.prepare('SELECT * FROM assignments WHERE id = ?').get(id);
     const submissions = db.prepare('SELECT * FROM submissions WHERE assignment_id = ?').all(id);
-    res.json({ success: true, type, id, data: formatAssignment(updated, submissions) });
+    res.json({ success: true, type, id, data: formatAssignment(updated, submissions, studentId) });
   } catch (err) {
     console.error('[Submit Error]:', err);
     res.status(500).json({ success: false, error: err.message });
@@ -2117,6 +2175,12 @@ app.post(['/api/records/:type/:id/grade', '/api/assignments/:type/:id/grade'], r
     const assignment = db.prepare('SELECT * FROM assignments WHERE id = ?').get(id);
     if (!assignment) {
       return res.status(404).json({ success: false, error: `Assignment '${id}' not found.` });
+    }
+    if (req.user.role === 'faculty' && assignment.created_by !== req.user.id) {
+      return res.status(403).json({ success: false, error: 'You can only grade assignments that you created.' });
+    }
+    if (!body.studentId) {
+      return res.status(400).json({ success: false, error: 'studentId is required to grade a submission.' });
     }
 
     const marks = parseFloat(body.marks);
@@ -2134,11 +2198,7 @@ app.post(['/api/records/:type/:id/grade', '/api/assignments/:type/:id/grade'], r
 
     const gradeTx = db.transaction(() => {
       let sub = null;
-      if (body.studentId) {
-        sub = db.prepare('SELECT * FROM submissions WHERE assignment_id = ? AND student_id = ?').get(id, body.studentId);
-      } else {
-        sub = db.prepare('SELECT * FROM submissions WHERE assignment_id = ?').get(id);
-      }
+      sub = db.prepare('SELECT * FROM submissions WHERE assignment_id = ? AND student_id = ?').get(id, body.studentId);
 
       if (sub) {
         // Update existing submission record
@@ -2166,7 +2226,7 @@ app.post(['/api/records/:type/:id/grade', '/api/assignments/:type/:id/grade'], r
           status,
           sub.id
         );
-      } else if (body.studentId) {
+      } else {
         // Create submission record for graded student if not already present
         const sUser = db.prepare('SELECT full_name, roll_no FROM users WHERE id = ?').get(body.studentId);
         db.prepare(`
@@ -2261,7 +2321,16 @@ app.post(['/api/records/:type/:id/grade', '/api/assignments/:type/:id/grade'], r
 app.delete(['/api/records/:type/:id', '/api/assignments/:type/:id'], requireRole(['faculty', 'officer']), (req, res) => {
   try {
     const { id } = req.params;
-    db.prepare('DELETE FROM assignments WHERE id = ?').run(id);
+    const assignment = db.prepare('SELECT created_by FROM assignments WHERE id = ?').get(id);
+    if (!assignment) return res.status(404).json({ success: false, error: `Assignment '${id}' not found.` });
+    if (req.user.role === 'faculty' && assignment.created_by !== req.user.id) {
+      return res.status(403).json({ success: false, error: 'You can only delete assignments that you created.' });
+    }
+    const deleteTx = db.transaction(() => {
+      db.prepare('DELETE FROM submissions WHERE assignment_id = ?').run(id);
+      db.prepare('DELETE FROM assignments WHERE id = ?').run(id);
+    });
+    deleteTx();
     res.json({ success: true, message: `Assignment '${id}' deleted successfully.` });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -4591,14 +4660,27 @@ app.get(['/dashboard', '/dashboard/'], (req, res) => {
   res.sendFile(path.join(DIR, 'index.html'));
 });
 
-// Serve all static assets from root directory
-app.use(express.static(DIR, {
-  extensions: ['html', 'htm'],
-  setHeaders: (res) => {
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Access-Control-Allow-Origin', '*');
+// Explicit static-file allowlist. Never expose the project root as a static dir.
+const publicFiles = new Set(['index.html', 'login.html', 'landing.html', 'register.html', 'styles.css', 'app.js', 'supabaseClient.js', 'dataStore.js']);
+app.get('/:publicFile', (req, res, next) => {
+  if (!publicFiles.has(req.params.publicFile)) return next();
+  res.setHeader('Cache-Control', 'no-cache');
+  res.sendFile(path.join(DIR, req.params.publicFile));
+});
+app.use('/assets', express.static(path.join(DIR, 'assets'), { fallthrough: true }));
+
+// Reject requests for private project files before the SPA fallback can answer.
+app.use((req, res, next) => {
+  const requestPath = decodeURIComponent(req.path).toLowerCase();
+  const privatePath = /(^|\/)(data|uploads|scratch|backup_pre_sqlite)(\/|$)/.test(requestPath);
+  const privateFile = /\.(?:db|sqlite|sqlite3|py|env|json|js|md|sql|log|bak|zip)$/i.test(requestPath)
+    && !publicFiles.has(path.basename(requestPath))
+    && !requestPath.startsWith('/assets/');
+  if (privatePath || privateFile || path.basename(requestPath).startsWith('.')) {
+    return res.status(404).send('Not found');
   }
-}));
+  next();
+});
 
 // Fallback to index.html for SPA hash routes
 app.use((req, res, next) => {

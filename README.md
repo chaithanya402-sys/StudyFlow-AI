@@ -59,12 +59,15 @@ StudyFlow AI combines modern web engineering, SQLite persistence, and supervised
    npm install
    ```
 
-3. **Start the Application**:
+3. **Configure Local Secrets**:
+   Copy `.env.example` to `.env`, then set private values for `FACULTY_PASSCODES` and `ALLOWED_ORIGINS`. Keep `.env` out of version control.
+
+4. **Start the Application**:
    ```bash
    npm start
    ```
 
-4. **Access the Application**:
+5. **Access the Application**:
    - **Landing Page**: [http://localhost:3000/landing.html](http://localhost:3000/landing.html)
    - **Main App Dashboard**: [http://localhost:3000/](http://localhost:3000/)
    - **Authentication Portal**: [http://localhost:3000/login.html](http://localhost:3000/login.html)

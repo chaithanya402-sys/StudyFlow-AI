@@ -11,6 +11,7 @@
 
 const http = require('http');
 const path = require('path');
+const { db: testDb } = require('./db.js');
 
 const PORT = 3004;
 process.env.PORT = PORT;
@@ -83,6 +84,17 @@ async function runSecuritySuite() {
   console.log('================================================================\n');
 
   try {
+    // The static surface is deliberately restricted to the public UI bundle.
+    console.log('--- Static File Allowlist Tests ---');
+    for (const privatePath of ['/server.js', '/db.js', '/studyflow.db', '/train_placement_models.py', '/scratch/get_creds.js', '/data/records.json', '/uploads/private.pdf', '/.env']) {
+      const response = await request('GET', privatePath);
+      recordResult(`Private path is not served (${privatePath})`, response.status === 404, `Status: ${response.status}`);
+    }
+    const publicPage = await request('GET', '/login.html');
+    recordResult('Allowlisted login page is served', publicPage.status === 200 && publicPage.raw.includes('<html'), `Status: ${publicPage.status}`);
+    const disallowedOrigin = await request('GET', '/login.html', null, { Origin: 'https://untrusted.example' });
+    recordResult('CORS omits access for unlisted browser origins', !disallowedOrigin.headers['access-control-allow-origin']);
+
     // -------------------------------------------------------------
     // SECTION 1: STRICT INPUT VALIDATION
     // -------------------------------------------------------------
@@ -170,6 +182,11 @@ async function runSecuritySuite() {
     const studentAId = regStudentA.body.user.id;
     recordResult('Student Alice registered successfully', regStudentA.status === 201 && !!studentAId, `ID: ${studentAId}`);
 
+    const queryTokenAccess = await request('GET', '/api/state?token=' + encodeURIComponent(tokenA));
+    recordResult('Session tokens in query strings are rejected', queryTokenAccess.status === 401, `Status: ${queryTokenAccess.status}`);
+    const bodyTokenAccess = await request('POST', '/api/tasks', { token: tokenA, title: 'Token body bypass attempt' });
+    recordResult('Session tokens in request bodies are rejected', bodyTokenAccess.status === 401, `Status: ${bodyTokenAccess.status}`);
+
     // Login Alice and inspect Set-Cookie
     const loginRes = await request('POST', '/api/auth/login', {
       email: studentAEmail,
@@ -207,6 +224,8 @@ async function runSecuritySuite() {
     const tokenB = regStudentB.body.token;
     const studentBId = regStudentB.body.user.id;
     recordResult('Student Bob registered successfully', regStudentB.status === 201 && !!studentBId, `ID: ${studentBId}`);
+    testDb.prepare("UPDATE student_profiles SET current_year = '4th Year', branch = 'IT' WHERE user_id = ?").run(studentBId);
+    testDb.prepare("UPDATE users SET department = 'IT' WHERE id = ?").run(studentBId);
 
     // Test 4.1: Alice cannot view Bob's profile by ID
     const aliceViewsBob = await request('GET', `/api/students/${studentBId}`, null, {
@@ -303,6 +322,41 @@ async function runSecuritySuite() {
     const facToken = facLogin.body?.token;
     recordResult('Faculty Dr. Rajesh logs in successfully', facLogin.status === 200 && !!facToken, `Token: ${facToken ? 'obtained' : 'failed'}`);
 
+    const cohortSuffix = Date.now().toString(36);
+    const createCse = await request('POST', '/api/assignments/faculty', {
+      title: `CSE cohort check ${cohortSuffix}`, subject: 'Machine Learning', targetYear: '1st Year',
+      targetClass: 'CSE', department: 'CSE', dueDate: '2099-12-30', dueTime: '23:59', maxMarks: 50
+    }, { Authorization: `Bearer ${facToken}` });
+    const createIt = await request('POST', '/api/assignments/faculty', {
+      title: `IT cohort check ${cohortSuffix}`, subject: 'Cloud Computing', targetYear: '4th Year',
+      targetClass: 'IT', department: 'IT', dueDate: '2099-12-30', dueTime: '23:59', maxMarks: 50
+    }, { Authorization: `Bearer ${facToken}` });
+    const aliceAssignments = await request('GET', '/api/assignments/faculty', null, { Authorization: `Bearer ${tokenA}` });
+    const bobAssignments = await request('GET', '/api/assignments/faculty', null, { Authorization: `Bearer ${tokenB}` });
+    const aliceHasCse = aliceAssignments.body?.data?.some(item => item.id === createCse.body?.id);
+    const aliceHasIt = aliceAssignments.body?.data?.some(item => item.id === createIt.body?.id);
+    const bobHasCse = bobAssignments.body?.data?.some(item => item.id === createCse.body?.id);
+    const bobHasIt = bobAssignments.body?.data?.some(item => item.id === createIt.body?.id);
+    recordResult('Assignment list filters by student year and class', createCse.status === 201 && createIt.status === 201 && aliceHasCse && !aliceHasIt && !bobHasCse && bobHasIt);
+    const aliceDashboard = await request('GET', '/api/state', null, { Authorization: `Bearer ${tokenA}` });
+    const bobDashboard = await request('GET', '/api/state', null, { Authorization: `Bearer ${tokenB}` });
+    recordResult('Student dashboard assignments use the same cohort filter',
+      aliceDashboard.body?.data?.facultyAssignments?.some(item => item.id === createCse.body?.id) && !aliceDashboard.body?.data?.facultyAssignments?.some(item => item.id === createIt.body?.id) &&
+      bobDashboard.body?.data?.facultyAssignments?.some(item => item.id === createIt.body?.id) && !bobDashboard.body?.data?.facultyAssignments?.some(item => item.id === createCse.body?.id));
+    const targetedNotifications = testDb.prepare('SELECT user_id FROM notifications WHERE title = ?').all(`New Assignment Published: CSE cohort check ${cohortSuffix}`).map(row => row.user_id);
+    recordResult('New assignment notification is limited to its matching cohort', targetedNotifications.includes(studentAId) && !targetedNotifications.includes(studentBId));
+
+    const lateAssignment = await request('POST', '/api/assignments/faculty', {
+      title: `Late submission check ${cohortSuffix}`, subject: 'Machine Learning', targetYear: '1st Year',
+      targetClass: 'CSE', department: 'CSE', dueDate: '2000-01-01', dueTime: '00:00', maxMarks: 20
+    }, { Authorization: `Bearer ${facToken}` });
+    const facultySubmit = await request('POST', `/api/assignments/faculty/${lateAssignment.body?.id}/submit`, {}, { Authorization: `Bearer ${facToken}` });
+    recordResult('Faculty accounts cannot submit student work', facultySubmit.status === 403, `Status: ${facultySubmit.status}`);
+    const lateSubmit = await request('POST', `/api/assignments/faculty/${lateAssignment.body?.id}/submit`, { notes: 'Submitted after deadline' }, { Authorization: `Bearer ${tokenA}` });
+    recordResult('Late submission is marked late in its saved status', lateSubmit.status === 200 && lateSubmit.body?.data?.submissions?.some(sub => sub.studentId === studentAId && sub.isLate && sub.status === 'Late'));
+    const missingStudentGrade = await request('POST', `/api/assignments/faculty/${lateAssignment.body?.id}/grade`, { marks: 10 }, { Authorization: `Bearer ${facToken}` });
+    recordResult('Grade requests without studentId are rejected', missingStudentGrade.status === 400, `Status: ${missingStudentGrade.status}`);
+
     // Faculty CAN access student directory
     const facDirectory = await request('GET', '/api/students', null, {
       'Authorization': `Bearer ${facToken}`
@@ -389,6 +443,23 @@ async function runSecuritySuite() {
     console.log(`FAILED: ${totalCount - passedCount}`);
     console.log(`SUCCESS RATE: ${Math.round((passedCount / totalCount) * 100)}%`);
     console.log('================================================================');
+
+    // -------------------------------------------------------------
+    // TEST CLEANUP: PURGE TEMPORARY FIXTURES
+    // -------------------------------------------------------------
+    try {
+      const Database = require('better-sqlite3');
+      const path = require('path');
+      const cleanDb = new Database(path.join(__dirname, 'data', 'studyflow.db'));
+      cleanDb.prepare('DELETE FROM sessions WHERE user_id IN (?, ?)').run(studentAId, studentBId);
+      cleanDb.prepare('DELETE FROM student_profiles WHERE user_id IN (?, ?)').run(studentAId, studentBId);
+      cleanDb.prepare('DELETE FROM notifications WHERE user_id IN (?, ?)').run(studentAId, studentBId);
+      cleanDb.prepare('DELETE FROM notifications WHERE title LIKE ? OR title LIKE ? OR title LIKE ?').run(`%CSE cohort check ${cohortSuffix}`, `%IT cohort check ${cohortSuffix}`, `%Late submission check ${cohortSuffix}`);
+      cleanDb.prepare('DELETE FROM assignments WHERE id IN (?, ?, ?)').run(createCse.body?.id, createIt.body?.id, lateAssignment.body?.id);
+      cleanDb.prepare('DELETE FROM audit_logs WHERE user_name IN (?, ?)').run('Alice Johnson', 'Bob Smith');
+      cleanDb.prepare('DELETE FROM users WHERE id IN (?, ?)').run(studentAId, studentBId);
+      cleanDb.close();
+    } catch (e) {}
 
     if (passedCount === totalCount) {
       console.log('🎉 ALL PRIORITY 1 SECURITY & DATA ISOLATION TESTS PASSED!');

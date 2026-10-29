@@ -1178,8 +1178,8 @@
       </div>
 
       <!-- Main Heading & Subtitle (Dynamic based on mode) -->
-      <h1 class="auth-card-title" id="auth-main-title">Create Your Account</h1>
-      <p class="auth-card-subtitle" id="auth-main-subtitle">Join StudyFlow AI and take control of your academic and career journey.</p>
+      <h1 class="auth-card-title" id="auth-main-title">Welcome Back</h1>
+      <p class="auth-card-subtitle" id="auth-main-subtitle">Sign in to access your placement dashboard and predictive insights.</p>
 
       <!-- Alert Notification Banner -->
       <div class="login-alert" id="login-alert-box" role="alert"></div>
@@ -1187,7 +1187,7 @@
       <!-- ====================================================================
            SECTION 1: CREATE ACCOUNT (REGISTRATION FLOW)
            ==================================================================== -->
-      <div id="section-register">
+      <div id="section-register" style="display: none;">
         <!-- 3 Role Tabs: Student, Faculty, T&P Officer -->
         <div class="role-tabs-wrap" role="tablist">
           <button type="button" class="role-tab-btn active" id="tab-reg-student" onclick="setRegisterRole('student')" role="tab" aria-selected="true">
@@ -1485,7 +1485,7 @@
       <!-- ====================================================================
            SECTION 2: SIGN IN (EXISTING LOGIN FLOW)
            ==================================================================== -->
-      <div id="section-signin" style="display: none;">
+      <div id="section-signin" style="display: block;">
         <!-- Role Switcher Tabs for Sign In -->
         <div class="role-tabs-wrap" role="tablist">
           <button type="button" class="role-tab-btn active" data-role="student" onclick="setSignInRole('student')" role="tab">
@@ -1511,6 +1511,15 @@
             </svg>
             <span>T&amp;P Officer</span>
           </button>
+        </div>
+
+        <!-- Quick Demo Credentials Hint Bar -->
+        <div class="demo-hints-bar" style="margin-bottom: 12px; padding: 8px 12px; background: #F8FAFC; border: 1px dashed #CBD5E1; border-radius: 9px; font-size: 11px; color: #64748B; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px;">
+          <span style="font-weight: 600; color: #475569;">Quick Demo Accounts:</span>
+          <div style="display: flex; gap: 6px;">
+            <button type="button" onclick="fillDemoCredentials('faculty')" style="border: 1px solid #BFDBFE; background: #EFF6FF; color: #1D4ED8; border-radius: 6px; padding: 2px 8px; font-size: 10.5px; font-weight: 600; cursor: pointer;">Faculty Demo</button>
+            <button type="button" onclick="fillDemoCredentials('officer')" style="border: 1px solid #E2E8F0; background: #FFFFFF; color: #334155; border-radius: 6px; padding: 2px 8px; font-size: 10.5px; font-weight: 600; cursor: pointer;">TPO Officer Demo</button>
+          </div>
         </div>
 
         <!-- Sign In Form -->
@@ -1673,14 +1682,14 @@
        APPLICATION JAVASCRIPT CONTROLLER
        ====================================================================== -->
   <script>
-    let activeAuthMode = 'register'; // Default to register view for modern create account experience
+    let activeAuthMode = 'signin'; // Default to sign in for standard login experience
     let currentSignInRole = 'student';
     let currentRegisterRole = 'student';
 
     const rolePlaceholders = {
       student: 'student@college.edu or Roll Number',
-      faculty: 'dr.rajesh.mentor@college.edu',
-      officer: 'placement.cell@college.edu'
+      faculty: 'dr.rajesh.mentor@college.edu or FAC-CSE-001',
+      officer: 'placement.cell@college.edu or TPO-HEAD-01'
     };
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -1690,11 +1699,11 @@
       const params = new URLSearchParams(window.location.search);
       const hash = (window.location.hash || '').toLowerCase();
 
-      if (params.get('mode') === 'signin' || hash === '#signin') {
-        switchAuthMode('signin');
-      } else {
-        // Default or explicit ?mode=register
+      if (params.get('mode') === 'register' || hash === '#register') {
         switchAuthMode('register');
+      } else {
+        // Default or explicit ?mode=signin
+        switchAuthMode('signin');
       }
 
       const roleParam = params.get('role');
@@ -1706,6 +1715,21 @@
         }
       }
     });
+
+    function fillDemoCredentials(role) {
+      switchAuthMode('signin');
+      setSignInRole(role);
+      const emailField = document.getElementById('login-email');
+      const passField = document.getElementById('login-password');
+      if (role === 'faculty') {
+        if (emailField) emailField.value = 'dr.rajesh.mentor@college.edu';
+        if (passField) passField.value = 'mentor2026';
+      } else if (role === 'officer') {
+        if (emailField) emailField.value = 'placement.cell@college.edu';
+        if (passField) passField.value = 'placement2026';
+      }
+      showAlert(`✓ Demo credentials loaded for ${role.toUpperCase()}. Click "Sign In with Verified Credentials" to enter.`, 'info');
+    }
 
     function updateCloudStatusIndicator() {
       const dot = document.getElementById('cloud-status-dot');
@@ -1765,6 +1789,7 @@
     // Switch Role in Sign In mode
     function setSignInRole(role) {
       currentSignInRole = role;
+      clearAlert();
       document.querySelectorAll('#section-signin .role-tab-btn').forEach(btn => {
         const isCurrent = btn.getAttribute('data-role') === role;
         btn.classList.toggle('active', isCurrent);
@@ -1772,8 +1797,14 @@
       });
 
       const emailInput = document.getElementById('login-email');
+      const emailLabel = document.querySelector('label[for="login-email"]');
       if (emailInput && rolePlaceholders[role]) {
         emailInput.placeholder = rolePlaceholders[role];
+      }
+      if (emailLabel) {
+        if (role === 'student') emailLabel.textContent = 'College Email or Roll Number';
+        else if (role === 'faculty') emailLabel.textContent = 'Official Email or Faculty ID';
+        else emailLabel.textContent = 'Official Email or Staff ID';
       }
     }
 
@@ -1975,8 +2006,17 @@
       submitText.textContent = 'Creating Account...';
       if (submitIcon) submitIcon.style.display = 'none';
 
+      const auth = window.SupabaseAuth || window.StudyFlowAuth || window.SQLiteAuth;
+      if (!auth) {
+        showAlert('Authentication client is initializing. Please refresh the page if this persists.', 'error');
+        submitBtn.disabled = false;
+        submitText.textContent = 'Create Account';
+        if (submitIcon) submitIcon.style.display = 'inline-block';
+        return;
+      }
+
       try {
-        const result = await window.SupabaseAuth.signUp({
+        const result = await auth.signUp({
           fullName,
           email,
           rollNo,
@@ -2043,8 +2083,16 @@
       submitBtn.disabled = true;
       submitText.textContent = 'Verifying Credentials...';
 
+      const auth = window.SupabaseAuth || window.StudyFlowAuth || window.SQLiteAuth;
+      if (!auth) {
+        showAlert('Authentication client is initializing. Please refresh the page if this persists.', 'error');
+        submitBtn.disabled = false;
+        submitText.textContent = 'Sign In with Verified Credentials';
+        return;
+      }
+
       try {
-        const result = await window.SupabaseAuth.signIn(email, pwd, currentSignInRole);
+        const result = await auth.signIn(email, pwd, currentSignInRole);
 
         if (!result.success) {
           showAlert(`Authentication Failed: ${result.error}`, 'error');

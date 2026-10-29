@@ -86,7 +86,7 @@ async function runVerificationSuite() {
 
     // 4. Student Setup Profile (CGPA, marks, year, semester)
     const profileRes = await request('POST', '/api/student/academic-profile', {
-      currentYear: '3rd Year',
+      currentYear: '4th Year',
       semester: '6th Semester',
       tenthPct: 91.5,
       twelfthPct: 88.0,
@@ -149,7 +149,9 @@ async function runVerificationSuite() {
       title: asgTitle,
       subject: 'Database Systems',
       category: 'System Design',
-      targetClass: 'CSE Class of 2026',
+      targetYear: '4th Year',
+      targetClass: 'CSE',
+      department: 'CSE',
       description: 'Document SQLite schema, indexes, and concurrency.',
       instructions: 'Submit PDF architecture diagram.',
       dueDate: '2026-11-10',
@@ -171,6 +173,7 @@ async function runVerificationSuite() {
     // 13. Faculty Grading: Faculty awards marks and feedback
     const gradeRes = await request('POST', `/api/records/faculty/${createdAsgId}/grade`, {
       marks: 49.5,
+      studentId: testStudentId,
       feedback: 'Flawless SQLite architecture design and clear indexing strategy.',
       strengths: 'Comprehensive schema design and strict constraints.',
       improvements: 'None',

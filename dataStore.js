@@ -1154,9 +1154,8 @@
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), options.timeoutMs || 4000);
-        const signal = options.signal || controller.signal;
-
-        const res = await fetch(`/api/records/${type}/${id}`, { signal });
+        const headers = { ...this.getAuthHeaders() };
+        const res = await fetch(`/api/records/${type}/${id}`, { signal, headers, credentials: 'same-origin' });
         clearTimeout(timeoutId);
 
         if (res.ok) {
@@ -1285,8 +1284,9 @@
         subject: assignmentObj.subject || 'Computer Science',
         category: assignmentObj.category || 'General Assignments',
         professor: this.data.roles.faculty.name || 'Dr. Rajesh Sharma',
-        department: this.data.roles.faculty.department || 'Computer Science & Engineering',
-        targetClass: assignmentObj.targetClass || 'CSE Final Year - Class of 2026',
+        targetYear: assignmentObj.targetYear || '1st Year',
+        targetClass: assignmentObj.targetClass || 'CSE',
+        department: assignmentObj.department || assignmentObj.targetClass || 'CSE',
         description: assignmentObj.description || '',
         instructions: assignmentObj.instructions || '',
         dueDate: assignmentObj.dueDate || '2026-11-15',
@@ -1368,128 +1368,65 @@
       const { notes, file, files, studentId = currentStudent.id, studentName = currentStudent.name || 'Student', rollNo = currentStudent.rollNo || '' } = submissionData;
       const submittedDate = new Date().toISOString().replace('T', ' ').slice(0, 16);
       const fileObj = file || (files && files[0]) || null;
-      const submissionUrl = fileObj ? fileObj.downloadUrl : (submissionData.submissionUrl || '');
+      const hasNewFile = !!fileObj || (submissionData.submissionUrl && submissionData.submissionUrl.trim().length > 0);
 
-      if (type === 'faculty') {
-        const asg = (this.data.facultyAssignments || []).find(a => a.id === id);
-        if (asg) {
-          asg.status = 'Submitted';
-          asg.studentStatus = 'Submitted';
-          asg.submissionUrl = submissionUrl;
-          asg.submittedDate = submittedDate;
-          asg.studentRemarks = notes;
-          asg.submittedFile = fileObj;
-          if (!asg.submissions) asg.submissions = [];
-          let sub = asg.submissions.find(s => s.studentId === studentId);
-          if (!sub) {
-            sub = {
-              id: 'sub_' + Date.now().toString(36),
-              studentId,
-              studentName,
-              rollNo,
-              submittedDate,
-              status: 'Submitted',
-              isLate: false,
-              fileUrl: submissionUrl,
-              fileName: fileObj ? fileObj.originalName : (submissionUrl ? submissionUrl.split('/').pop() : 'submission.pdf'),
-              fileSize: fileObj ? fileObj.size : 0,
-              remarks: notes,
-              marks: null,
-              feedback: '',
-              published: false,
-              gradedDate: null
-            };
-            asg.submissions.unshift(sub);
-          } else {
+      // Helper to update specific record list in local state
+      const updateList = (listKey) => {
+        const item = (this.data[listKey] || []).find(x => x.id === id);
+        if (!item) return;
+        if (!item.submissions) item.submissions = [];
+        let sub = item.submissions.find(s => s.studentId === studentId);
+
+        const finalFileUrl = hasNewFile ? (fileObj ? fileObj.downloadUrl : submissionData.submissionUrl) : (sub ? sub.fileUrl : item.submissionUrl);
+        const finalFileName = hasNewFile ? (fileObj ? fileObj.originalName : (finalFileUrl ? finalFileUrl.split('/').pop() : '')) : (sub ? sub.fileName : (item.submittedFile?.originalName || ''));
+        const finalFileSize = hasNewFile ? (fileObj ? fileObj.size : 0) : (sub ? sub.fileSize : 0);
+        const finalFileObj = hasNewFile ? fileObj : (sub && sub.fileUrl ? { originalName: sub.fileName, downloadUrl: sub.fileUrl, size: sub.fileSize } : item.submittedFile);
+
+        item.status = 'Submitted';
+        item.studentStatus = 'Submitted';
+        item.submissionUrl = finalFileUrl;
+        item.submittedFile = finalFileObj;
+        item.studentRemarks = notes;
+        if (hasNewFile || !item.submittedDate) item.submittedDate = submittedDate;
+        item.updatedAt = submittedDate;
+
+        if (!sub) {
+          sub = {
+            id: 'sub_' + Date.now().toString(36),
+            studentId,
+            studentName,
+            rollNo,
+            submittedDate,
+            updatedAt: submittedDate,
+            status: 'Submitted',
+            isLate: false,
+            fileUrl: finalFileUrl,
+            fileName: finalFileName,
+            fileSize: finalFileSize,
+            remarks: notes,
+            marks: null,
+            feedback: '',
+            published: false,
+            gradedDate: null
+          };
+          item.submissions.unshift(sub);
+        } else {
+          sub.status = 'Submitted';
+          if (hasNewFile) {
             sub.submittedDate = submittedDate;
-            sub.status = 'Submitted';
-            sub.fileUrl = submissionUrl;
-            if (fileObj) {
-              sub.fileName = fileObj.originalName;
-              sub.fileSize = fileObj.size;
-            }
-            sub.remarks = notes;
+            sub.fileUrl = finalFileUrl;
+            sub.fileName = finalFileName;
+            sub.fileSize = finalFileSize;
           }
+          sub.updatedAt = submittedDate;
+          sub.remarks = notes;
         }
-      } else if (type === 'lab') {
-        const lab = (this.data.labAssignments || []).find(l => l.id === id);
-        if (lab) {
-          lab.status = 'Submitted';
-          lab.studentStatus = 'Submitted';
-          lab.submittedDate = submittedDate;
-          lab.submittedAt = submittedDate;
-          lab.submissionUrl = submissionUrl;
-          lab.studentRemarks = notes;
-          lab.submittedFile = fileObj;
-          lab.grade = 'Under Evaluation';
-          if (!lab.submissions) lab.submissions = [];
-          let sub = lab.submissions.find(s => s.studentId === studentId);
-          if (!sub) {
-            lab.submissions.unshift({
-              id: 'sub_' + Date.now().toString(36),
-              studentId,
-              studentName,
-              rollNo,
-              submittedDate,
-              status: 'Submitted',
-              fileUrl: submissionUrl,
-              remarks: notes
-            });
-          } else {
-            sub.status = 'Submitted';
-            sub.submittedDate = submittedDate;
-            sub.fileUrl = submissionUrl;
-          }
-        }
-      } else if (type === 'learning') {
-        const rec = (this.data.learningRecords || []).find(r => r.id === id);
-        if (rec) {
-          rec.status = 'Submitted';
-          rec.studentStatus = 'Submitted';
-          rec.submittedDate = submittedDate;
-          rec.submissionUrl = submissionUrl;
-          rec.studentRemarks = notes;
-          rec.submittedFile = fileObj;
-          if (!rec.submissions) rec.submissions = [];
-          let sub = rec.submissions.find(s => s.studentId === studentId);
-          if (!sub) {
-            rec.submissions.unshift({
-              id: 'sub_' + Date.now().toString(36),
-              studentId,
-              studentName,
-              rollNo,
-              submittedDate,
-              status: 'Submitted',
-              fileUrl: submissionUrl,
-              remarks: notes
-            });
-          }
-        }
-      } else if (type === 'practice') {
-        const pr = (this.data.practiceRecords || []).find(p => p.id === id);
-        if (pr) {
-          pr.status = 'Submitted';
-          pr.studentStatus = 'Submitted';
-          pr.submittedDate = submittedDate;
-          pr.submissionUrl = submissionUrl;
-          pr.studentRemarks = notes;
-          pr.submittedFile = fileObj;
-          if (!pr.submissions) pr.submissions = [];
-          let sub = pr.submissions.find(s => s.studentId === studentId);
-          if (!sub) {
-            pr.submissions.unshift({
-              id: 'sub_' + Date.now().toString(36),
-              studentId,
-              studentName,
-              rollNo,
-              submittedDate,
-              status: 'Submitted',
-              fileUrl: submissionUrl,
-              remarks: notes
-            });
-          }
-        }
-      }
+      };
+
+      if (type === 'faculty') updateList('facultyAssignments');
+      else if (type === 'lab') updateList('labAssignments');
+      else if (type === 'learning') updateList('learningRecords');
+      else if (type === 'practice') updateList('practiceRecords');
 
       this.invalidateRecordCache(type, id);
       this.addAudit(`Student submitted ${type} assignment: ${id}`);
@@ -1497,19 +1434,29 @@
       this.notify();
 
       try {
+        const payload = {
+          studentId,
+          studentName,
+          rollNo,
+          notes,
+          submissionUrl: hasNewFile ? (fileObj ? fileObj.downloadUrl : submissionData.submissionUrl) : undefined
+        };
+        if (fileObj) payload.file = fileObj;
+
         const response = await fetch(`/api/records/${type}/${id}/submit`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            studentId,
-            studentName,
-            rollNo,
-            notes,
-            file: fileObj,
-            submissionUrl
-          })
+          headers: {
+            'Content-Type': 'application/json',
+            ...this.getAuthHeaders()
+          },
+          credentials: 'same-origin',
+          body: JSON.stringify(payload)
         });
         const resJson = await response.json();
+        if (resJson && resJson.success && resJson.data) {
+          if (!this._recordCache) this._recordCache = new Map();
+          this._recordCache.set(`${type}_${id}`, resJson.data);
+        }
         return resJson;
       } catch (e) {
         console.warn('[DataStore] Backend submission persistence failed, saved locally:', e);

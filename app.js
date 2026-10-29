@@ -706,8 +706,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
 
-      // Re-fetch latest student profile from SQLite when visiting profile or dashboard
-      if (currentRoute === '/student/profile' || currentRoute === '/student/dashboard') {
+      // Re-fetch latest student profile from SQLite when visiting profile, dashboard, overview or skills
+      if (currentRoute === '/student/profile' || currentRoute === '/student/dashboard' || currentRoute === '/student/overview' || currentRoute === '/student/skills') {
         store.fetchStudentProfile?.();
       }
     }
@@ -842,6 +842,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const probEl = document.getElementById('kpi-student-prob');
+    const probPill = document.getElementById('kpi-student-prob-pill');
+    const probSub = document.getElementById('kpi-student-prob-subtext');
+    const readinessEl = document.getElementById('kpi-student-readiness');
+    const readinessPill = document.getElementById('kpi-student-readiness-pill');
+    const skillsCountEl = document.getElementById('kpi-student-skills-count');
+    const skillsPill = document.getElementById('kpi-student-skills-pill');
     const appsEl = document.getElementById('kpi-student-apps');
     const shortlistedEl = document.getElementById('kpi-student-shortlisted');
     const placedBadgeKpi = document.getElementById('student-placed-badge-kpi');
@@ -849,10 +855,47 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (probEl) {
       if (stats.probability !== null && !isProfilePending) {
         probEl.textContent = `${stats.probability}%`;
+        if (probPill) {
+          probPill.textContent = stats.probability >= 75 ? 'Placement Ready' : 'Moderate';
+          probPill.className = `kpi-pill ${stats.probability >= 75 ? 'teal' : 'blue'}`;
+        }
+        if (probSub) probSub.textContent = 'Multi-factor ML projection';
       } else {
         probEl.textContent = `--%`;
+        if (probPill) {
+          probPill.textContent = 'Pending Setup';
+          probPill.className = 'kpi-pill orange';
+        }
+        if (probSub) probSub.textContent = 'Complete academic profile';
       }
     }
+
+    if (readinessEl) {
+      const readinessVal = stats.readinessScore || student.probability || (student.cgpa ? Math.round(Number(student.cgpa) * 10) : null);
+      if (readinessVal !== null && !isProfilePending) {
+        readinessEl.innerHTML = `${readinessVal} <span style="font-size: 14px; font-weight: 500; color: var(--text-secondary);">/ 100</span>`;
+        if (readinessPill) {
+          readinessPill.textContent = readinessVal >= 75 ? 'Ready' : (readinessVal >= 60 ? 'Moderate' : 'Needs Prep');
+          readinessPill.className = `kpi-pill ${readinessVal >= 75 ? 'teal' : 'orange'}`;
+        }
+      } else {
+        readinessEl.innerHTML = `-- <span style="font-size: 14px; font-weight: 500; color: var(--text-secondary);">/ 100</span>`;
+        if (readinessPill) {
+          readinessPill.textContent = 'Pending';
+          readinessPill.className = 'kpi-pill orange';
+        }
+      }
+    }
+
+    if (skillsCountEl) {
+      const numSkills = Array.isArray(student.skills) ? student.skills.length : 0;
+      skillsCountEl.innerHTML = `${numSkills} <span style="font-size: 14px; font-weight: 500; color: var(--text-secondary);">Skills</span>`;
+      if (skillsPill) {
+        skillsPill.textContent = numSkills > 0 ? `${numSkills} Verified` : 'Add Skills';
+        skillsPill.className = `kpi-pill ${numSkills > 0 ? 'teal' : 'blue'}`;
+      }
+    }
+
     if (appsEl) appsEl.innerHTML = `${stats.applicationsCount} <span style="font-size: 14px; font-weight: 500; color: var(--text-secondary);">Applied</span>`;
     if (shortlistedEl) shortlistedEl.textContent = `${stats.shortlistedCount} Shortlisted`;
 
@@ -3112,128 +3155,267 @@ document.addEventListener('DOMContentLoaded', async () => {
     window._selectedSubmitFile = null;
   };
 
+  window._subModalSeq = 0;
+
   window.openSubmissionDetailsModal = async function(type, id) {
     if (!type || !id) return;
     const modal = document.getElementById('modal-submission-details');
     if (!modal) return;
 
-    const res = await store.fetchRecordById(type, id);
-    const item = res && res.data ? res.data : null;
-    if (!item) {
-      window.showToast?.('Record could not be retrieved', 'error');
-      return;
-    }
+    window._subModalSeq = (window._subModalSeq || 0) + 1;
+    const thisSeq = window._subModalSeq;
 
+    // 1. Immediately reset stale modal elements to prevent showing previously viewed records
     const hiddenType = document.getElementById('sub-detail-hidden-type');
     const hiddenId = document.getElementById('sub-detail-hidden-id');
     if (hiddenType) hiddenType.value = type;
     if (hiddenId) hiddenId.value = id;
 
     const courseTagEl = document.getElementById('sub-detail-course-tag');
-    if (courseTagEl) courseTagEl.textContent = (item.code || item.subject || item.department || 'COURSEWORK').toUpperCase();
+    if (courseTagEl) courseTagEl.textContent = type.toUpperCase();
 
     const titleEl = document.getElementById('sub-detail-title');
-    if (titleEl) titleEl.textContent = `Submission Details: ${item.title || item.problemName || 'Problem Set'}`;
+    if (titleEl) titleEl.textContent = 'Loading Submission Details...';
 
     const instructorEl = document.getElementById('sub-detail-instructor');
-    if (instructorEl) instructorEl.textContent = item.professor || item.verifiedBy || 'Dr. S. Rao';
+    if (instructorEl) instructorEl.textContent = 'Loading...';
 
     const dueEl = document.getElementById('sub-detail-due');
-    if (dueEl) dueEl.textContent = item.dueDate || item.date || 'Flexible';
+    if (dueEl) dueEl.textContent = '...';
 
     const pointsEl = document.getElementById('sub-detail-points');
-    if (pointsEl) pointsEl.textContent = `${item.maxMarks || 100} pts`;
+    if (pointsEl) pointsEl.textContent = '...';
 
     const statusBadge = document.getElementById('sub-detail-status-badge');
-    const evaluatedBox = document.getElementById('sub-detail-evaluated-box');
-    const scoreEl = document.getElementById('sub-detail-awarded-score');
-    const feedbackQuote = document.getElementById('sub-detail-feedback-quote');
-    const feedbackExtra = document.getElementById('sub-detail-feedback-extra');
-
-    const isGraded = item.status === 'Graded' || item.studentStatus === 'Graded';
-    const isRevision = item.status === 'Revision Requested' || item.studentStatus === 'Revision Requested';
-    const isSubmitted = item.status === 'Submitted' || item.studentStatus === 'Submitted';
-
-    if (isGraded) {
-      if (statusBadge) {
-        statusBadge.textContent = 'Graded';
-        statusBadge.style.background = '#065F46';
-        statusBadge.style.color = '#FFFFFF';
-      }
-      if (evaluatedBox) {
-        evaluatedBox.style.display = 'block';
-        evaluatedBox.style.background = '#ECFDF5';
-        evaluatedBox.style.borderColor = '#A7F3D0';
-      }
-      if (scoreEl) scoreEl.textContent = item.marks ? `${item.marks} pts` : `${item.studentMarks || 46} / ${item.maxMarks || 50} pts`;
-      if (feedbackQuote) feedbackQuote.textContent = `"${item.feedback || 'Good database design. Pay closer attention to composite primary keys.'}"`;
-      if (feedbackExtra) {
-        let extra = '';
-        if (item.strengths) extra += `<div><strong>Strengths:</strong> ${item.strengths}</div>`;
-        if (item.improvements) extra += `<div style="margin-top: 3px;"><strong>Areas for Improvement:</strong> ${item.improvements}</div>`;
-        if (item.nextSteps) extra += `<div style="margin-top: 3px;"><strong>Next Steps:</strong> ${item.nextSteps}</div>`;
-        if (extra) {
-          feedbackExtra.innerHTML = extra;
-          feedbackExtra.style.display = 'block';
-        } else {
-          feedbackExtra.style.display = 'none';
-        }
-      }
-    } else if (isRevision) {
-      if (statusBadge) {
-        statusBadge.textContent = 'Revision Requested';
-        statusBadge.style.background = '#D97706';
-        statusBadge.style.color = '#FFFFFF';
-      }
-      if (evaluatedBox) {
-        evaluatedBox.style.display = 'block';
-        evaluatedBox.style.background = '#FFFBEB';
-        evaluatedBox.style.borderColor = '#FDE68A';
-      }
-      if (scoreEl) scoreEl.textContent = `Revision Required`;
-      if (feedbackQuote) feedbackQuote.textContent = `"${item.feedback || 'Please address the instructor feedback and resubmit your updated files.'}"`;
-      if (feedbackExtra) feedbackExtra.style.display = 'none';
-    } else {
-      if (statusBadge) {
-        statusBadge.textContent = isSubmitted ? 'Submitted' : 'Pending Evaluation';
-        statusBadge.style.background = '#2563EB';
-        statusBadge.style.color = '#FFFFFF';
-      }
-      if (evaluatedBox) evaluatedBox.style.display = 'none';
+    if (statusBadge) {
+      statusBadge.textContent = 'Loading...';
+      statusBadge.style.background = '#94A3B8';
+      statusBadge.style.color = '#FFFFFF';
     }
+
+    const evaluatedBox = document.getElementById('sub-detail-evaluated-box');
+    if (evaluatedBox) evaluatedBox.style.display = 'none';
 
     const fileLink = document.getElementById('sub-detail-file-link');
     const fileNameEl = document.getElementById('sub-detail-file-name');
-    let displayFileName = 'frame_008.png';
-    let fileUrl = '#';
-
-    if (item.submittedFile && item.submittedFile.originalName) {
-      displayFileName = item.submittedFile.originalName;
-      fileUrl = item.submittedFile.downloadUrl || '#';
-    } else if (item.submissionUrl && item.submissionUrl.length > 0) {
-      displayFileName = item.submissionUrl.split('/').pop() || 'submission_artifact.pdf';
-      fileUrl = item.submissionUrl;
+    const noFileMsg = document.getElementById('sub-detail-no-file-msg');
+    if (fileLink) fileLink.style.display = 'none';
+    if (noFileMsg) {
+      noFileMsg.style.display = 'inline-block';
+      noFileMsg.textContent = 'Loading...';
     }
-
-    if (fileNameEl) fileNameEl.textContent = displayFileName;
-    if (fileLink) {
-      fileLink.href = fileUrl;
-      fileLink.setAttribute('download', displayFileName);
-    }
+    if (fileNameEl) fileNameEl.textContent = '';
 
     const remarksEl = document.getElementById('sub-detail-remarks-box');
     if (remarksEl) {
-      remarksEl.textContent = `"${item.studentRemarks || item.studentNotes || 'Alex Kumar solution to Problem Set 7.'}"`;
+      remarksEl.textContent = 'Loading...';
+      remarksEl.style.color = '#94A3B8';
+      remarksEl.style.fontStyle = 'italic';
     }
 
     const replaceNotesEl = document.getElementById('sub-detail-replace-notes');
-    if (replaceNotesEl) replaceNotesEl.value = item.studentRemarks || item.studentNotes || '';
+    if (replaceNotesEl) replaceNotesEl.value = '';
 
     window._selectedReplaceFile = null;
     const repContainer = document.getElementById('sub-detail-replace-file-container');
     if (repContainer) {
       repContainer.style.display = 'none';
       repContainer.innerHTML = '';
+    }
+    const repError = document.getElementById('sub-detail-replace-error');
+    if (repError) repError.style.display = 'none';
+    const repInput = document.getElementById('sub-detail-replace-file-input');
+    if (repInput) repInput.value = '';
+
+    // Show modal immediately with loading state
+    modal.classList.add('active');
+    modal.style.display = 'flex';
+
+    // 2. Retrieve the specific record via API / DataStore
+    const res = await store.fetchRecordById(type, id, { bypassCache: true });
+    if (thisSeq !== window._subModalSeq) {
+      // Discard stale response if another record was clicked quickly
+      return;
+    }
+
+    const item = res && res.data ? res.data : null;
+    if (!item) {
+      window.showToast?.('Record could not be retrieved', 'error');
+      if (titleEl) titleEl.textContent = 'Record not found';
+      if (statusBadge) statusBadge.textContent = 'Error';
+      if (noFileMsg) noFileMsg.textContent = 'No submission found';
+      if (remarksEl) remarksEl.textContent = 'Unable to load record details.';
+      return;
+    }
+
+    // 3. Authenticated student identity & submission lookup
+    const currentStudent = (store.data && store.data.roles && store.data.roles.student) ? store.data.roles.student : {};
+    const currentStudentId = currentStudent.id;
+
+    const subsList = Array.isArray(item.submissions) ? item.submissions : [];
+    const studentSub = currentStudentId
+      ? subsList.find(s => (s.studentId || s.student_id) === currentStudentId)
+      : (subsList[0] || null);
+
+    const isGraded = (studentSub && studentSub.status === 'Graded') || item.studentStatus === 'Graded';
+    const isRevision = (studentSub && (studentSub.status === 'Revision Requested' || Boolean(studentSub.isRevisionRequested))) || item.studentStatus === 'Revision Requested' || Boolean(item.isRevisionRequested);
+    const isSubmitted = (studentSub && studentSub.status === 'Submitted') || item.studentStatus === 'Submitted';
+
+    const hasSubmission = isGraded || isRevision || isSubmitted || !!studentSub || !!item.submittedFile || (item.submissionUrl && item.submissionUrl.trim().length > 0);
+
+    // Course tag / header
+    if (courseTagEl) {
+      const tagText = item.code || item.subject || item.department || item.category || (type === 'faculty' ? 'Faculty Assignment' : type === 'lab' ? 'Lab Assignment' : type === 'learning' ? 'Learning Record' : 'Practice Record');
+      courseTagEl.textContent = tagText.toUpperCase();
+    }
+
+    // Assignment / Problem Title
+    const titleText = (item.title && item.title !== 'Assignment') ? item.title : (item.problemName || item.title || 'Coursework Assignment');
+    if (titleEl) titleEl.textContent = `Submission Details: ${titleText}`;
+
+    // Instructor / Verifier
+    if (instructorEl) instructorEl.textContent = item.professor || item.verifiedBy || 'Dr. Rajesh Sharma';
+
+    // Due Date
+    if (dueEl) dueEl.textContent = item.dueDate || item.date || item.completionDate || 'Flexible';
+
+    // Total points
+    if (pointsEl) pointsEl.textContent = `${item.maxMarks || item.maxScore || 100} pts`;
+
+    // Status Badge
+    if (statusBadge) {
+      if (isGraded) {
+        statusBadge.textContent = 'Graded';
+        statusBadge.style.background = '#065F46';
+        statusBadge.style.color = '#FFFFFF';
+      } else if (isRevision) {
+        statusBadge.textContent = 'Revision Requested';
+        statusBadge.style.background = '#D97706';
+        statusBadge.style.color = '#FFFFFF';
+      } else if (hasSubmission) {
+        statusBadge.textContent = isSubmitted ? 'Submitted' : 'Pending Evaluation';
+        statusBadge.style.background = '#2563EB';
+        statusBadge.style.color = '#FFFFFF';
+      } else {
+        statusBadge.textContent = 'Not Submitted';
+        statusBadge.style.background = '#64748B';
+        statusBadge.style.color = '#FFFFFF';
+      }
+    }
+
+    // Evaluated Box
+    if (evaluatedBox) {
+      if (isGraded) {
+        evaluatedBox.style.display = 'block';
+        evaluatedBox.style.background = '#ECFDF5';
+        evaluatedBox.style.borderColor = '#A7F3D0';
+        if (scoreEl) {
+          const awarded = studentSub && studentSub.marks !== null && studentSub.marks !== undefined
+            ? studentSub.marks
+            : (item.studentMarks !== null && item.studentMarks !== undefined ? item.studentMarks : (item.marks || 46));
+          scoreEl.textContent = `${awarded} / ${item.maxMarks || item.maxScore || 50} pts`;
+        }
+        if (feedbackQuote) {
+          const fb = (studentSub && studentSub.feedback) || item.feedback || 'Good work on this coursework assignment.';
+          feedbackQuote.textContent = `"${fb}"`;
+        }
+        if (feedbackExtra) {
+          let extra = '';
+          const strengths = (studentSub && studentSub.strengths) || item.strengths;
+          const improvements = (studentSub && studentSub.improvements) || item.improvements;
+          const nextSteps = (studentSub && studentSub.nextSteps) || item.nextSteps;
+          if (strengths) extra += `<div><strong>Strengths:</strong> ${strengths}</div>`;
+          if (improvements) extra += `<div style="margin-top: 3px;"><strong>Areas for Improvement:</strong> ${improvements}</div>`;
+          if (nextSteps) extra += `<div style="margin-top: 3px;"><strong>Next Steps:</strong> ${nextSteps}</div>`;
+          if (extra) {
+            feedbackExtra.innerHTML = extra;
+            feedbackExtra.style.display = 'block';
+          } else {
+            feedbackExtra.style.display = 'none';
+          }
+        }
+      } else if (isRevision) {
+        evaluatedBox.style.display = 'block';
+        evaluatedBox.style.background = '#FFFBEB';
+        evaluatedBox.style.borderColor = '#FDE68A';
+        if (scoreEl) scoreEl.textContent = 'Revision Required';
+        if (feedbackQuote) {
+          const fb = (studentSub && studentSub.feedback) || item.feedback || 'Please address instructor feedback and resubmit your updated files.';
+          feedbackQuote.textContent = `"${fb}"`;
+        }
+        if (feedbackExtra) feedbackExtra.style.display = 'none';
+      } else {
+        evaluatedBox.style.display = 'none';
+      }
+    }
+
+    // Submitted File logic - Strict isolation, NO hardcoded fake files!
+    let displayFileName = '';
+    let fileUrl = '';
+
+    if (studentSub && (studentSub.fileUrl || studentSub.file_url)) {
+      fileUrl = studentSub.fileUrl || studentSub.file_url;
+      displayFileName = studentSub.fileName || studentSub.file_name || fileUrl.split('/').pop() || 'submission.pdf';
+    } else if (item.submittedFile && (item.submittedFile.originalName || item.submittedFile.fileName)) {
+      displayFileName = item.submittedFile.originalName || item.submittedFile.fileName;
+      fileUrl = item.submittedFile.downloadUrl || item.submittedFile.url || '#';
+    } else if (item.submissionUrl && item.submissionUrl.trim().length > 0) {
+      displayFileName = item.submissionUrl.split('/').pop() || 'submission.pdf';
+      fileUrl = item.submissionUrl;
+    }
+
+    if (displayFileName && fileUrl && fileUrl !== '#') {
+      if (fileNameEl) fileNameEl.textContent = displayFileName;
+      if (fileLink) {
+        fileLink.href = fileUrl;
+        fileLink.setAttribute('download', displayFileName);
+        fileLink.style.display = 'inline-flex';
+      }
+      if (noFileMsg) noFileMsg.style.display = 'none';
+    } else {
+      if (fileLink) fileLink.style.display = 'none';
+      if (noFileMsg) {
+        noFileMsg.style.display = 'inline-block';
+        noFileMsg.textContent = 'No submission yet.';
+      }
+    }
+
+    // Remarks logic - Strict isolation, NO hardcoded fake remarks!
+    const remarks = (studentSub && studentSub.remarks !== undefined)
+      ? studentSub.remarks
+      : (item.studentRemarks !== undefined ? item.studentRemarks : (item.studentNotes || ''));
+
+    if (remarksEl) {
+      if (remarks && remarks.trim().length > 0) {
+        remarksEl.textContent = `"${remarks.trim()}"`;
+        remarksEl.style.color = '#334155';
+        remarksEl.style.fontStyle = 'italic';
+      } else if (hasSubmission) {
+        remarksEl.textContent = '"No remarks provided with this submission."';
+        remarksEl.style.color = '#94A3B8';
+        remarksEl.style.fontStyle = 'italic';
+      } else {
+        remarksEl.textContent = 'No submission yet.';
+        remarksEl.style.color = '#94A3B8';
+        remarksEl.style.fontStyle = 'italic';
+      }
+    }
+
+    if (replaceNotesEl) {
+      replaceNotesEl.value = (remarks && remarks.trim().length > 0) ? remarks.trim() : '';
+    }
+
+    // Form buttons and labels
+    const updateBtn = document.getElementById('btn-sub-detail-update-action');
+    const replaceLabel = document.getElementById('sub-detail-replace-label');
+    if (updateBtn) {
+      updateBtn.disabled = false;
+      updateBtn.textContent = hasSubmission ? 'Update Submission' : 'Submit Assignment';
+    }
+    if (replaceLabel) {
+      replaceLabel.textContent = hasSubmission
+        ? 'Upload Replacement Document (Optional if updating notes)'
+        : 'Upload Solution Document (Optional if providing notes/repo link)';
     }
 
     modal.classList.add('active');
@@ -3467,9 +3649,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       try {
+        const authHeaders = (store && typeof store.getAuthHeaders === 'function') ? store.getAuthHeaders() : {};
         const uploadRes = await fetch('/api/upload', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...authHeaders
+          },
+          credentials: 'same-origin',
           body: JSON.stringify({
             fileName: file.name,
             fileType: file.type || 'application/octet-stream',
@@ -3479,24 +3666,40 @@ document.addEventListener('DOMContentLoaded', async () => {
         const uploadJson = await uploadRes.json();
         if (uploadJson.success && uploadJson.file) {
           uploadedFile = uploadJson.file;
+        } else {
+          window.showToast?.(uploadJson.error || 'File upload failed', 'error');
+          btn.disabled = false;
+          btn.textContent = 'Update Submission';
+          return;
         }
       } catch (err) {
         console.warn('Replace upload error:', err);
+        window.showToast?.('File upload failed: network error', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Update Submission';
+        return;
       }
     }
 
-    await store.submitAssignment(type, id, {
+    const submitRes = await store.submitAssignment(type, id, {
       notes,
       file: uploadedFile,
-      submissionUrl: uploadedFile ? uploadedFile.downloadUrl : ''
+      submissionUrl: uploadedFile ? uploadedFile.downloadUrl : undefined
     });
 
-    window.showToast?.('✓ Submission and notes updated!', 'success');
-    closeSubmissionDetailsModal();
-
-    renderStudentAssignments(store.data.roles.student);
-    if (typeof renderStudentViews === 'function') renderStudentViews();
-    if (typeof renderFacultySubmissionsQueue === 'function') renderFacultySubmissionsQueue();
+    if (submitRes && submitRes.success) {
+      window.showToast?.('✓ Submission and notes updated!', 'success');
+      closeSubmissionDetailsModal();
+      if (typeof renderStudentAssignments === 'function') {
+        renderStudentAssignments(store.data && store.data.roles ? store.data.roles.student : {});
+      }
+      if (typeof renderStudentViews === 'function') renderStudentViews();
+      if (typeof renderFacultySubmissionsQueue === 'function') renderFacultySubmissionsQueue();
+    } else {
+      window.showToast?.((submitRes && submitRes.error) || 'Failed to update submission', 'error');
+      btn.disabled = false;
+      btn.textContent = 'Update Submission';
+    }
   };
 
   // SHARED RECORD DETAILS CONTROLLER (Faculty, Lab, Learning, Practice)
@@ -4331,71 +4534,490 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderStudentNotifications();
   };
 
+  // --- TARGET ROLE DICTIONARY & COMPETENCY ENGINE ---
+  const TARGET_ROLES = {
+    sde: {
+      id: 'sde',
+      title: 'SDE-1',
+      fullName: 'Software Development Engineer (SDE-1)',
+      benchmark: 80,
+      factors: [
+        { id: 'cgpa', name: 'Academic CGPA', desc: 'Academic performance and consistency', weight: 35, tier: 'highest', color: '#10B981', badgeColor: 'green' },
+        { id: 'aptitude', name: 'Aptitude Test Score', desc: 'Logical and quantitative ability', weight: 25, tier: 'high', color: '#3B82F6', badgeColor: 'blue' },
+        { id: 'projects', name: 'Technical Projects', desc: 'Practical implementation and problem solving', weight: 18, tier: 'medium', color: '#8B5CF6', badgeColor: 'purple' },
+        { id: 'backlogs', name: 'Active Backlogs', desc: 'Academic progress and standing backlogs', weight: 12, tier: 'medium-amber', color: '#F59E0B', badgeColor: 'orange' },
+        { id: 'mock', name: 'Mock Interview Score', desc: 'Communication and interview readiness', weight: 10, tier: 'lower', color: '#14B8A6', badgeColor: 'teal' }
+      ],
+      skills: [
+        { id: 'dsa', name: 'Data Structures & Algorithms', base: 78, keywords: ['dsa', 'data structures', 'algorithms', 'leetcode', 'c++', 'java', 'competitive programming', 'arrays', 'trees', 'graphs'], angle: -90, icon: 'green' },
+        { id: 'web', name: 'Web Technologies & Frameworks', base: 82, keywords: ['javascript', 'html', 'css', 'react', 'node', 'web', 'spring boot', 'express', 'frontend', 'backend', 'full stack'], angle: -18, icon: 'blue' },
+        { id: 'sys', name: 'System Design & Architecture', base: 62, keywords: ['system design', 'architecture', 'microservices', 'caching', 'load balancing', 'distributed', 'redis', 'kafka'], angle: 54, icon: 'orange' },
+        { id: 'cs', name: 'Core CS (OS, DBMS, Networks)', base: 72, keywords: ['os', 'dbms', 'sql', 'database', 'networks', 'operating systems', 'computer networks', 'linux'], angle: 126, icon: 'green' },
+        { id: 'apt', name: 'Quantitative & Logical Aptitude', base: 75, keywords: ['aptitude', 'quant', 'reasoning', 'math', 'problem solving'], angle: 198, icon: 'teal' }
+      ],
+      recommendation: (worst, gap) => `Focus on ${worst.name} (gap: ${Math.abs(gap)}%) and Database Indexing to reach the 80% benchmark before Dream tier placement drives.`
+    },
+    fullstack: {
+      id: 'fullstack',
+      title: 'Full Stack',
+      fullName: 'Full Stack Web Developer',
+      benchmark: 75,
+      factors: [
+        { id: 'projects', name: 'Full-Stack Projects', desc: 'Production-ready web apps, DBs & APIs', weight: 32, tier: 'highest', color: '#8B5CF6', badgeColor: 'purple' },
+        { id: 'web', name: 'Web Technologies (React/Node)', desc: 'Modern frontend & backend frameworks', weight: 26, tier: 'high', color: '#3B82F6', badgeColor: 'blue' },
+        { id: 'cgpa', name: 'Academic CGPA', desc: 'Coursework performance and consistency', weight: 18, tier: 'medium', color: '#10B981', badgeColor: 'green' },
+        { id: 'aptitude', name: 'Aptitude & Problem Solving', desc: 'Logical reasoning and debugging agility', weight: 14, tier: 'medium-amber', color: '#F59E0B', badgeColor: 'orange' },
+        { id: 'mock', name: 'Mock Technical Interview', desc: 'Live coding walkthrough and design defense', weight: 10, tier: 'lower', color: '#14B8A6', badgeColor: 'teal' }
+      ],
+      skills: [
+        { id: 'react', name: 'Frontend Frameworks (React/Vue)', base: 82, keywords: ['react', 'vue', 'angular', 'javascript', 'html', 'css', 'frontend', 'typescript', 'tailwind'], angle: -90, icon: 'green' },
+        { id: 'backend', name: 'Backend APIs & Microservices', base: 80, keywords: ['node', 'express', 'spring boot', 'python', 'django', 'backend', 'rest', 'api', 'fastapi'], angle: -18, icon: 'blue' },
+        { id: 'db', name: 'Database Architecture (SQL/NoSQL)', base: 74, keywords: ['sql', 'mongodb', 'postgresql', 'mysql', 'database', 'dbms', 'redis'], angle: 54, icon: 'orange' },
+        { id: 'sys', name: 'System Design & REST Security', base: 66, keywords: ['system design', 'jwt', 'auth', 'security', 'api design', 'caching', 'microservices'], angle: 126, icon: 'green' },
+        { id: 'deploy', name: 'Cloud Deployment & CI/CD (Docker)', base: 60, keywords: ['docker', 'cloud', 'aws', 'ci/cd', 'git', 'github', 'devops', 'deployment'], angle: 198, icon: 'teal' }
+      ],
+      recommendation: (worst, gap) => `Strengthen ${worst.name} with Docker containerization and CI/CD pipelines to exceed full-stack recruiter cutoffs.`
+    },
+    data: {
+      id: 'data',
+      title: 'Data Scientist / ML',
+      fullName: 'Data Scientist / ML Engineer',
+      benchmark: 82,
+      factors: [
+        { id: 'projects', name: 'ML & AI Capstone Projects', desc: 'Applied model pipelines and deployment', weight: 30, tier: 'highest', color: '#8B5CF6', badgeColor: 'purple' },
+        { id: 'aptitude', name: 'Math & Statistical Aptitude', desc: 'Probability, linear algebra and calculus', weight: 26, tier: 'high', color: '#3B82F6', badgeColor: 'blue' },
+        { id: 'cgpa', name: 'Academic CGPA', desc: 'Coursework grades in Data Structures & Math', weight: 22, tier: 'medium', color: '#10B981', badgeColor: 'green' },
+        { id: 'backlogs', name: 'Active Backlogs', desc: 'Academic progression and clear records', weight: 12, tier: 'medium-amber', color: '#F59E0B', badgeColor: 'orange' },
+        { id: 'mock', name: 'Mock Technical Interview', desc: 'Model evaluation defense and problem formulation', weight: 10, tier: 'lower', color: '#14B8A6', badgeColor: 'teal' }
+      ],
+      skills: [
+        { id: 'ml', name: 'Machine Learning Algorithms', base: 76, keywords: ['machine learning', 'ml', 'scikit-learn', 'deep learning', 'random forest', 'regression', 'classification'], angle: -90, icon: 'green' },
+        { id: 'pydata', name: 'Python & Data Analysis (NumPy/Pandas)', base: 84, keywords: ['python', 'pandas', 'numpy', 'data analysis', 'jupyter', 'matplotlib'], angle: -18, icon: 'blue' },
+        { id: 'sql', name: 'SQL & Data Engineering Pipelines', base: 78, keywords: ['sql', 'database', 'data engineering', 'etl', 'spark', 'postgres'], angle: 54, icon: 'orange' },
+        { id: 'stats', name: 'Probability & Applied Statistics', base: 74, keywords: ['statistics', 'probability', 'math', 'linear algebra', 'hypothesis testing'], angle: 126, icon: 'green' },
+        { id: 'dl', name: 'Deep Learning & MLOps Deployment', base: 58, keywords: ['deep learning', 'tensorflow', 'pytorch', 'neural networks', 'nlp', 'computer vision', 'mlops'], angle: 198, icon: 'teal' }
+      ],
+      recommendation: (worst, gap) => `Build an end-to-end deployed project focusing on ${worst.name} to close the ${Math.abs(gap)}% gap before specialized AI drives.`
+    },
+    cloud: {
+      id: 'cloud',
+      title: 'Cloud / DevOps',
+      fullName: 'Cloud & DevOps Engineer',
+      benchmark: 78,
+      factors: [
+        { id: 'projects', name: 'Cloud Infrastructure Projects', desc: 'Docker, Kubernetes, and IaC implementations', weight: 30, tier: 'highest', color: '#8B5CF6', badgeColor: 'purple' },
+        { id: 'cert', name: 'Cloud Certifications & Linux', desc: 'AWS/Azure/GCP credentials and shell mastery', weight: 24, tier: 'high', color: '#3B82F6', badgeColor: 'blue' },
+        { id: 'cgpa', name: 'Academic CGPA', desc: 'Engineering degree academic standing', weight: 20, tier: 'medium', color: '#10B981', badgeColor: 'green' },
+        { id: 'aptitude', name: 'Aptitude & Problem Solving', desc: 'Troubleshooting agility and root-cause analysis', weight: 14, tier: 'medium-amber', color: '#F59E0B', badgeColor: 'orange' },
+        { id: 'mock', name: 'Mock Scenario Interview', desc: 'Live troubleshooting and architecture defense', weight: 12, tier: 'lower', color: '#14B8A6', badgeColor: 'teal' }
+      ],
+      skills: [
+        { id: 'cloudinfra', name: 'Cloud Infrastructure (AWS/Azure/GCP)', base: 66, keywords: ['aws', 'azure', 'gcp', 'cloud', 'ec2', 's3', 'iam', 'lambda'], angle: -90, icon: 'green' },
+        { id: 'containers', name: 'Containers & Kubernetes (Docker)', base: 72, keywords: ['docker', 'kubernetes', 'k8s', 'containers', 'helm', 'containerization'], angle: -18, icon: 'blue' },
+        { id: 'cicd', name: 'CI/CD Pipelines & Git Automation', base: 68, keywords: ['ci/cd', 'github actions', 'jenkins', 'git', 'automation', 'devops'], angle: 54, icon: 'orange' },
+        { id: 'linux', name: 'Linux OS & Shell Scripting (Bash)', base: 76, keywords: ['linux', 'bash', 'shell', 'unix', 'scripting', 'terminal'], angle: 126, icon: 'green' },
+        { id: 'netsec', name: 'Networking, VPCs & Cloud Security', base: 70, keywords: ['networks', 'vpc', 'dns', 'tcp/ip', 'http', 'ssl', 'security', 'firewall'], angle: 198, icon: 'teal' }
+      ],
+      recommendation: (worst, gap) => `Containerize multi-tier apps with Docker and deploy to AWS to raise ${worst.name} above the 78% benchmark.`
+    },
+    core: {
+      id: 'core',
+      title: 'Core Systems',
+      fullName: 'Core Computer Systems & Engineering',
+      benchmark: 80,
+      factors: [
+        { id: 'cgpa', name: 'Academic CGPA', desc: 'Foundational coursework in core computer science', weight: 38, tier: 'highest', color: '#10B981', badgeColor: 'green' },
+        { id: 'corecs', name: 'Core CS Subject Mastery', desc: 'Operating Systems, DBMS, Networks, Compilers', weight: 26, tier: 'high', color: '#3B82F6', badgeColor: 'blue' },
+        { id: 'aptitude', name: 'Quantitative & Logical Aptitude', desc: 'Analytical reasoning and algorithmic thinking', weight: 16, tier: 'medium', color: '#8B5CF6', badgeColor: 'purple' },
+        { id: 'backlogs', name: 'Active Backlogs', desc: 'Zero standing arrears in university exams', weight: 12, tier: 'medium-amber', color: '#F59E0B', badgeColor: 'orange' },
+        { id: 'mock', name: 'Mock Technical Interview', desc: 'Deep dive into memory management and protocols', weight: 8, tier: 'lower', color: '#14B8A6', badgeColor: 'teal' }
+      ],
+      skills: [
+        { id: 'os', name: 'Operating Systems & Concurrency', base: 75, keywords: ['os', 'operating systems', 'concurrency', 'threads', 'processes', 'memory management', 'paging'], angle: -90, icon: 'green' },
+        { id: 'dbms', name: 'Database Management Systems (DBMS)', base: 80, keywords: ['dbms', 'database', 'sql', 'indexing', 'transactions', 'acid', 'normalization'], angle: -18, icon: 'blue' },
+        { id: 'net', name: 'Computer Networks (TCP/IP)', base: 74, keywords: ['networks', 'computer networks', 'tcp', 'ip', 'udp', 'dns', 'routing', 'osi'], angle: 54, icon: 'orange' },
+        { id: 'lowlevel', name: 'Low-Level Programming (C / C++)', base: 78, keywords: ['c', 'c++', 'pointers', 'memory', 'dsa', 'data structures'], angle: 126, icon: 'green' },
+        { id: 'quant', name: 'Quantitative & Analytical Aptitude', base: 76, keywords: ['aptitude', 'quant', 'math', 'problem solving'], angle: 198, icon: 'teal' }
+      ],
+      recommendation: (worst, gap) => `Revise OS thread synchronization and TCP handshakes to close the ${worst.name} gap before core engineering campus rounds.`
+    }
+  };
+
+  const safeEscape = (str) => String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+  window.handleTargetRoleChange = function(roleId) {
+    if (!TARGET_ROLES[roleId]) roleId = 'sde';
+    window._selectedTargetRole = roleId;
+    try {
+      localStorage.setItem('spp_target_role', roleId);
+    } catch (e) {}
+
+    const select1 = document.getElementById('select-target-role');
+    if (select1 && select1.value !== roleId) select1.value = roleId;
+    const select2 = document.getElementById('select-target-role-skills-pane');
+    if (select2 && select2.value !== roleId) select2.value = roleId;
+
+    const student = store?.data?.roles?.student;
+    if (student) {
+      renderStudentCharts(student);
+    }
+    window.showToast?.(`Target role switched to ${TARGET_ROLES[roleId].fullName}! Benchmarks updated.`, 'info');
+  };
+
+  function renderDonutChartSVG(factors) {
+    const svgEl = document.getElementById('donut-chart-svg');
+    if (!svgEl) return;
+
+    const cx = 120, cy = 120, R = 80, r = 52;
+    let currentAngle = -90; // Start at 12 o'clock
+    let paths = '';
+    let callouts = '';
+
+    factors.forEach((f) => {
+      const sweep = (f.weight / 100) * 360;
+      const startAngle = currentAngle;
+      const endAngle = currentAngle + sweep;
+      const midAngle = (startAngle + endAngle) / 2;
+
+      const radStart = (startAngle * Math.PI) / 180;
+      const radEnd = (endAngle * Math.PI) / 180;
+      const radMid = (midAngle * Math.PI) / 180;
+
+      const x1 = (cx + R * Math.cos(radStart)).toFixed(2);
+      const y1 = (cy + R * Math.sin(radStart)).toFixed(2);
+      const x2 = (cx + R * Math.cos(radEnd)).toFixed(2);
+      const y2 = (cy + R * Math.sin(radEnd)).toFixed(2);
+      const x3 = (cx + r * Math.cos(radEnd)).toFixed(2);
+      const y3 = (cy + r * Math.sin(radEnd)).toFixed(2);
+      const x4 = (cx + r * Math.cos(radStart)).toFixed(2);
+      const y4 = (cy + r * Math.sin(radStart)).toFixed(2);
+
+      const largeArc = sweep > 180 ? 1 : 0;
+      const d = `M ${x1} ${y1} A ${R} ${R} 0 ${largeArc} 1 ${x2} ${y2} L ${x3} ${y3} A ${r} ${r} 0 ${largeArc} 0 ${x4} ${y4} Z`;
+
+      paths += `<path class="donut-slice" d="${d}" fill="${f.color}" stroke="#FFFFFF" stroke-width="2.5"><title>${safeEscape(f.name)}: ${f.weight}%</title></path>`;
+
+      const R_text = 98;
+      const tx = (cx + R_text * Math.cos(radMid)).toFixed(1);
+      const ty = (cy + R_text * Math.sin(radMid) + 4).toFixed(1);
+      callouts += `<text x="${tx}" y="${ty}" text-anchor="middle" font-size="11.5" font-weight="800" fill="${f.color}">${f.weight}%</text>`;
+
+      currentAngle = endAngle;
+    });
+
+    svgEl.innerHTML = `
+      ${paths}
+      <text x="120" y="115" text-anchor="middle" font-family="'Plus Jakarta Sans', 'Inter', sans-serif" font-weight="800" font-size="22" fill="#172B4D">100%</text>
+      <text x="120" y="132" text-anchor="middle" font-size="10.5" font-weight="600" fill="#64748B">Total Weight</text>
+      ${callouts}
+    `;
+  }
+
+  function renderFactorList(factors, student) {
+    const container = document.getElementById('factor-list-items');
+    if (!container) return;
+
+    const groupProjects = (store && typeof store.getGroupProjects === 'function') ? store.getGroupProjects() : (store?.data?.groupProjects || []);
+    const projCount = (Array.isArray(student.projects) ? student.projects.length : 0) + groupProjects.length + (Array.isArray(student.workExperience) ? student.workExperience.length : 0);
+    const techScore = student.technicalScore || (student.cgpa ? Math.round(Number(student.cgpa) * 8.5) : 75);
+    const aptScore = student.aptitudeScore || student.quizAvg || 75;
+    const mockScore = student.mockInterviewScore || Math.min(100, Math.round((techScore * 0.6) + (aptScore * 0.4) + (projCount * 2)));
+
+    const icons = {
+      cgpa: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>`,
+      aptitude: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>`,
+      projects: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`,
+      backlogs: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>`,
+      mock: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>`,
+      default: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>`
+    };
+
+    container.innerHTML = factors.map(f => {
+      let valueLabel = '';
+      let clickAction = '';
+      if (f.id === 'cgpa') {
+        const val = student.cgpa ? Number(student.cgpa).toFixed(2) : '8.10';
+        valueLabel = `${f.name} (${val} / 10.0)`;
+        clickAction = "openEditAcademicModal()";
+      } else if (f.id === 'aptitude') {
+        valueLabel = `${f.name} (${aptScore} / 100)`;
+        clickAction = "navigateToRoute('/student/prediction')";
+      } else if (f.id === 'projects') {
+        valueLabel = `${f.name} (${projCount || 3} Completed)`;
+        clickAction = "navigateToRoute('/student/group-projects')";
+      } else if (f.id === 'backlogs') {
+        valueLabel = `${f.name} (${student.backlogs ?? 0} Active)`;
+        clickAction = "openEditAcademicModal()";
+      } else if (f.id === 'mock') {
+        valueLabel = `${f.name} (${mockScore} / 100)`;
+        clickAction = "navigateToRoute('/student/skills')";
+      } else {
+        valueLabel = `${f.name}`;
+        clickAction = "navigateToRoute('/student/skills')";
+      }
+
+      const iconSvg = icons[f.id] || icons.default;
+      const tierLabel = f.tier === 'highest' ? 'Highest' : (f.tier === 'high' ? 'High' : (f.tier.includes('medium') ? 'Medium' : 'Lower'));
+
+      return `
+        <div class="factor-item-row" onclick="${clickAction}" style="cursor: pointer;" title="Click to review / edit ${safeEscape(f.name)}">
+          <div class="factor-item-left">
+            <div class="factor-icon-badge ${f.badgeColor}">
+              ${iconSvg}
+            </div>
+            <div class="factor-info">
+              <div class="factor-name-title" id="factor-name-${f.id}">${safeEscape(valueLabel)}</div>
+              <div class="factor-name-desc">${safeEscape(f.desc)}</div>
+            </div>
+          </div>
+          <div class="factor-item-right">
+            <span class="factor-weight-val" id="factor-weight-${f.id}">${f.weight}%</span>
+            <span class="pill-tier ${f.tier}" id="factor-pill-${f.id}">${tierLabel}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderRadarChartSVG(skills, benchmark) {
+    const svgEl = document.getElementById('radar-chart-svg');
+    if (!svgEl) return;
+
+    const cx = 170, cy = 135, R = 85;
+
+    // Grid pentagons for 20%, 40%, 60%, 80%, 100%
+    const gridPcts = [20, 40, 60, 80, 100];
+    let gridPolygons = '';
+    gridPcts.forEach(pct => {
+      const radius = (pct / 100) * R;
+      const pts = skills.map(s => {
+        const rad = (s.angle * Math.PI) / 180;
+        return `${(cx + radius * Math.cos(rad)).toFixed(1)},${(cy + radius * Math.sin(rad)).toFixed(1)}`;
+      }).join(' ');
+
+      const isBenchmark = (pct === benchmark);
+      const stroke = isBenchmark ? '#94A3B8' : (pct === 100 ? '#CBD5E1' : '#E2E8F0');
+      const strokeWidth = isBenchmark ? 1.4 : 1;
+      const dash = isBenchmark ? 'stroke-dasharray="3,3"' : '';
+      gridPolygons += `<polygon points="${pts}" fill="none" stroke="${stroke}" stroke-width="${strokeWidth}" ${dash}></polygon>`;
+    });
+
+    // 5 Axis lines
+    let axisLines = '';
+    skills.forEach(s => {
+      const rad = (s.angle * Math.PI) / 180;
+      const x = (cx + R * Math.cos(rad)).toFixed(1);
+      const y = (cy + R * Math.sin(rad)).toFixed(1);
+      axisLines += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#E2E8F0" stroke-width="1"></line>`;
+    });
+
+    // Student polygon points & vertex dots
+    const studentPoints = [];
+    let vertexDots = '';
+    skills.forEach(s => {
+      const normRadius = Math.max(0.18, Math.min(1.0, s.score / 100)) * R;
+      const rad = (s.angle * Math.PI) / 180;
+      const x = (cx + normRadius * Math.cos(rad)).toFixed(1);
+      const y = (cy + normRadius * Math.sin(rad)).toFixed(1);
+      studentPoints.push(`${x},${y}`);
+      vertexDots += `<circle cx="${x}" cy="${y}" r="3.5" fill="#10B981" stroke="#FFFFFF" stroke-width="1.5"></circle>`;
+    });
+
+    // Outer Axis Labels
+    let axisLabels = '';
+    skills.forEach(s => {
+      const isMet = s.score >= benchmark;
+      const scoreColor = isMet ? '#059669' : '#D97706';
+
+      let tx = cx, ty = cy, anchor = 'middle';
+      if (s.angle === -90) { // Top
+        tx = cx; ty = 24; anchor = 'middle';
+      } else if (s.angle === -18) { // Top-Right
+        tx = 256; ty = 98; anchor = 'start';
+      } else if (s.angle === 54) { // Bottom-Right
+        tx = 226; ty = 218; anchor = 'start';
+      } else if (s.angle === 126) { // Bottom-Left
+        tx = 114; ty = 218; anchor = 'end';
+      } else { // Top-Left
+        tx = 83; ty = 98; anchor = 'end';
+      }
+
+      const words = s.name.split(' ');
+      let line1 = s.name, line2 = '';
+      if (words.length > 2) {
+        const mid = Math.ceil(words.length / 2);
+        line1 = words.slice(0, mid).join(' ');
+        line2 = words.slice(mid).join(' ');
+      }
+
+      axisLabels += `
+        <text x="${tx}" y="${ty}" text-anchor="${anchor}" font-size="9.5" font-weight="600" fill="#172B4D">${safeEscape(line1)}</text>
+        ${line2 ? `<text x="${tx}" y="${ty + 11}" text-anchor="${anchor}" font-size="9.5" font-weight="600" fill="#172B4D">${safeEscape(line2)}</text>` : ''}
+        <text x="${tx}" y="${ty + (line2 ? 23 : 13)}" text-anchor="${anchor}" font-size="11" font-weight="800" fill="${scoreColor}" id="radar-val-${s.id}">${s.score}%</text>
+      `;
+    });
+
+    svgEl.innerHTML = `
+      ${gridPolygons}
+      ${axisLines}
+      <polygon id="radar-student-polygon" points="${studentPoints.join(' ')}" fill="rgba(16, 185, 129, 0.18)" stroke="#10B981" stroke-width="2.2"></polygon>
+      ${vertexDots}
+      ${axisLabels}
+    `;
+  }
+
+  function renderSkillPerformanceList(skills, benchmark) {
+    const container = document.getElementById('skill-list-items');
+    if (!container) return;
+
+    const icons = {
+      green: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>`,
+      blue: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>`,
+      orange: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>`,
+      teal: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"></rect><line x1="8" y1="6" x2="16" y2="6"></line><line x1="8" y1="10" x2="16" y2="10"></line><line x1="8" y1="14" x2="16" y2="14"></line><line x1="8" y1="18" x2="16" y2="18"></line></svg>`
+    };
+
+    container.innerHTML = skills.map(s => {
+      const isMet = s.score >= benchmark;
+      const diff = s.score - benchmark;
+      let statusText = '';
+      let statusClass = '';
+
+      if (s.score >= benchmark + 5) {
+        statusText = 'Exceeds';
+        statusClass = 'pill-skill-status met';
+      } else if (isMet) {
+        statusText = 'Met';
+        statusClass = 'pill-skill-status met';
+      } else {
+        statusText = `Gap (${diff}%)`;
+        statusClass = 'pill-skill-status gap';
+      }
+
+      const scoreColorClass = isMet ? 'green' : 'orange';
+      const iconSvg = icons[s.icon] || icons.blue;
+
+      return `
+        <div class="skill-item-row" onclick="openEditSkillsModal()" style="cursor: pointer;" title="Click to add / verify skills for ${safeEscape(s.name)}">
+          <div class="skill-item-left">
+            <div class="skill-icon-badge ${s.icon}">
+              ${iconSvg}
+            </div>
+            <span class="skill-label-text">${safeEscape(s.name)}</span>
+          </div>
+          <div class="skill-item-right">
+            <span class="skill-score-num ${scoreColorClass}" id="skill-score-${s.id}">${s.score}%</span>
+            <span class="${statusClass}" id="skill-pill-${s.id}">${statusText}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderSkillsComparisonTable(skills, benchmark) {
+    const tbody = document.getElementById('skills-competency-comparison-tbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = skills.map(s => {
+      const isMet = s.score >= benchmark;
+      const diff = s.score - benchmark;
+      let statusBadge = '';
+      if (s.score >= benchmark + 5) {
+        statusBadge = '<span class="badge-status success">Exceeds</span>';
+      } else if (isMet) {
+        statusBadge = '<span class="badge-status success">Ready</span>';
+      } else {
+        statusBadge = `<span class="badge-status ${diff < -10 ? 'error' : 'warning'}">Gap (${diff}%)</span>`;
+      }
+
+      return `
+        <tr>
+          <td><strong>${safeEscape(s.name)}</strong></td>
+          <td>${s.score}% (${s.score >= benchmark ? 'Verified Competent' : 'Needs Practice'})</td>
+          <td>${benchmark}%</td>
+          <td>${statusBadge}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
   function renderStudentCharts(student) {
     if (!student) return;
 
-    // 1. Dynamic Factor Weights labels
-    const cgpaEl = document.getElementById('factor-name-cgpa');
-    const aptEl = document.getElementById('factor-name-aptitude');
-    const backlogsEl = document.getElementById('factor-name-backlogs');
-    if (cgpaEl) cgpaEl.textContent = `Academic CGPA (${student.cgpa || 8.1} / 10.0)`;
-    if (aptEl) aptEl.textContent = `Aptitude Test Score (${student.aptitudeScore || 78} / 100)`;
-    if (backlogsEl) backlogsEl.textContent = `Active Backlogs (${student.backlogs ?? 0} Active)`;
+    // 1. Resolve Target Role
+    const roleId = window._selectedTargetRole || localStorage.getItem('spp_target_role') || 'sde';
+    const role = TARGET_ROLES[roleId] || TARGET_ROLES.sde;
 
-    // 2. Dynamic Radar Chart & Skills
-    const skills = [
-      { id: 'dsa', name: 'Data Structures & Algorithms', score: 82, benchmark: 80, angle: -90 },
-      { id: 'web', name: 'Web Technologies & Frameworks', score: 88, benchmark: 80, angle: -18 },
-      { id: 'sys', name: 'System Design & Architecture', score: 65, benchmark: 80, angle: 54 },
-      { id: 'cs', name: 'Core CS (OS, DBMS, Networks)', score: 74, benchmark: 80, angle: 126 },
-      { id: 'apt', name: 'Quantitative & Logical Aptitude', score: student.aptitudeScore ? Math.round(student.aptitudeScore * 80 / 78) : 80, benchmark: 80, angle: 198 }
-    ];
+    // Sync role selects
+    const roleSelect1 = document.getElementById('select-target-role');
+    if (roleSelect1 && roleSelect1.value !== roleId) roleSelect1.value = roleId;
+    const roleSelect2 = document.getElementById('select-target-role-skills-pane');
+    if (roleSelect2 && roleSelect2.value !== roleId) roleSelect2.value = roleId;
 
-    const cx = 170, cy = 135, R = 85;
-    const polyPoints = [];
+    // Update Card 2 Titles & Subtitles
+    const titleEl = document.getElementById('skill-competency-card-title');
+    if (titleEl) titleEl.textContent = `Skill Competency vs Target Role (${role.title})`;
 
-    skills.forEach(s => {
-      const isMet = s.score >= s.benchmark;
-      const diff = s.score - s.benchmark;
+    const subtitleEl = document.getElementById('skill-competency-card-subtitle');
+    if (subtitleEl) subtitleEl.textContent = `Target Cutoff Benchmark: ${role.benchmark}%`;
 
-      const scoreEl = document.getElementById(`skill-score-${s.id}`);
-      const pillEl = document.getElementById(`skill-pill-${s.id}`);
-      const valEl = document.getElementById(`radar-val-${s.id}`);
+    const legendBench = document.getElementById('legend-benchmark-target');
+    if (legendBench) legendBench.textContent = `Target (${role.benchmark}%)`;
 
-      if (scoreEl) {
-        scoreEl.textContent = `${s.score}%`;
-        scoreEl.className = `skill-score-num ${isMet ? 'green' : 'orange'}`;
+    // 2. Render Donut Chart SVG & Factor Weights List for Card 1
+    renderDonutChartSVG(role.factors);
+    renderFactorList(role.factors, student);
+
+    // 3. Calculate dynamic skill scores for Card 2 based on student's profile & verified skills
+    const studentSkills = [...(student.skills || []), ...(student.technicalSkills || [])].map(s => String(s).toLowerCase().trim());
+    const groupProjects = (store && typeof store.getGroupProjects === 'function') ? store.getGroupProjects() : (store?.data?.groupProjects || []);
+    const projCount = (Array.isArray(student.projects) ? student.projects.length : 0) + groupProjects.length + (Array.isArray(student.workExperience) ? student.workExperience.length : 0);
+    const techScore = student.technicalScore || (student.cgpa ? Math.round(Number(student.cgpa) * 8.5) : 75);
+    const aptScore = student.aptitudeScore || student.quizAvg || 75;
+
+    const evaluatedSkills = role.skills.map(s => {
+      // Check keyword overlap
+      let matches = 0;
+      if (studentSkills.length > 0 && Array.isArray(s.keywords)) {
+        matches = s.keywords.filter(kw => studentSkills.some(sk => sk.includes(kw) || kw.includes(sk))).length;
       }
 
-      if (pillEl) {
-        if (s.score >= 85) {
-          pillEl.textContent = 'Exceeds';
-          pillEl.className = 'pill-skill-status met';
-        } else if (isMet) {
-          pillEl.textContent = 'Met';
-          pillEl.className = 'pill-skill-status met';
-        } else {
-          pillEl.textContent = `Gap (${diff}%)`;
-          pillEl.className = 'pill-skill-status gap';
-        }
-      }
+      // If student has zero skills added, baseline is lower to prompt skill benchmarking
+      const baseWeight = studentSkills.length > 0 ? 0.45 : 0.65;
+      let calculated = Math.round(
+        (s.base * baseWeight) +
+        (techScore * 0.25) +
+        (aptScore * 0.15) +
+        (Math.min(matches, 4) * 4) +
+        (Math.min(projCount, 3) * 2)
+      );
 
-      if (valEl) {
-        valEl.textContent = `${s.score}%`;
-        valEl.setAttribute('fill', isMet ? '#059669' : '#D97706');
-      }
+      // Clamp between 35% and 96%
+      calculated = Math.max(35, Math.min(96, calculated));
 
-      const normRadius = Math.max(0.15, Math.min(1.0, s.score / 100)) * R;
-      const rad = s.angle * Math.PI / 180;
-      const x = (cx + normRadius * Math.cos(rad)).toFixed(1);
-      const y = (cy + normRadius * Math.sin(rad)).toFixed(1);
-      polyPoints.push(`${x},${y}`);
+      return {
+        ...s,
+        score: calculated,
+        benchmark: role.benchmark
+      };
     });
 
-    const polyEl = document.getElementById('radar-student-polygon');
-    if (polyEl) {
-      polyEl.setAttribute('points', polyPoints.join(' '));
+    // 4. Render Radar Chart SVG
+    renderRadarChartSVG(evaluatedSkills, role.benchmark);
+
+    // 5. Render Skill-wise Performance List
+    renderSkillPerformanceList(evaluatedSkills, role.benchmark);
+
+    // 6. Update Practical Recommendation
+    const worstSkill = [...evaluatedSkills].sort((a, b) => a.score - b.score)[0];
+    const recEl = document.getElementById('skill-practical-rec-desc');
+    if (recEl && worstSkill) {
+      const gap = worstSkill.score - role.benchmark;
+      recEl.textContent = role.recommendation(worstSkill, gap);
     }
+
+    // 7. Render Core Competency Comparison table on /student/skills if open
+    renderSkillsComparisonTable(evaluatedSkills, role.benchmark);
   }
 
   function renderStudentProfileView(student) {
@@ -5774,6 +6396,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const subjectSelect = document.getElementById('faculty-asg-subject');
     const categorySelect = document.getElementById('faculty-asg-category');
     const classInput = document.getElementById('faculty-asg-class');
+    const yearSelect = document.getElementById('faculty-asg-year');
     const maxMarksInput = document.getElementById('faculty-asg-max-marks');
     const dueInput = document.getElementById('faculty-asg-due');
     const prioritySelect = document.getElementById('faculty-asg-priority');
@@ -5790,7 +6413,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (titleInput) titleInput.value = assignment.title;
         if (subjectSelect) subjectSelect.value = assignment.subject;
         if (categorySelect) categorySelect.value = assignment.category;
-        if (classInput) classInput.value = assignment.targetClass;
+        if (classInput) {
+          const legacyClass = assignment.targetClass || '';
+          classInput.value = [...classInput.options].some(option => option.value === legacyClass)
+            ? legacyClass
+            : (['CSE', 'IT', 'ECE', 'EEE', 'Mechanical', 'Civil'].find(value => legacyClass.toLowerCase().includes(value.toLowerCase())) || 'CSE');
+        }
+        if (yearSelect) yearSelect.value = assignment.targetYear || (/final|4th|fourth/i.test(assignment.targetClass || '') ? '4th Year' : '1st Year');
         if (maxMarksInput) maxMarksInput.value = assignment.maxMarks;
         if (dueInput) dueInput.value = `${assignment.dueDate}T${assignment.dueTime || '23:59'}`;
         if (prioritySelect) prioritySelect.value = assignment.priority || 'Medium';
@@ -5827,6 +6456,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const subject = document.getElementById('faculty-asg-subject').value;
     const category = document.getElementById('faculty-asg-category').value;
     const targetClass = document.getElementById('faculty-asg-class').value;
+    const targetYear = document.getElementById('faculty-asg-year').value;
     const maxMarks = document.getElementById('faculty-asg-max-marks').value;
     const dueVal = document.getElementById('faculty-asg-due').value;
     const priority = document.getElementById('faculty-asg-priority').value;
@@ -5840,13 +6470,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (id) {
       store.updateFacultyAssignment(id, {
-        title, subject, category, targetClass, maxMarks: parseInt(maxMarks, 10),
+        title, subject, category, targetYear, targetClass, department: targetClass, maxMarks: parseInt(maxMarks, 10),
         dueDate, dueTime, priority, instructions, description: instructions, attachment, status
       });
       window.showToast?.('✓ Assignment updated successfully.', 'success');
     } else {
       store.createFacultyAssignment({
-        title, subject, category, targetClass, maxMarks: parseInt(maxMarks, 10),
+        title, subject, category, targetYear, targetClass, department: targetClass, maxMarks: parseInt(maxMarks, 10),
         dueDate, dueTime, priority, instructions, description: instructions, attachment, status
       });
       window.showToast?.(`✓ Assignment "${title}" created and ${status.toLowerCase()}!`, 'success');
@@ -6439,14 +7069,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isDark = mode === 'dark';
     if (isDark) {
       document.body.classList.add('dark-theme');
+      document.documentElement.setAttribute('data-theme', 'dark');
+      document.body.setAttribute('data-theme', 'dark');
       document.getElementById('btn-theme-dark')?.classList.add('active');
       document.getElementById('btn-theme-light')?.classList.remove('active');
       localStorage.setItem('spp_theme', 'dark');
     } else {
       document.body.classList.remove('dark-theme');
+      document.documentElement.setAttribute('data-theme', 'light');
+      document.body.setAttribute('data-theme', 'light');
       document.getElementById('btn-theme-light')?.classList.add('active');
       document.getElementById('btn-theme-dark')?.classList.remove('active');
       localStorage.setItem('spp_theme', 'light');
+    }
+
+    // Refresh active charts if visible to update SVG text/tracks
+    const currentRoute = window.location.hash || '#/student/overview';
+    if (currentRoute.includes('overview') || currentRoute.includes('skills') || currentRoute.includes('prediction')) {
+      const student = store?.data?.roles?.student;
+      if (student && typeof renderStudentCharts === 'function') {
+        try { renderStudentCharts(student); } catch (e) {}
+      }
     }
   };
 
