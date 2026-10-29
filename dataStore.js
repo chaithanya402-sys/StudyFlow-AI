@@ -435,10 +435,10 @@
       return this.data.mentorTasks || [];
     }
 
-    getStudentTasks(studentId = this.data.roles.student?.id) {
+    getStudentTasks(studentId = this.data.roles?.student?.id) {
       if (!Array.isArray(this.data.mentorTasks)) return [];
-      if (!studentId) return this.data.mentorTasks;
-      return this.data.mentorTasks.filter(t => t.studentId === studentId || !t.studentId);
+      if (!studentId) return [];
+      return this.data.mentorTasks.filter(t => t.studentId === studentId);
     }
 
     assignTask(taskObj) {

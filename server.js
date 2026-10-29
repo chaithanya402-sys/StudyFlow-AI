@@ -1613,12 +1613,11 @@ app.get('/api/state', (req, res) => {
     });
 
     // 4. Mentor Tasks, Notes, and Interventions
+    let mentorTasksRows;
     if (currentStudentId) {
-      ensureDefaultStudentTasks(currentStudentId);
-    }
-    let mentorTasksRows = db.prepare('SELECT * FROM mentor_tasks').all();
-    if (currentStudentId) {
-      mentorTasksRows = mentorTasksRows.filter(t => t.student_id === currentStudentId || !t.student_id);
+      mentorTasksRows = db.prepare('SELECT * FROM mentor_tasks WHERE student_id = ?').all(currentStudentId);
+    } else {
+      mentorTasksRows = db.prepare('SELECT * FROM mentor_tasks').all();
     }
     const mentorTasks = mentorTasksRows.map(t => ({
       id: t.id,
@@ -1629,7 +1628,7 @@ app.get('/api/state', (req, res) => {
       priority: t.priority,
       status: t.status,
       notes: t.notes,
-      assignedDate: t.created_at ? t.created_at.split(' ')[0] : '2026-10-15'
+      assignedDate: t.created_at ? t.created_at.split(' ')[0] : new Date().toISOString().split('T')[0]
     }));
 
     let mentorNotesRows = db.prepare('SELECT * FROM mentor_notes').all();
@@ -2500,83 +2499,6 @@ app.patch('/api/students/:id', handleStudentIdUpdate);
 // -----------------------------------------------------------------------------
 // 7. Mentoring Tasks & Notes Endpoints (/api/tasks & /api/mentor-notes)
 // -----------------------------------------------------------------------------
-function ensureDefaultStudentTasks(studentId) {
-  if (!studentId) return;
-  try {
-    const count = db.prepare('SELECT COUNT(*) as count FROM mentor_tasks WHERE student_id = ?').get(studentId).count;
-    if (count === 0) {
-      const studentUser = db.prepare('SELECT id, full_name FROM users WHERE id = ?').get(studentId);
-      if (!studentUser) return;
-
-      const studentProfile = db.prepare('SELECT mentor_id FROM student_profiles WHERE user_id = ?').get(studentId);
-      let mentorId = (studentProfile && studentProfile.mentor_id) ? studentProfile.mentor_id : 'fac_001';
-      const mentorUser = db.prepare('SELECT id FROM users WHERE id = ?').get(mentorId);
-      if (!mentorUser) mentorId = 'fac_001';
-
-      const insertTask = db.prepare(`
-        INSERT OR IGNORE INTO mentor_tasks (id, mentor_id, student_id, title, due_date, priority, status, notes)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `);
-
-      const defaultTasks = [
-        {
-          id: 'tsk_init_1_' + studentId.slice(-6),
-          title: 'Complete Academic Profile & Semester Scores',
-          dueDate: '2026-10-25',
-          priority: 'High',
-          status: 'Pending',
-          notes: '[Academic] Input your CGPA, 10th/12th percentages, and technical skills to unlock ML placement prediction.'
-        },
-        {
-          id: 'tsk_init_2_' + studentId.slice(-6),
-          title: 'Run ATS Resume Compatibility Check',
-          dueDate: '2026-10-28',
-          priority: 'Medium',
-          status: 'Pending',
-          notes: '[Placement Prep] Scan your resume against campus drive job descriptions and verify ATS score.'
-        },
-        {
-          id: 'tsk_init_3_' + studentId.slice(-6),
-          title: 'Practice 15 Coding & Data Structures Problems',
-          dueDate: '2026-11-02',
-          priority: 'High',
-          status: 'Pending',
-          notes: '[Coding & DSA] Solve Tree and Dynamic Programming practice benchmarks for upcoming technical tests.'
-        },
-        {
-          id: 'tsk_init_4_' + studentId.slice(-6),
-          title: 'Review Campus Recruitment Drives & Eligibility',
-          dueDate: '2026-11-05',
-          priority: 'Medium',
-          status: 'Pending',
-          notes: '[Campus Drives] Review cutoff criteria and apply to active recruitment drives from Google India, Microsoft, and Cisco.'
-        }
-      ];
-
-      const tx = db.transaction(() => {
-        for (const t of defaultTasks) {
-          insertTask.run(t.id, mentorId, studentId, t.title, t.dueDate, t.priority, t.status, t.notes);
-        }
-      });
-      tx();
-    }
-  } catch (err) {
-    console.warn('[Tasks] ensureDefaultStudentTasks warning:', err.message);
-  }
-}
-
-function seedExistingStudentTasks() {
-  try {
-    const students = db.prepare("SELECT id FROM users WHERE role = 'student'").all();
-    for (const s of students) {
-      ensureDefaultStudentTasks(s.id);
-    }
-  } catch (err) {
-    console.warn('[Tasks] seedExistingStudentTasks warning:', err.message);
-  }
-}
-seedExistingStudentTasks();
-
 app.get('/api/tasks', requireRole(['student', 'faculty', 'officer']), (req, res) => {
   try {
     let studentId = req.query.studentId;
@@ -2587,9 +2509,6 @@ app.get('/api/tasks', requireRole(['student', 'faculty', 'officer']), (req, res)
       studentId = req.user.id;
     }
 
-    if (studentId) {
-      ensureDefaultStudentTasks(studentId);
-    }
     let tasks;
     if (studentId) {
       tasks = db.prepare('SELECT * FROM mentor_tasks WHERE student_id = ? ORDER BY due_date ASC').all(studentId);
@@ -2605,7 +2524,7 @@ app.get('/api/tasks', requireRole(['student', 'faculty', 'officer']), (req, res)
       priority: t.priority,
       status: t.status,
       notes: t.notes,
-      assignedDate: t.created_at ? t.created_at.split(' ')[0] : '2026-10-15'
+      assignedDate: t.created_at ? t.created_at.split(' ')[0] : new Date().toISOString().split('T')[0]
     }));
     res.json({ success: true, count: formatted.length, data: formatted });
   } catch (err) {
