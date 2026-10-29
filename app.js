@@ -3263,29 +3263,83 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const hasSubmission = isGraded || isRevision || isSubmitted || !!studentSub || !!item.submittedFile || (item.submissionUrl && item.submissionUrl.trim().length > 0);
 
+    // Helper to format dates as DD-MM-YYYY
+    const toDDMMYYYY = dStr => {
+      if (!dStr) return 'Flexible';
+      const clean = String(dStr).split('T')[0].split(' ')[0];
+      const parts = clean.split('-');
+      if (parts.length === 3 && parts[0].length === 4) {
+        return `${parts[2]}-${parts[1]}-${parts[0]}`;
+      }
+      return dStr;
+    };
+
     // Course tag / header
     if (courseTagEl) {
-      const tagText = item.code || item.subject || item.department || item.category || (type === 'faculty' ? 'Faculty Assignment' : type === 'lab' ? 'Lab Assignment' : type === 'learning' ? 'Learning Record' : 'Practice Record');
+      const tagText = item.subject || item.code || item.department || item.category || (type === 'faculty' ? 'Faculty Assignment' : type === 'lab' ? 'Lab Assignment' : type === 'learning' ? 'Learning Record' : 'Practice Record');
       courseTagEl.textContent = tagText.toUpperCase();
     }
 
     // Assignment / Problem Title
     const titleText = (item.title && item.title !== 'Assignment') ? item.title : (item.problemName || item.title || 'Coursework Assignment');
-    if (titleEl) titleEl.textContent = `Submission Details: ${titleText}`;
+    if (titleEl) titleEl.textContent = titleText;
 
     // Instructor / Verifier
-    if (instructorEl) instructorEl.textContent = item.professor || item.verifiedBy || 'Dr. Rajesh Sharma';
+    if (instructorEl) instructorEl.textContent = item.professor || item.facultyName || item.verifiedBy || 'Dr. Rajesh Sharma';
 
-    // Due Date
-    if (dueEl) dueEl.textContent = item.dueDate || item.date || item.completionDate || 'Flexible';
+    // Due Date in DD-MM-YYYY
+    if (dueEl) {
+      const formattedDate = toDDMMYYYY(item.dueDate || item.date || item.completionDate);
+      dueEl.textContent = item.dueTime ? `${formattedDate} (${item.dueTime})` : formattedDate;
+    }
 
     // Total points
     if (pointsEl) pointsEl.textContent = `${item.maxMarks || item.maxScore || 100} pts`;
 
-    // Status Badge
+    // Assignment Description & Guidelines
+    const descBox = document.getElementById('sub-detail-desc-box');
+    const descText = document.getElementById('sub-detail-desc-text');
+    if (descText) {
+      const instructions = item.description || item.instructions || item.rubric || 'Review the objectives and submit your coursework solution before the deadline.';
+      descText.textContent = instructions;
+      if (descBox) descBox.style.display = 'block';
+    }
+
+    // Assignment PDF / Question Paper (View PDF & Download PDF)
+    const pdfBox = document.getElementById('sub-detail-attachment-box');
+    const pdfNameEl = document.getElementById('sub-detail-attachment-name');
+    const viewPdfBtn = document.getElementById('btn-view-assignment-pdf');
+    const dlPdfBtn = document.getElementById('btn-download-assignment-pdf');
+
+    const pdfUrl = item.attachmentUrl || item.attachment || (item.attachments && item.attachments[0] ? (item.attachments[0].url || item.attachments[0].href) : '') || '';
+    const rawPdfName = item.attachmentName || (item.attachments && item.attachments[0] ? (item.attachments[0].fileName || item.attachments[0].originalName) : '') || (pdfUrl ? pdfUrl.split('/').pop().split('?')[0] : '');
+    const pdfName = rawPdfName || (pdfUrl ? 'Assignment_Document.pdf' : '');
+
+    window._currentAssignmentPdfUrl = pdfUrl;
+    window._currentAssignmentPdfName = pdfName || 'Assignment_Paper.pdf';
+
+    if (pdfBox) {
+      if (pdfUrl) {
+        pdfBox.style.display = 'flex';
+        if (pdfNameEl) pdfNameEl.textContent = pdfName || 'Assignment_Questions.pdf';
+        if (viewPdfBtn) viewPdfBtn.style.display = 'inline-flex';
+        if (dlPdfBtn) {
+          dlPdfBtn.style.display = 'inline-flex';
+          dlPdfBtn.href = pdfUrl;
+          dlPdfBtn.setAttribute('download', pdfName || 'Assignment_Paper.pdf');
+        }
+      } else {
+        pdfBox.style.display = 'flex';
+        if (pdfNameEl) pdfNameEl.textContent = 'No PDF reference attached for this assignment.';
+        if (viewPdfBtn) viewPdfBtn.style.display = 'none';
+        if (dlPdfBtn) dlPdfBtn.style.display = 'none';
+      }
+    }
+
+    // Status Badge - Pending, Submitted, Late, Graded
     if (statusBadge) {
       if (isGraded) {
-        statusBadge.textContent = 'Graded';
+        statusBadge.textContent = 'Graded ✓';
         statusBadge.style.background = '#065F46';
         statusBadge.style.color = '#FFFFFF';
       } else if (isRevision) {
@@ -3293,13 +3347,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         statusBadge.style.background = '#D97706';
         statusBadge.style.color = '#FFFFFF';
       } else if (hasSubmission) {
-        statusBadge.textContent = isSubmitted ? 'Submitted' : 'Pending Evaluation';
-        statusBadge.style.background = '#2563EB';
+        const isLateSub = studentSub && Boolean(studentSub.isLate || studentSub.is_late || studentSub.status === 'Late');
+        statusBadge.textContent = isLateSub ? 'Submitted (Late)' : 'Submitted';
+        statusBadge.style.background = isLateSub ? '#D97706' : '#0D9488';
         statusBadge.style.color = '#FFFFFF';
       } else {
-        statusBadge.textContent = 'Not Submitted';
-        statusBadge.style.background = '#64748B';
-        statusBadge.style.color = '#FFFFFF';
+        // Check if past due
+        let isPastDue = false;
+        if (item.dueDate) {
+          const dueTime = item.dueTime || '23:59';
+          const dueAt = new Date(`${item.dueDate}T${dueTime}:00`);
+          if (!isNaN(dueAt.getTime()) && new Date() > dueAt) {
+            isPastDue = true;
+          }
+        }
+        if (isPastDue) {
+          statusBadge.textContent = 'Late';
+          statusBadge.style.background = '#DC2626';
+          statusBadge.style.color = '#FFFFFF';
+        } else {
+          statusBadge.textContent = 'Pending';
+          statusBadge.style.background = '#2563EB';
+          statusBadge.style.color = '#FFFFFF';
+        }
       }
     }
 
@@ -3429,6 +3499,36 @@ document.addEventListener('DOMContentLoaded', async () => {
       modal.style.display = 'none';
     }
     window._selectedReplaceFile = null;
+  };
+
+  window.viewAssignmentPdf = function() {
+    const url = window._currentAssignmentPdfUrl;
+    if (!url) {
+      if (typeof window.showToast === 'function') window.showToast('No Assignment PDF is attached.', 'info');
+      return;
+    }
+    let viewUrl = url;
+    if (viewUrl.includes('/api/files/')) {
+      const sep = viewUrl.includes('?') ? '&' : '?';
+      viewUrl = `${viewUrl}${sep}view=1`;
+    }
+    window.open(viewUrl, '_blank');
+  };
+
+  window.downloadAssignmentPdf = function(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const url = window._currentAssignmentPdfUrl;
+    if (!url) {
+      if (typeof window.showToast === 'function') window.showToast('No Assignment PDF is attached.', 'info');
+      return;
+    }
+    const fileName = window._currentAssignmentPdfName || 'Assignment_Paper.pdf';
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   window.clearSelectedUpload = function(target) {
@@ -4222,77 +4322,132 @@ document.addEventListener('DOMContentLoaded', async () => {
     const facultyList = document.getElementById('student-faculty-assignments-list');
     if (facultyList) {
       const fa = store.getFacultyAssignments();
-      facultyList.innerHTML = fa.map(f => {
-        const isGraded = f.studentStatus === 'Graded' || (f.status === 'Graded' && f.studentStatus !== 'Assigned');
-        const isRevision = f.studentStatus === 'Revision Requested' || Boolean(f.isRevisionRequested) || (f.status === 'Revision Requested' && f.studentStatus !== 'Assigned');
-        const isSubmitted = f.studentStatus === 'Submitted' || (f.status === 'Submitted' && f.studentStatus !== 'Assigned');
-
-        let statusBadgeClass = 'blue';
-        let statusText = f.studentStatus || 'Assigned';
-
-        if (isGraded) {
-          statusBadgeClass = 'success';
-          statusText = 'Graded ✓';
-        } else if (isRevision) {
-          statusBadgeClass = 'warning';
-          statusText = 'Revision Requested';
-        } else if (isSubmitted) {
-          statusBadgeClass = 'teal';
-          statusText = 'Submitted';
-        } else {
-          statusBadgeClass = 'blue';
-          statusText = 'Assigned';
-        }
-
-        const displayScore = isGraded 
-          ? (f.studentMarks !== null && f.studentMarks !== undefined ? `${f.studentMarks} / ${f.maxMarks || 50}` : (f.marks || 'Graded'))
-          : 'Pending Evaluation';
-
-        return `
-          <div class="assignment-card-box">
-            <div class="assignment-card-header">
-              <div>
-                <span class="badge-status blue" style="font-size: 11px;">${f.department}</span>
-                <span style="font-size: 12px; color: var(--text-secondary); margin-left: 6px;">Assigned by: <strong>${f.professor}</strong></span>
-                <h3 style="font-size: 15.5px; font-weight: 700; color: #0F172A; margin-top: 4px;">${f.title}</h3>
-              </div>
-              <div style="text-align: right;">
-                <span class="badge-status ${statusBadgeClass}">${statusText}</span>
-                <div style="font-size: 12px; font-weight: 700; color: #0F172A; margin-top: 4px;">Score: ${displayScore}</div>
-              </div>
-            </div>
-
-            <div style="background: #F8FAFC; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 12px; color: var(--text-secondary);">
-              <strong>Instructions:</strong> ${f.instructions || f.description || 'Departmental project work deliverables.'}
-            </div>
-
-            ${isGraded && f.feedback ? `
-              <div style="background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: var(--radius-sm); padding: 8px 12px; font-size: 12px; color: #065F46;">
-                <strong>Faculty Feedback:</strong> "${f.feedback}"
-              </div>
-            ` : ''}
-
-            ${isRevision && f.feedback ? `
-              <div style="background: #FFFBEB; border: 1px solid #FDE68A; border-radius: var(--radius-sm); padding: 8px 12px; font-size: 12px; color: #92400E;">
-                <strong>Revision Notice:</strong> "${f.feedback}"
-              </div>
-            ` : ''}
-
-            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 12px; color: var(--text-muted); margin-top: 4px;">
-              <span>Deadline: <strong>${f.dueDate} ${f.dueTime || ''}</strong> <span class="badge-status ${f.priority === 'High' ? 'error' : 'blue'}" style="margin-left: 4px; font-size: 10px;">${f.priority || 'Medium'}</span></span>
-              <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                <button class="btn-outline btn-sm" onclick="openSubmissionDetailsModal('faculty', '${f.id}')">View Details</button>
-                ${isRevision
-                  ? `<button class="btn-primary btn-sm" style="background: #D97706;" onclick="openSubmitAssignmentModal('faculty', '${f.id}')">Resubmit Work</button>`
-                  : isSubmitted || isGraded
-                  ? `<button class="btn-outline btn-sm" onclick="openSubmitAssignmentModal('faculty', '${f.id}')">Replace Submission</button>`
-                  : `<button class="btn-primary btn-sm" onclick="openSubmitAssignmentModal('faculty', '${f.id}')">Submit Assignment</button>`
-                }
-              </div>
-            </div>
+      if (!fa || fa.length === 0) {
+        facultyList.innerHTML = `
+          <div class="empty-state-card" style="text-align: center; padding: 48px 20px; background: #FFFFFF; border: 1.5px dashed #CBD5E1; border-radius: 14px; margin-top: 10px;">
+            <div style="font-size: 40px; margin-bottom: 10px;">📚</div>
+            <h3 style="font-size: 16px; font-weight: 700; color: #1E293B; margin-bottom: 6px;">No Faculty Assignments Available</h3>
+            <p style="font-size: 13px; color: #64748B; max-width: 440px; margin: 0 auto;">There are currently no active assignments published for your course or section. When your professors create assignments, they will appear here automatically.</p>
           </div>
         `;
-      }).join('');
+      } else {
+        facultyList.innerHTML = fa.map(f => {
+          const isGraded = f.studentStatus === 'Graded' || (f.status === 'Graded' && f.studentStatus !== 'Assigned');
+          const isRevision = f.studentStatus === 'Revision Requested' || Boolean(f.isRevisionRequested) || (f.status === 'Revision Requested' && f.studentStatus !== 'Assigned');
+          const isSubmitted = f.studentStatus === 'Submitted' || (f.status === 'Submitted' && f.studentStatus !== 'Assigned') || Boolean(f.submittedFile || (f.submissionUrl && f.submissionUrl.trim().length > 0));
+
+          // Date formatting DD-MM-YYYY
+          const toDDMMYYYY = dStr => {
+            if (!dStr) return 'Flexible';
+            const clean = String(dStr).split('T')[0].split(' ')[0];
+            const parts = clean.split('-');
+            if (parts.length === 3 && parts[0].length === 4) {
+              return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+            return dStr;
+          };
+          const formattedDueDate = f.displayDueDate || toDDMMYYYY(f.dueDate);
+
+          // Status calculation: Pending, Submitted, Late
+          let statusBadgeClass = 'blue';
+          let statusText = 'Pending';
+
+          if (isGraded) {
+            statusBadgeClass = 'success';
+            statusText = 'Graded ✓';
+          } else if (isRevision) {
+            statusBadgeClass = 'warning';
+            statusText = 'Revision Requested';
+          } else if (isSubmitted) {
+            const isLate = Boolean(f.isLate || (f.submissions && f.submissions[0] && f.submissions[0].isLate));
+            if (isLate) {
+              statusBadgeClass = 'warning';
+              statusText = 'Late';
+            } else {
+              statusBadgeClass = 'teal';
+              statusText = 'Submitted';
+            }
+          } else {
+            let isPastDue = false;
+            if (f.dueDate) {
+              const dueTime = f.dueTime || '23:59';
+              const dueAt = new Date(`${f.dueDate}T${dueTime}:00`);
+              if (!isNaN(dueAt.getTime()) && new Date() > dueAt) {
+                isPastDue = true;
+              }
+            }
+            if (isPastDue) {
+              statusBadgeClass = 'error';
+              statusText = 'Late';
+            } else {
+              statusBadgeClass = 'blue';
+              statusText = 'Pending';
+            }
+          }
+
+          const displayScore = isGraded 
+            ? (f.studentMarks !== null && f.studentMarks !== undefined ? `${f.studentMarks} / ${f.maxMarks || 50}` : (f.marks || 'Graded'))
+            : 'Pending Evaluation';
+
+          const pdfUrl = f.attachmentUrl || f.attachment || (f.attachments && f.attachments[0] ? (f.attachments[0].url || f.attachments[0].href) : '');
+          const rawPdfName = f.attachmentName || (f.attachments && f.attachments[0] ? (f.attachments[0].fileName || f.attachments[0].originalName) : '') || (pdfUrl ? pdfUrl.split('/').pop().split('?')[0] : '');
+          const pdfName = rawPdfName || (pdfUrl ? 'Assignment_Document.pdf' : '');
+
+          return `
+            <div class="assignment-card-box" style="cursor: pointer;" onclick="openSubmissionDetailsModal('faculty', '${f.id}')">
+              <div class="assignment-card-header">
+                <div>
+                  <span class="badge-status blue" style="font-size: 11px; font-weight: 700;">${f.subject || f.department || 'Coursework'}</span>
+                  <span style="font-size: 12px; color: var(--text-secondary); margin-left: 6px;">Faculty: <strong>${f.facultyName || f.professor || 'Faculty Mentor'}</strong></span>
+                  <h3 style="font-size: 16px; font-weight: 700; color: #0F172A; margin-top: 4px;">${f.title}</h3>
+                </div>
+                <div style="text-align: right;">
+                  <span class="badge-status ${statusBadgeClass}">${statusText}</span>
+                  <div style="font-size: 12px; font-weight: 700; color: #0F172A; margin-top: 4px;">Score: ${displayScore}</div>
+                </div>
+              </div>
+
+              <div style="background: #F8FAFC; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                <strong>Description / Instructions:</strong> ${f.description || f.instructions || 'Review the requirements and submit your coursework solution.'}
+              </div>
+
+              ${pdfUrl ? `
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: var(--radius-sm); padding: 8px 12px; margin-top: 6px;" onclick="event.stopPropagation();">
+                  <div style="display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: #1E40AF; min-width: 0;">
+                    <span style="font-size: 16px;">📄</span>
+                    <strong style="color: #1E3A8A; font-size: 12px;">Assignment PDF:</strong>
+                    <span style="color: #0F172A; font-weight: 600; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 250px;">${pdfName}</span>
+                  </div>
+                  <div style="display: flex; gap: 6px;">
+                    <button type="button" class="btn-outline btn-sm" style="font-size: 11px; padding: 3px 10px; background: #FFFFFF;" onclick="event.stopPropagation(); window._currentAssignmentPdfUrl='${pdfUrl}'; window._currentAssignmentPdfName='${pdfName}'; viewAssignmentPdf();">View PDF</button>
+                    <a href="${pdfUrl}" download="${pdfName}" class="btn-primary btn-sm" style="font-size: 11px; padding: 3px 10px; text-decoration: none;" onclick="event.stopPropagation();">Download PDF</a>
+                  </div>
+                </div>
+              ` : ''}
+
+              ${isGraded && f.feedback ? `
+                <div style="background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: var(--radius-sm); padding: 8px 12px; font-size: 12px; color: #065F46; margin-top: 6px;">
+                  <strong>Faculty Feedback:</strong> "${f.feedback}"
+                </div>
+              ` : ''}
+
+              ${isRevision && f.feedback ? `
+                <div style="background: #FFFBEB; border: 1px solid #FDE68A; border-radius: var(--radius-sm); padding: 8px 12px; font-size: 12px; color: #92400E; margin-top: 6px;">
+                  <strong>Revision Notice:</strong> "${f.feedback}"
+                </div>
+              ` : ''}
+
+              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 12px; color: var(--text-muted); margin-top: 6px;" onclick="event.stopPropagation();">
+                <span>Due Date: <strong>${formattedDueDate}</strong> ${f.dueTime ? `(${f.dueTime})` : ''} <span class="badge-status ${f.priority === 'High' ? 'error' : 'blue'}" style="margin-left: 4px; font-size: 10px;">${f.priority || 'Medium'}</span></span>
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                  <button class="btn-outline btn-sm" onclick="event.stopPropagation(); openSubmissionDetailsModal('faculty', '${f.id}')">View Details</button>
+                  <button class="btn-primary btn-sm" onclick="event.stopPropagation(); openSubmissionDetailsModal('faculty', '${f.id}')">${isSubmitted || isGraded ? 'Update Submission' : 'Submit Assignment'}</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
     }
   }
 
@@ -6405,6 +6560,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const statusSelect = document.getElementById('faculty-asg-status');
     const modalTitle = document.getElementById('faculty-assignment-modal-title');
 
+    const pdfDropTitle = document.getElementById('faculty-asg-pdf-title');
+    const pdfDropSub = document.getElementById('faculty-asg-pdf-subtitle');
+    const pdfDropStatus = document.getElementById('faculty-asg-pdf-status');
+    const pdfFileInput = document.getElementById('faculty-asg-pdf-file');
+    if (pdfFileInput) pdfFileInput.value = '';
+
     if (assignmentId) {
       const assignment = (store.data.facultyAssignments || []).find(a => a.id === assignmentId);
       if (assignment) {
@@ -6424,8 +6585,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (dueInput) dueInput.value = `${assignment.dueDate}T${assignment.dueTime || '23:59'}`;
         if (prioritySelect) prioritySelect.value = assignment.priority || 'Medium';
         if (instructionsText) instructionsText.value = assignment.instructions || assignment.description || '';
-        if (attachmentInput) attachmentInput.value = assignment.attachment || '';
+        if (attachmentInput) attachmentInput.value = assignment.attachment || assignment.attachmentUrl || '';
         if (statusSelect) statusSelect.value = assignment.status;
+
+        const existingAtt = assignment.attachment || assignment.attachmentUrl || '';
+        if (existingAtt) {
+          const rawName = assignment.attachmentName || existingAtt.split('/').pop().split('?')[0];
+          if (pdfDropTitle) pdfDropTitle.textContent = `Attached: ${rawName}`;
+          if (pdfDropSub) pdfDropSub.textContent = 'Click to change or replace assignment document';
+          if (pdfDropStatus) {
+            pdfDropStatus.textContent = '✓ Assignment document attached';
+            pdfDropStatus.style.display = 'block';
+          }
+        } else {
+          if (pdfDropTitle) pdfDropTitle.textContent = 'Click to upload Assignment PDF';
+          if (pdfDropSub) pdfDropSub.textContent = 'Supports PDF and DOCX files up to 25MB';
+          if (pdfDropStatus) pdfDropStatus.style.display = 'none';
+        }
       }
     } else {
       if (modalTitle) modalTitle.textContent = 'Create New Academic Assignment';
@@ -6434,6 +6610,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (instructionsText) instructionsText.value = '';
       if (attachmentInput) attachmentInput.value = '';
       if (statusSelect) statusSelect.value = 'Published';
+      if (pdfDropTitle) pdfDropTitle.textContent = 'Click to upload Assignment PDF';
+      if (pdfDropSub) pdfDropSub.textContent = 'Supports PDF and DOCX files up to 25MB';
+      if (pdfDropStatus) pdfDropStatus.style.display = 'none';
       if (dueInput) {
         const nextWeek = new Date();
         nextWeek.setDate(nextWeek.getDate() + 7);
@@ -6442,6 +6621,65 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     modal.style.display = 'flex';
+  };
+
+  window.handleFacultyPdfSelect = async function(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+
+    const titleEl = document.getElementById('faculty-asg-pdf-title');
+    const subtitleEl = document.getElementById('faculty-asg-pdf-subtitle');
+    const statusEl = document.getElementById('faculty-asg-pdf-status');
+    const attInput = document.getElementById('faculty-asg-attachment');
+
+    if (titleEl) titleEl.textContent = `Uploading: ${file.name}...`;
+
+    try {
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.onerror = err => reject(err);
+        reader.readAsDataURL(file);
+      });
+
+      const token = localStorage.getItem('spp_auth_token') || '';
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        headers,
+        credentials: 'same-origin',
+        body: JSON.stringify({
+          fileName: file.name,
+          fileType: file.type || 'application/pdf',
+          fileData: base64
+        })
+      });
+      const data = await res.json();
+      if (data.success && data.file) {
+        const fileUrl = data.file.downloadUrl || `/api/files/${data.file.fileName}`;
+        if (attInput) attInput.value = fileUrl;
+        if (titleEl) titleEl.textContent = `Attached: ${file.name}`;
+        if (subtitleEl) subtitleEl.textContent = `Size: ${(file.size / (1024 * 1024)).toFixed(2)} MB • File ready to assign`;
+        if (statusEl) {
+          statusEl.textContent = `✓ PDF uploaded successfully (${data.file.fileName})`;
+          statusEl.style.display = 'block';
+        }
+        if (typeof window.showToast === 'function') window.showToast('Assignment PDF uploaded successfully.', 'success');
+      } else {
+        throw new Error((data && data.error) || 'Upload failed');
+      }
+    } catch (err) {
+      console.error('[Faculty PDF Upload Error]:', err);
+      if (titleEl) titleEl.textContent = 'Click to upload Assignment PDF';
+      if (statusEl) {
+        statusEl.textContent = `Upload failed: ${err.message}`;
+        statusEl.style.color = '#DC2626';
+        statusEl.style.display = 'block';
+      }
+      if (typeof window.showToast === 'function') window.showToast(err.message || 'PDF upload failed', 'error');
+    }
   };
 
   window.closeCreateAssignmentModal = function() {

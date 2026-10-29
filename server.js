@@ -319,25 +319,52 @@ function formatAssignment(a, subs = [], currentUserId = null) {
     size: primarySub.fileSize || 0
   } : null;
 
+  const parsedAttachments = (() => {
+    try {
+      const parsed = JSON.parse(a.attachments_json || '[]');
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      return [];
+    }
+  })();
+  const primaryAttachment = parsedAttachments[0] || null;
+  const attachmentUrl = primaryAttachment ? (primaryAttachment.url || primaryAttachment.href || '') : (a.submission_url || '');
+  const attachmentName = primaryAttachment ? (primaryAttachment.fileName || primaryAttachment.originalName || primaryAttachment.name || (attachmentUrl ? attachmentUrl.split('/').pop().split('?')[0] : 'Assignment_Paper.pdf')) : (attachmentUrl ? attachmentUrl.split('/').pop().split('?')[0] : '');
+
+  const formatDDMMYYYY = dStr => {
+    if (!dStr) return '';
+    const clean = String(dStr).split('T')[0].split(' ')[0];
+    const parts = clean.split('-');
+    if (parts.length === 3 && parts[0].length === 4) {
+      return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+    return dStr;
+  };
+
   return {
     ...meta,
     id: a.id,
     type: a.type,
     title: a.title,
-    subject: a.subject,
-    category: a.category,
-    professor: a.professor,
+    subject: a.subject || 'Coursework',
+    category: a.category || 'General Assignments',
+    professor: a.professor || 'Faculty Mentor',
+    facultyName: a.professor || 'Faculty Mentor',
     department: a.department,
     targetClass: a.target_class,
     targetYear: a.target_year || null,
-    attachments: (() => { try { return JSON.parse(a.attachments_json || '[]'); } catch (e) { return []; } })(),
-    description: a.description,
-    instructions: a.instructions,
+    attachment: attachmentUrl,
+    attachmentUrl,
+    attachmentName,
+    attachments: parsedAttachments,
+    description: a.description || a.instructions || '',
+    instructions: a.instructions || a.description || '',
     dueDate: a.due_date,
+    displayDueDate: formatDDMMYYYY(a.due_date),
     dueTime: a.due_time,
-    priority: a.priority,
-    status: a.status,
-    maxMarks: a.max_marks,
+    priority: a.priority || 'Medium',
+    status: a.status || 'Published',
+    maxMarks: a.max_marks || 50,
     marks: a.marks,
     feedback: effectiveFeedback,
     studentStatus: effectiveStatus,
@@ -1904,7 +1931,8 @@ app.get('/api/files/:filename', (req, res) => {
 
   res.setHeader('Content-Type', contentType);
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  const isInline = req.query.view === '1' || req.query.inline === '1' || req.query.preview === '1';
+  res.setHeader('Content-Disposition', `${isInline ? 'inline' : 'attachment'}; filename="${filename}"`);
   res.setHeader('Cache-Control', 'private, max-age=86400');
   fs.createReadStream(targetPath).pipe(res);
 });
@@ -1992,14 +2020,28 @@ app.post(['/api/records/:type', '/api/assignments/:type'], requireRole(['faculty
       if (typeof value !== 'string' && (!value || typeof value !== 'object' || typeof url !== 'string' || !url)) {
         return res.status(400).json({ success: false, error: 'Each attachment must be an http or https link.' });
       }
-      try {
-        if (url && !['http:', 'https:'].includes(new URL(url).protocol)) throw new Error('protocol');
-      } catch (_) {
-        return res.status(400).json({ success: false, error: 'Attachment links must use http or https.' });
+      const isInternalPath = /^\/(api\/files|uploads)\/[A-Za-z0-9._-]+$/i.test(url);
+      if (!isInternalPath) {
+        try {
+          if (url && !['http:', 'https:'].includes(new URL(url).protocol)) throw new Error('protocol');
+        } catch (_) {
+          return res.status(400).json({ success: false, error: 'Attachment links must use http or https.' });
+        }
       }
     }
     const department = String(body.department || targetClass).trim();
-    const structuredAttachments = attachmentValues.map(value => typeof value === 'string' ? { url: value } : value);
+    const structuredAttachments = attachmentValues.map(value => {
+      if (typeof value === 'string') {
+        const fileName = value.split('/').pop().split('?')[0] || 'Assignment_Paper.pdf';
+        return { url: value, fileName, originalName: fileName };
+      }
+      return {
+        url: value.url || value.href || '',
+        fileName: value.fileName || value.name || (value.url ? value.url.split('/').pop().split('?')[0] : 'Assignment_Paper.pdf'),
+        originalName: value.originalName || value.fileName || value.name || 'Assignment_Paper.pdf',
+        size: value.size || 0
+      };
+    });
     const newId = body.id || (type === 'faculty' ? 'fa_' : (type === 'lab' ? 'lab_' : 'rec_')) + Date.now().toString(36);
 
     const insertTx = db.transaction(() => {
@@ -2323,6 +2365,97 @@ app.post(['/api/records/:type/:id/grade', '/api/assignments/:type/:id/grade'], r
     res.json({ success: true, type, id, data: formatAssignment(updated, submissions) });
   } catch (err) {
     console.error('[Grade Error]:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Update assignment
+app.put(['/api/records/:type/:id', '/api/assignments/:type/:id'], requireRole(['faculty', 'officer']), (req, res) => {
+  try {
+    const { type, id } = req.params;
+    const body = req.body;
+    const existing = db.prepare('SELECT * FROM assignments WHERE id = ?').get(id);
+    if (!existing) return res.status(404).json({ success: false, error: `Assignment '${id}' not found.` });
+    if (req.user.role === 'faculty' && existing.created_by && existing.created_by !== req.user.id) {
+      return res.status(403).json({ success: false, error: 'You can only update assignments that you created.' });
+    }
+
+    const title = body.title !== undefined ? String(body.title).trim() : existing.title;
+    const subject = body.subject !== undefined ? String(body.subject).trim() : existing.subject;
+    const category = body.category !== undefined ? body.category : existing.category;
+    const targetYear = body.targetYear !== undefined ? String(body.targetYear).trim() : existing.target_year;
+    const targetClass = body.targetClass !== undefined ? String(body.targetClass).trim() : existing.target_class;
+    const department = body.department !== undefined ? String(body.department).trim() : (targetClass || existing.department);
+    const dueDate = body.dueDate !== undefined ? String(body.dueDate).trim() : existing.due_date;
+    const dueTime = body.dueTime !== undefined ? String(body.dueTime).trim() : existing.due_time;
+    const maxMarks = body.maxMarks !== undefined ? Number(body.maxMarks) : existing.max_marks;
+    const priority = body.priority !== undefined ? body.priority : existing.priority;
+    const instructions = body.instructions !== undefined ? body.instructions : (body.description !== undefined ? body.description : existing.instructions);
+    const description = body.description !== undefined ? body.description : (body.instructions !== undefined ? body.instructions : existing.description);
+    const status = body.status !== undefined ? body.status : existing.status;
+
+    let structuredAttachments = [];
+    const asList = value => value === undefined || value === null || value === '' ? [] : (Array.isArray(value) ? value : [value]);
+    const attachmentValues = [...asList(body.attachment), ...asList(body.attachments), ...asList(body.links)].filter(Boolean);
+    if (attachmentValues.length > 0) {
+      structuredAttachments = attachmentValues.map(value => {
+        if (typeof value === 'string') {
+          const fileName = value.split('/').pop().split('?')[0] || 'Assignment_Paper.pdf';
+          return { url: value, fileName, originalName: fileName };
+        }
+        return {
+          url: value.url || value.href || '',
+          fileName: value.fileName || value.name || (value.url ? value.url.split('/').pop().split('?')[0] : 'Assignment_Paper.pdf'),
+          originalName: value.originalName || value.fileName || value.name || 'Assignment_Paper.pdf',
+          size: value.size || 0
+        };
+      });
+    } else if (existing.attachments_json) {
+      try { structuredAttachments = JSON.parse(existing.attachments_json); } catch (e) {}
+    }
+
+    db.prepare(`
+      UPDATE assignments SET
+        title = ?,
+        subject = ?,
+        category = ?,
+        target_year = ?,
+        target_class = ?,
+        department = ?,
+        due_date = ?,
+        due_time = ?,
+        max_marks = ?,
+        priority = ?,
+        instructions = ?,
+        description = ?,
+        status = ?,
+        attachments_json = ?,
+        meta_json = ?
+      WHERE id = ?
+    `).run(
+      title,
+      subject,
+      category,
+      targetYear,
+      targetClass,
+      department,
+      dueDate,
+      dueTime,
+      maxMarks,
+      priority,
+      instructions,
+      description,
+      status,
+      JSON.stringify(structuredAttachments),
+      JSON.stringify({ attachments: structuredAttachments }),
+      id
+    );
+
+    const updated = db.prepare('SELECT * FROM assignments WHERE id = ?').get(id);
+    const submissions = db.prepare('SELECT * FROM submissions WHERE assignment_id = ?').all(id);
+    res.json({ success: true, type, id, data: formatAssignment(updated, submissions), message: `Assignment '${id}' updated successfully.` });
+  } catch (err) {
+    console.error('[Assignment Update Error]:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 });

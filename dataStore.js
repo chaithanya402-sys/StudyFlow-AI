@@ -1278,17 +1278,20 @@
 
     createFacultyAssignment(assignmentObj) {
       const newId = 'fa_' + Date.now().toString(36);
+      const attUrl = assignmentObj.attachment || assignmentObj.attachmentUrl || '';
+      const attName = attUrl ? attUrl.split('/').pop().split('?')[0] : '';
       const newAssignment = {
         id: newId,
         title: assignmentObj.title || 'Untitled Assignment',
         subject: assignmentObj.subject || 'Computer Science',
         category: assignmentObj.category || 'General Assignments',
         professor: this.data.roles.faculty.name || 'Dr. Rajesh Sharma',
+        facultyName: this.data.roles.faculty.name || 'Dr. Rajesh Sharma',
         targetYear: assignmentObj.targetYear || '1st Year',
         targetClass: assignmentObj.targetClass || 'CSE',
         department: assignmentObj.department || assignmentObj.targetClass || 'CSE',
-        description: assignmentObj.description || '',
-        instructions: assignmentObj.instructions || '',
+        description: assignmentObj.description || assignmentObj.instructions || '',
+        instructions: assignmentObj.instructions || assignmentObj.description || '',
         dueDate: assignmentObj.dueDate || '2026-11-15',
         dueTime: assignmentObj.dueTime || '23:59',
         priority: assignmentObj.priority || 'Medium',
@@ -1297,6 +1300,10 @@
         maxMarks: parseInt(assignmentObj.maxMarks, 10) || 50,
         marks: assignmentObj.status === 'Published' ? 'Pending' : 'Draft',
         feedback: assignmentObj.status === 'Published' ? 'Assignment published to student portal.' : 'Draft saved.',
+        attachment: attUrl,
+        attachmentUrl: attUrl,
+        attachmentName: attName,
+        attachments: attUrl ? [{ url: attUrl, fileName: attName, originalName: attName }] : [],
         submissions: []
       };
 
@@ -1330,13 +1337,22 @@
 
       this.addAudit(`Faculty ${this.data.roles.faculty.name} created assignment: "${newAssignment.title}"`);
       this.save();
-      sendBackendMutation('/api/records/faculty', 'POST', newAssignment);
+      sendBackendMutation('/api/records/faculty', 'POST', newAssignment).catch(e => console.warn('[DataStore] Assignment creation warning:', e));
       return newAssignment;
     }
 
     updateFacultyAssignment(id, updateObj) {
       const assignment = (this.data.facultyAssignments || []).find(a => a.id === id);
       if (!assignment) return null;
+
+      if (updateObj.attachment || updateObj.attachmentUrl) {
+        const attUrl = updateObj.attachment || updateObj.attachmentUrl;
+        const attName = attUrl.split('/').pop().split('?')[0];
+        updateObj.attachment = attUrl;
+        updateObj.attachmentUrl = attUrl;
+        updateObj.attachmentName = attName;
+        updateObj.attachments = [{ url: attUrl, fileName: attName, originalName: attName }];
+      }
 
       Object.assign(assignment, updateObj);
       if (updateObj.status === 'Published' && !assignment.publishedDate) {
@@ -1345,7 +1361,7 @@
       this.invalidateRecordCache('faculty', id);
       this.addAudit(`Faculty updated assignment: "${assignment.title}"`);
       this.save();
-      sendBackendMutation(`/api/records/faculty/${id}`, 'PUT', updateObj);
+      sendBackendMutation(`/api/records/faculty/${id}`, 'PUT', updateObj).catch(e => console.warn('[DataStore] Assignment update warning:', e));
       return assignment;
     }
 
