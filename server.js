@@ -4727,7 +4727,9 @@ app.get(['/dashboard', '/dashboard/'], (req, res) => {
 const publicFiles = new Set(['index.html', 'login.html', 'landing.html', 'register.html', 'styles.css', 'app.js', 'supabaseClient.js', 'dataStore.js']);
 app.get('/:publicFile', (req, res, next) => {
   if (!publicFiles.has(req.params.publicFile)) return next();
-  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   res.sendFile(path.join(DIR, req.params.publicFile));
 });
 app.use('/assets', express.static(path.join(DIR, 'assets'), { fallthrough: true }));
@@ -4748,6 +4750,9 @@ app.use((req, res, next) => {
 // Fallback to index.html for SPA hash routes
 app.use((req, res, next) => {
   if (req.method === 'GET' && !req.path.startsWith('/api/')) {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     return res.sendFile(path.join(DIR, 'index.html'));
   }
   next();

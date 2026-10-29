@@ -4402,16 +4402,43 @@
             <textarea class="form-textarea" id="faculty-asg-instructions" rows="4" placeholder="Detail the objectives, submission format, test scenarios, or report guidelines..." required></textarea>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">Assignment PDF / Question Paper (PDF or DOCX)</label>
-            <div class="modal-dropzone" id="faculty-asg-pdf-dropzone" onclick="document.getElementById('faculty-asg-pdf-file').click()" style="padding: 16px 14px; background: #F8FAFC; border: 1.5px dashed #CBD5E1; border-radius: 10px; cursor: pointer; text-align: center; transition: all 0.2s ease;">
-              <div style="font-size: 22px; margin-bottom: 3px;">📄</div>
-              <div style="font-size: 13px; font-weight: 600; color: #1E293B;" id="faculty-asg-pdf-title">Click to upload Assignment PDF</div>
-              <div style="font-size: 11px; color: #64748B;" id="faculty-asg-pdf-subtitle">Supports PDF and DOCX files up to 25MB</div>
+          <div class="form-group" style="margin-top: 14px;">
+            <label class="form-label" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-weight: 700; color: #1E293B;">Assignment PDF / Question Paper (Attach File)</span>
+              <span style="font-size: 11px; font-weight: 500; color: #64748B;">Supports PDF, DOCX, ZIP up to 25MB</span>
+            </label>
+
+            <!-- Prominent File Upload Dropzone -->
+            <div class="modal-dropzone" id="faculty-asg-pdf-dropzone" onclick="document.getElementById('faculty-asg-pdf-file').click()" style="padding: 20px 16px; background: #F0F7FF; border: 2px dashed #93C5FD; border-radius: 12px; cursor: pointer; text-align: center; transition: all 0.2s ease;">
+              <div style="font-size: 32px; margin-bottom: 4px;">📄</div>
+              <div style="font-size: 14px; font-weight: 700; color: #1E40AF; margin-bottom: 4px;" id="faculty-asg-pdf-title">Click to upload Assignment PDF / Question Paper</div>
+              <div style="font-size: 12px; color: #475569; margin-bottom: 12px;" id="faculty-asg-pdf-subtitle">Drag and drop file here, or click button to select from computer</div>
+              <button type="button" class="btn-primary btn-sm" style="font-size: 12px; font-weight: 600; padding: 6px 18px; border-radius: 6px; pointer-events: none;">
+                📁 Browse &amp; Attach File
+              </button>
             </div>
-            <input type="file" id="faculty-asg-pdf-file" style="display: none;" accept=".pdf,.doc,.docx" onchange="handleFacultyPdfSelect(event)">
-            <input type="text" class="form-input" id="faculty-asg-attachment" placeholder="https://... or uploaded file path" style="margin-top: 8px; font-size: 12px;">
-            <div id="faculty-asg-pdf-status" style="display: none; font-size: 11.5px; margin-top: 4px; font-weight: 600; color: #16A34A;"></div>
+            <input type="file" id="faculty-asg-pdf-file" style="display: none;" accept=".pdf,.doc,.docx,.zip,.tar,.gz,.png,.jpg,.jpeg,.txt" onchange="handleFacultyPdfSelect(event)">
+
+            <!-- Attached File Card (Shown when file is selected) -->
+            <div id="faculty-asg-attached-card" style="display: none; margin-top: 10px; background: #F0FDF4; border: 1.5px solid #22C55E; border-radius: 10px; padding: 10px 14px; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+                <span style="font-size: 24px;" id="faculty-asg-attached-icon">📕</span>
+                <div style="min-width: 0;">
+                  <div id="faculty-asg-attached-filename" style="font-size: 13.5px; font-weight: 700; color: #0F172A; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 340px;">assignment.pdf</div>
+                  <div id="faculty-asg-attached-filesize" style="font-size: 11.5px; color: #16A34A; font-weight: 600;">✓ Ready to assign (Uploaded)</div>
+                </div>
+              </div>
+              <button type="button" class="btn-outline btn-sm" onclick="removeFacultyAttachedFile(event)" style="font-size: 11.5px; padding: 4px 10px; color: #DC2626; border-color: #FCA5A5; background: #FFFFFF; cursor: pointer;">✕ Remove</button>
+            </div>
+
+            <!-- Upload Status Banner -->
+            <div id="faculty-asg-pdf-status" style="display: none; font-size: 12px; margin-top: 6px; font-weight: 600; color: #16A34A;"></div>
+
+            <!-- Optional External Link Alternative -->
+            <div style="margin-top: 12px;">
+              <div style="font-size: 11.5px; font-weight: 600; color: #64748B; margin-bottom: 4px;">Or External Material Link (Optional Google Drive or problem link):</div>
+              <input type="text" class="form-input" id="faculty-asg-attachment" placeholder="https://docs.google.com/... or uploaded file path" style="font-size: 12px; padding: 7px 10px;">
+            </div>
           </div>
 
           <div class="form-group">

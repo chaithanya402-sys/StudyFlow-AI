@@ -3667,6 +3667,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       });
     }
+
+    const facultyDropzone = document.getElementById('faculty-asg-pdf-dropzone');
+    if (facultyDropzone) {
+      ['dragenter', 'dragover'].forEach(evt => {
+        facultyDropzone.addEventListener(evt, e => {
+          e.preventDefault();
+          facultyDropzone.style.borderColor = '#2563EB';
+          facultyDropzone.style.background = '#DBEAFE';
+        });
+      });
+      ['dragleave', 'drop'].forEach(evt => {
+        facultyDropzone.addEventListener(evt, e => {
+          e.preventDefault();
+          facultyDropzone.style.borderColor = '#93C5FD';
+          facultyDropzone.style.background = '#F0F7FF';
+        });
+      });
+      facultyDropzone.addEventListener('drop', e => {
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          if (typeof window.handleFacultyPdfFile === 'function') {
+            window.handleFacultyPdfFile(e.dataTransfer.files[0]);
+          }
+        }
+      });
+    }
   }
 
   window.handleSubmitAssignmentAction = async function() {
@@ -6563,6 +6588,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const pdfDropTitle = document.getElementById('faculty-asg-pdf-title');
     const pdfDropSub = document.getElementById('faculty-asg-pdf-subtitle');
     const pdfDropStatus = document.getElementById('faculty-asg-pdf-status');
+    const attachedCard = document.getElementById('faculty-asg-attached-card');
+    const attachedFilename = document.getElementById('faculty-asg-attached-filename');
+    const attachedFilesize = document.getElementById('faculty-asg-attached-filesize');
     const pdfFileInput = document.getElementById('faculty-asg-pdf-file');
     if (pdfFileInput) pdfFileInput.value = '';
 
@@ -6591,15 +6619,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         const existingAtt = assignment.attachment || assignment.attachmentUrl || '';
         if (existingAtt) {
           const rawName = assignment.attachmentName || existingAtt.split('/').pop().split('?')[0];
+          if (attachedCard) {
+            attachedCard.style.display = 'flex';
+            if (attachedFilename) attachedFilename.textContent = rawName;
+            if (attachedFilesize) attachedFilesize.textContent = '✓ Currently Attached Document';
+          }
           if (pdfDropTitle) pdfDropTitle.textContent = `Attached: ${rawName}`;
-          if (pdfDropSub) pdfDropSub.textContent = 'Click to change or replace assignment document';
+          if (pdfDropSub) pdfDropSub.textContent = 'Click button to change or replace file';
           if (pdfDropStatus) {
-            pdfDropStatus.textContent = '✓ Assignment document attached';
+            pdfDropStatus.textContent = `✓ Active file: ${rawName}`;
             pdfDropStatus.style.display = 'block';
           }
         } else {
-          if (pdfDropTitle) pdfDropTitle.textContent = 'Click to upload Assignment PDF';
-          if (pdfDropSub) pdfDropSub.textContent = 'Supports PDF and DOCX files up to 25MB';
+          if (attachedCard) attachedCard.style.display = 'none';
+          if (pdfDropTitle) pdfDropTitle.textContent = 'Click to upload Assignment PDF / Question Paper';
+          if (pdfDropSub) pdfDropSub.textContent = 'Drag and drop file here, or click button to select from computer';
           if (pdfDropStatus) pdfDropStatus.style.display = 'none';
         }
       }
@@ -6610,8 +6644,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (instructionsText) instructionsText.value = '';
       if (attachmentInput) attachmentInput.value = '';
       if (statusSelect) statusSelect.value = 'Published';
-      if (pdfDropTitle) pdfDropTitle.textContent = 'Click to upload Assignment PDF';
-      if (pdfDropSub) pdfDropSub.textContent = 'Supports PDF and DOCX files up to 25MB';
+      if (attachedCard) attachedCard.style.display = 'none';
+      if (pdfDropTitle) pdfDropTitle.textContent = 'Click to upload Assignment PDF / Question Paper';
+      if (pdfDropSub) pdfDropSub.textContent = 'Drag and drop file here, or click button to select from computer';
       if (pdfDropStatus) pdfDropStatus.style.display = 'none';
       if (dueInput) {
         const nextWeek = new Date();
@@ -6623,16 +6658,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     modal.style.display = 'flex';
   };
 
-  window.handleFacultyPdfSelect = async function(event) {
+  window.handleFacultyPdfSelect = function(event) {
     const file = event.target.files && event.target.files[0];
+    if (file) window.handleFacultyPdfFile(file);
+  };
+
+  window.handleFacultyPdfFile = async function(file) {
     if (!file) return;
 
     const titleEl = document.getElementById('faculty-asg-pdf-title');
     const subtitleEl = document.getElementById('faculty-asg-pdf-subtitle');
     const statusEl = document.getElementById('faculty-asg-pdf-status');
     const attInput = document.getElementById('faculty-asg-attachment');
+    const attachedCard = document.getElementById('faculty-asg-attached-card');
+    const attachedFilename = document.getElementById('faculty-asg-attached-filename');
+    const attachedFilesize = document.getElementById('faculty-asg-attached-filesize');
+    const attachedIcon = document.getElementById('faculty-asg-attached-icon');
 
     if (titleEl) titleEl.textContent = `Uploading: ${file.name}...`;
+    if (statusEl) {
+      statusEl.textContent = `⏳ Uploading ${file.name}...`;
+      statusEl.style.color = '#2563EB';
+      statusEl.style.display = 'block';
+    }
 
     try {
       const base64 = await new Promise((resolve, reject) => {
@@ -6661,25 +6709,56 @@ document.addEventListener('DOMContentLoaded', async () => {
         const fileUrl = data.file.downloadUrl || `/api/files/${data.file.fileName}`;
         if (attInput) attInput.value = fileUrl;
         if (titleEl) titleEl.textContent = `Attached: ${file.name}`;
-        if (subtitleEl) subtitleEl.textContent = `Size: ${(file.size / (1024 * 1024)).toFixed(2)} MB • File ready to assign`;
+        const formattedSize = file.size < 1024 * 1024 ? `${(file.size / 1024).toFixed(1)} KB` : `${(file.size / (1024 * 1024)).toFixed(2)} MB`;
+        if (subtitleEl) subtitleEl.textContent = `File ready to assign (${formattedSize})`;
         if (statusEl) {
-          statusEl.textContent = `✓ PDF uploaded successfully (${data.file.fileName})`;
+          statusEl.textContent = `✓ "${file.name}" uploaded successfully!`;
+          statusEl.style.color = '#16A34A';
           statusEl.style.display = 'block';
         }
-        if (typeof window.showToast === 'function') window.showToast('Assignment PDF uploaded successfully.', 'success');
+        if (attachedCard) {
+          attachedCard.style.display = 'flex';
+          if (attachedFilename) attachedFilename.textContent = file.name;
+          if (attachedFilesize) attachedFilesize.textContent = `✓ Uploaded (${formattedSize}) • Ready to assign`;
+          if (attachedIcon) {
+            const ext = (file.name || '').split('.').pop().toLowerCase();
+            attachedIcon.textContent = ext === 'pdf' ? '📕' : (ext === 'zip' ? '📦' : '📄');
+          }
+        }
+        if (typeof window.showToast === 'function') window.showToast(`✓ "${file.name}" attached successfully.`, 'success');
       } else {
         throw new Error((data && data.error) || 'Upload failed');
       }
     } catch (err) {
       console.error('[Faculty PDF Upload Error]:', err);
-      if (titleEl) titleEl.textContent = 'Click to upload Assignment PDF';
+      if (titleEl) titleEl.textContent = 'Click to upload Assignment PDF / Question Paper';
       if (statusEl) {
         statusEl.textContent = `Upload failed: ${err.message}`;
         statusEl.style.color = '#DC2626';
         statusEl.style.display = 'block';
       }
-      if (typeof window.showToast === 'function') window.showToast(err.message || 'PDF upload failed', 'error');
+      if (typeof window.showToast === 'function') window.showToast(err.message || 'File upload failed', 'error');
     }
+  };
+
+  window.removeFacultyAttachedFile = function(e) {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    const fileInput = document.getElementById('faculty-asg-pdf-file');
+    if (fileInput) fileInput.value = '';
+    const attInput = document.getElementById('faculty-asg-attachment');
+    if (attInput) attInput.value = '';
+    const card = document.getElementById('faculty-asg-attached-card');
+    if (card) card.style.display = 'none';
+    const statusEl = document.getElementById('faculty-asg-pdf-status');
+    if (statusEl) statusEl.style.display = 'none';
+    const titleEl = document.getElementById('faculty-asg-pdf-title');
+    if (titleEl) titleEl.textContent = 'Click to upload Assignment PDF / Question Paper';
+    const subEl = document.getElementById('faculty-asg-pdf-subtitle');
+    if (subEl) subEl.textContent = 'Drag and drop file here, or click button to select from computer';
+    if (typeof window.showToast === 'function') window.showToast('Attached file removed.', 'info');
   };
 
   window.closeCreateAssignmentModal = function() {
