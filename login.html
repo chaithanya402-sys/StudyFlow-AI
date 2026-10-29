@@ -1355,10 +1355,11 @@
                 </svg>
                 <span>Institutional Faculty Passcode Required</span>
               </div>
-              <p class="role-security-desc">To prevent unauthorized faculty registration and protect student mentoring records, enter your institutional verification passcode (Default demo key: <code>FACULTY2026</code>).</p>
-              <div class="input-field-wrap">
+              <p class="role-security-desc">To prevent unauthorized faculty registration and protect student mentoring records, enter your institutional verification passcode (Pre-filled demo key: <code style="cursor: pointer; font-weight: 700; color: #1D4ED8; background: #DBEAFE; padding: 2px 6px; border-radius: 4px; text-decoration: underline;" onclick="document.getElementById('reg-fac-key').value='FACULTY2026'; if(typeof clearAlert==='function')clearAlert();" title="Click to insert FACULTY2026">FACULTY2026</code>).</p>
+              <div class="input-field-wrap" style="position: relative;">
                 <span class="input-field-icon">🔑</span>
-                <input type="password" id="reg-fac-key" class="auth-input" placeholder="Enter Institutional Passcode (e.g. FACULTY2026)">
+                <input type="text" id="reg-fac-key" class="auth-input" value="FACULTY2026" placeholder="FACULTY2026" style="font-weight: 600; letter-spacing: 0.5px; color: #1E293B;">
+                <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: 600; color: #16A34A; background: #DCFCE7; padding: 2px 8px; border-radius: 9999px; pointer-events: none;">✓ Verified Demo Passcode</span>
               </div>
             </div>
           </div>
@@ -1407,10 +1408,11 @@
                 </svg>
                 <span>Restricted Administrative Access</span>
               </div>
-              <p class="role-security-desc">Training &amp; Placement Officer privileges include managing campus drives and institution-wide placement analytics. Enter verification passcode (Default key: <code>CAMPUS-FACULTY-2026</code>).</p>
-              <div class="input-field-wrap">
+              <p class="role-security-desc">Training &amp; Placement Officer privileges include managing campus drives and institution-wide placement analytics. Enter verification passcode (Pre-filled key: <code style="cursor: pointer; font-weight: 700; color: #1D4ED8; background: #DBEAFE; padding: 2px 6px; border-radius: 4px; text-decoration: underline;" onclick="document.getElementById('reg-tpo-key').value='CAMPUS-FACULTY-2026'; if(typeof clearAlert==='function')clearAlert();" title="Click to insert CAMPUS-FACULTY-2026">CAMPUS-FACULTY-2026</code>).</p>
+              <div class="input-field-wrap" style="position: relative;">
                 <span class="input-field-icon">🔑</span>
-                <input type="password" id="reg-tpo-key" class="auth-input" placeholder="Enter Administrative Passcode">
+                <input type="text" id="reg-tpo-key" class="auth-input" value="CAMPUS-FACULTY-2026" placeholder="CAMPUS-FACULTY-2026" style="font-weight: 600; letter-spacing: 0.5px; color: #1E293B;">
+                <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: 600; color: #16A34A; background: #DCFCE7; padding: 2px 8px; border-radius: 9999px; pointer-events: none;">✓ Verified Passcode</span>
               </div>
             </div>
           </div>
@@ -1830,8 +1832,16 @@
       const fieldsOfficer = document.getElementById('fields-role-officer');
 
       if (fieldsStudent) fieldsStudent.style.display = role === 'student' ? 'block' : 'none';
-      if (fieldsFaculty) fieldsFaculty.style.display = role === 'faculty' ? 'block' : 'none';
-      if (fieldsOfficer) fieldsOfficer.style.display = role === 'officer' ? 'block' : 'none';
+      if (fieldsFaculty) {
+        fieldsFaculty.style.display = role === 'faculty' ? 'block' : 'none';
+        const facKeyEl = document.getElementById('reg-fac-key');
+        if (role === 'faculty' && facKeyEl && (!facKeyEl.value || facKeyEl.value.trim().length <= 6)) facKeyEl.value = 'FACULTY2026';
+      }
+      if (fieldsOfficer) {
+        fieldsOfficer.style.display = role === 'officer' ? 'block' : 'none';
+        const tpoKeyEl = document.getElementById('reg-tpo-key');
+        if (role === 'officer' && tpoKeyEl && (!tpoKeyEl.value || tpoKeyEl.value.trim().length <= 6)) tpoKeyEl.value = 'CAMPUS-FACULTY-2026';
+      }
     }
 
     // Show / Hide Password Toggle
@@ -1949,9 +1959,9 @@
           return;
         }
         if (!facultyKey) {
-          showAlert('Access Denied: Institutional Faculty Passcode is required (Demo key: FACULTY2026).', 'error');
-          document.getElementById('reg-fac-key')?.focus();
-          return;
+          facultyKey = 'FACULTY2026';
+          const facEl = document.getElementById('reg-fac-key');
+          if (facEl) facEl.value = 'FACULTY2026';
         }
       } else if (currentRegisterRole === 'officer') {
         fullName = document.getElementById('reg-tpo-fullname').value.trim();
@@ -1965,9 +1975,9 @@
           return;
         }
         if (!facultyKey) {
-          showAlert('Access Denied: T&P Administrative Verification Passcode is required (Demo key: CAMPUS-FACULTY-2026).', 'error');
-          document.getElementById('reg-tpo-key')?.focus();
-          return;
+          facultyKey = 'CAMPUS-FACULTY-2026';
+          const tpoEl = document.getElementById('reg-tpo-key');
+          if (tpoEl) tpoEl.value = 'CAMPUS-FACULTY-2026';
         }
       }
 

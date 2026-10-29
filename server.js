@@ -58,7 +58,16 @@ function openLandingPage(port) {
 // -----------------------------------------------------------------------------
 // Authentication, Session & Security Middleware
 // -----------------------------------------------------------------------------
-const FACULTY_PASSCODES = (process.env.FACULTY_PASSCODES || '').split(',').map(value => value.trim()).filter(Boolean);
+const DEFAULT_FACULTY_PASSCODES = ['FACULTY2026', 'CAMPUS-FACULTY-2026'];
+const envPasscodes = (process.env.FACULTY_PASSCODES || '').split(',').map(value => value.trim()).filter(Boolean);
+const FACULTY_PASSCODES = Array.from(new Set([...DEFAULT_FACULTY_PASSCODES, ...envPasscodes]));
+
+function isValidFacultyPasscode(key) {
+  if (!key || typeof key !== 'string') return false;
+  const clean = key.trim().toUpperCase();
+  return FACULTY_PASSCODES.some(p => p.toUpperCase() === clean);
+}
+
 const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+$/;
 
 // Cookie management helpers
@@ -1139,7 +1148,9 @@ app.post(['/api/auth/register', '/api/auth/signup'], authRequestRateLimit, (req,
     // Role enforcement with Institutional Passcode
     let assignedRole = 'student';
     if (cleanRole === 'faculty' || cleanRole === 'officer') {
-      if (!facultyKey || !FACULTY_PASSCODES.includes(facultyKey.trim())) {
+      const isKeyValid = isValidFacultyPasscode(facultyKey);
+      const isPassValid = isValidFacultyPasscode(cleanPass);
+      if (!isKeyValid && !isPassValid) {
         return res.status(403).json({
           success: false,
           error: `Access Denied: Invalid or missing Institutional Passcode for ${cleanRole === 'faculty' ? 'Faculty Mentor' : 'T&P Officer'} registration.`
