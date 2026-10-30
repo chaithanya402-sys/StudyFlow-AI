@@ -1103,6 +1103,947 @@
 
       </div>
 
+      <!-- ================================================================= -->
+      <!-- PANE 2A: STUDENT ACADEMIC PERFORMANCE (PILLAR 1) -->
+      <!-- ================================================================= -->
+      <div class="view-container screen-pane" id="pane-student-academic-performance" style="display: none;">
+        <div class="panel-header" style="margin-bottom: 16px;">
+          <div>
+            <h2 class="welcome-heading">Academic Performance</h2>
+            <p class="welcome-subtext">Collect, validate, and manage semester CGPA, school metrics, and backlog records to feed the supervised ML placement engine.</p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-outline btn-sm" onclick="navigateToRoute('/student/overview')">
+              <span>View Overview</span>
+            </button>
+            <button class="btn-primary btn-sm" onclick="saveAcademicPerformanceForm()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+              <span>Save &amp; Verify Records</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Academic Indicator Cards -->
+        <div class="kpi-grid-4" style="margin-bottom: 20px;">
+          <div class="kpi-card">
+            <div class="kpi-top-row">
+              <span class="kpi-label">Academic Standing</span>
+              <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path></svg>
+            </div>
+            <div class="kpi-main-val" id="acad-kpi-standing" style="font-size: 18px;">First Class</div>
+            <div class="kpi-context-row">
+              <span class="kpi-pill teal" id="acad-kpi-standing-pill">CGPA Benchmark Met</span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-top-row">
+              <span class="kpi-label">Super Dream (Tier 1)</span>
+              <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+            </div>
+            <div class="kpi-main-val" id="acad-kpi-tier1">Eligible</div>
+            <div class="kpi-context-row">
+              <span class="kpi-pill teal" id="acad-kpi-tier1-pill">CGPA &gt;= 7.50, 0 Backlogs</span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-top-row">
+              <span class="kpi-label">Backlog Status</span>
+              <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            </div>
+            <div class="kpi-main-val" id="acad-kpi-backlogs">0 Active</div>
+            <div class="kpi-context-row">
+              <span class="kpi-pill teal" id="acad-kpi-backlogs-pill">Clear Record</span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-top-row">
+              <span class="kpi-label">Academic Pillar Score</span>
+              <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline></svg>
+            </div>
+            <div class="kpi-main-val" id="acad-kpi-score">84 <span style="font-size: 13px; color: var(--text-secondary);">/ 100</span></div>
+            <div class="kpi-context-row">
+              <span class="kpi-pill blue">30% ML Weight</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-grid-2">
+          <!-- Left: Academic Form -->
+          <div class="content-panel">
+            <h3 class="panel-title" style="margin-bottom: 14px;">Student Academic Record Details</h3>
+            <form id="form-academic-performance" onsubmit="event.preventDefault(); saveAcademicPerformanceForm();">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+                <div>
+                  <label class="form-label">Student Name</label>
+                  <input type="text" id="acad-input-name" class="form-input" placeholder="e.g. Chandu Palla" required>
+                </div>
+                <div>
+                  <label class="form-label">Department / Branch</label>
+                  <select id="acad-input-dept" class="form-input">
+                    <option value="Computer Science & Engineering">Computer Science &amp; Engineering</option>
+                    <option value="Information Technology">Information Technology</option>
+                    <option value="Electronics & Communication">Electronics &amp; Communication</option>
+                    <option value="Electrical Engineering">Electrical Engineering</option>
+                    <option value="Mechanical Engineering">Mechanical Engineering</option>
+                    <option value="Civil Engineering">Civil Engineering</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+                <div>
+                  <label class="form-label">Degree</label>
+                  <select id="acad-input-degree" class="form-input">
+                    <option value="B.Tech">B.Tech (Bachelor of Technology)</option>
+                    <option value="B.E.">B.E. (Bachelor of Engineering)</option>
+                    <option value="M.Tech">M.Tech</option>
+                    <option value="MCA">MCA (Master of Computer Apps)</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="form-label">Current Semester</label>
+                  <select id="acad-input-sem" class="form-input">
+                    <option value="1st Semester">1st Semester</option>
+                    <option value="2nd Semester">2nd Semester</option>
+                    <option value="3rd Semester">3rd Semester</option>
+                    <option value="4th Semester">4th Semester</option>
+                    <option value="5th Semester">5th Semester</option>
+                    <option value="6th Semester" selected>6th Semester</option>
+                    <option value="7th Semester">7th Semester</option>
+                    <option value="8th Semester">8th Semester</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+                <div>
+                  <label class="form-label">Current CGPA (0 - 10)</label>
+                  <input type="number" step="0.01" min="0" max="10" id="acad-input-cgpa" class="form-input" placeholder="8.45" required>
+                </div>
+                <div>
+                  <label class="form-label">10th Standard %</label>
+                  <input type="number" step="0.1" min="0" max="100" id="acad-input-tenth" class="form-input" placeholder="88.0" required>
+                </div>
+                <div>
+                  <label class="form-label">12th / Inter %</label>
+                  <input type="number" step="0.1" min="0" max="100" id="acad-input-twelfth" class="form-input" placeholder="85.5" required>
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px;">
+                <div>
+                  <label class="form-label">Active Standing Backlogs</label>
+                  <input type="number" min="0" max="15" id="acad-input-active-backlogs" class="form-input" value="0" required>
+                  <small style="color: var(--text-secondary); font-size: 11px;">Current unresolved backlogs</small>
+                </div>
+                <div>
+                  <label class="form-label">Previous Cleared Backlogs</label>
+                  <input type="number" min="0" max="15" id="acad-input-prev-backlogs" class="form-input" value="0">
+                  <small style="color: var(--text-secondary); font-size: 11px;">Historical backlogs resolved</small>
+                </div>
+              </div>
+
+              <div id="acad-form-msg" style="display: none; padding: 10px; border-radius: 8px; margin-bottom: 14px; font-size: 12.5px;"></div>
+
+              <button type="submit" class="btn-primary" style="width: 100%;">
+                <span>Save Academic Information &amp; Recalculate Indicators</span>
+              </button>
+            </form>
+          </div>
+
+          <!-- Right: Visual Analytics & Cutoffs -->
+          <div class="content-panel">
+            <h3 class="panel-title" style="margin-bottom: 12px;">Institutional Eligibility Criteria</h3>
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+              <div style="padding: 12px 14px; background: #F8FAFC; border: 1px solid var(--border-subtle); border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                  <strong style="font-size: 13px; color: #1E293B;">Tier-1 Super Dream (Package &gt; 12 LPA)</strong>
+                  <span class="badge-status teal" id="cutoff-badge-tier1">Eligible</span>
+                </div>
+                <p style="font-size: 11.5px; color: var(--text-secondary); margin: 0;">Requirements: Minimum 7.50 CGPA, 0 active backlogs, 60%+ in 10th &amp; 12th standards.</p>
+              </div>
+
+              <div style="padding: 12px 14px; background: #F8FAFC; border: 1px solid var(--border-subtle); border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                  <strong style="font-size: 13px; color: #1E293B;">Tier-2 Dream (Package 6 - 12 LPA)</strong>
+                  <span class="badge-status teal" id="cutoff-badge-tier2">Eligible</span>
+                </div>
+                <p style="font-size: 11.5px; color: var(--text-secondary); margin: 0;">Requirements: Minimum 6.50 CGPA, max 1 history backlog cleared, 60%+ graduation average.</p>
+              </div>
+
+              <div style="padding: 12px 14px; background: #F8FAFC; border: 1px solid var(--border-subtle); border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                  <strong style="font-size: 13px; color: #1E293B;">Standard IT Services (3.5 - 6 LPA)</strong>
+                  <span class="badge-status teal" id="cutoff-badge-mass">Eligible</span>
+                </div>
+                <p style="font-size: 11.5px; color: var(--text-secondary); margin: 0;">Requirements: Minimum 6.00 CGPA or 60% aggregate without standing backlogs at interview.</p>
+              </div>
+            </div>
+
+            <h4 style="font-size: 12.5px; font-weight: 700; color: #1E293B; margin-bottom: 8px;">Academic Score Contribution to ML Model</h4>
+            <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 8px; padding: 12px; font-size: 12px; line-height: 1.5; color: #1E3A8A;">
+              <strong>Calibrated Coefficient Impact:</strong> In our Scikit-learn placement classification model, CGPA contributes +0.58 to the logistic probability score, while standing backlogs impart a -1.85 penalty. Keeping standing backlogs at zero is the single highest leverage academic factor for placement eligibility.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================================================================= -->
+      <!-- PANE 2B: STUDENT PROFILE & SKILLS (PILLAR 2) -->
+      <!-- ================================================================= -->
+      <div class="view-container screen-pane" id="pane-student-profile-skills" style="display: none;">
+        <div class="panel-header" style="margin-bottom: 16px;">
+          <div>
+            <h2 class="welcome-heading">Student Profile &amp; Technical Skills</h2>
+            <p class="welcome-subtext">Manage programming languages, databases, web technologies, verified internships, and project repositories.</p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-primary btn-sm" onclick="navigateToRoute('/student/placement-prediction')">
+              <span>View Placement Prediction</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Pillar 2 KPI Summary -->
+        <div class="kpi-grid-4" style="margin-bottom: 20px;">
+          <div class="kpi-card">
+            <div class="kpi-top-row">
+              <span class="kpi-label">Technical Skills</span>
+              <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            </div>
+            <div class="kpi-main-val" id="prof-kpi-skills-count">0</div>
+            <div class="kpi-context-row">
+              <span class="kpi-pill blue">Verified Stack</span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-top-row">
+              <span class="kpi-label">Internships Completed</span>
+              <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+            </div>
+            <div class="kpi-main-val" id="prof-kpi-internships-count">0</div>
+            <div class="kpi-context-row">
+              <span class="kpi-pill teal" id="prof-kpi-internships-pill">Industry Experience</span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-top-row">
+              <span class="kpi-label">Production Projects</span>
+              <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path></svg>
+            </div>
+            <div class="kpi-main-val" id="prof-kpi-projects-count">0</div>
+            <div class="kpi-context-row">
+              <span class="kpi-pill blue">Live Deliverables</span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-top-row">
+              <span class="kpi-label">Profile Pillar Score</span>
+              <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline></svg>
+            </div>
+            <div class="kpi-main-val" id="prof-kpi-score">76 <span style="font-size: 13px; color: var(--text-secondary);">/ 100</span></div>
+            <div class="kpi-context-row">
+              <span class="kpi-pill blue">25% ML Weight</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 1: Add Skill & Skill Tags -->
+        <div class="content-panel" style="margin-bottom: 20px;">
+          <h3 class="panel-title" style="margin-bottom: 12px;">Technical Skills Inventory</h3>
+          <div style="background: #F8FAFC; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px; margin-bottom: 16px;">
+            <div style="display: grid; grid-template-columns: 2fr 1.5fr 1.5fr 1fr auto; gap: 10px; align-items: end;">
+              <div>
+                <label class="form-label">Skill Name</label>
+                <input type="text" id="skill-input-name" class="form-input" placeholder="e.g. Python, SQL, React.js">
+              </div>
+              <div>
+                <label class="form-label">Category</label>
+                <select id="skill-input-cat" class="form-input">
+                  <option value="programming">Programming (Python, Java, C, C++)</option>
+                  <option value="database">Database (SQL, MySQL, MongoDB)</option>
+                  <option value="web">Web Development (React, Node, HTML/CSS)</option>
+                  <option value="data_science">Data Science &amp; ML (Pandas, Scikit-learn)</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label">Proficiency Level</label>
+                <select id="skill-input-level" class="form-input">
+                  <option value="Beginner">Beginner</option>
+                  <option value="Intermediate" selected>Intermediate</option>
+                  <option value="Advanced">Advanced</option>
+                  <option value="Expert">Expert</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label">Experience</label>
+                <input type="number" step="0.5" min="0.5" max="10" id="skill-input-exp" class="form-input" value="1.0">
+              </div>
+              <div>
+                <button type="button" class="btn-primary" onclick="handleAddSkillItem()">
+                  <span>Add Skill</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div id="skills-list-container" style="display: flex; flex-wrap: wrap; gap: 10px; min-height: 48px;">
+            <!-- Dynamically populated skills -->
+          </div>
+        </div>
+
+        <div class="panel-grid-2">
+          <!-- Section 2: Internships -->
+          <div class="content-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <h3 class="panel-title">Industry Internships</h3>
+              <button class="btn-outline btn-sm" onclick="toggleAddInternshipBox()">
+                <span>+ Add Internship</span>
+              </button>
+            </div>
+
+            <!-- Add Internship Drawer -->
+            <div id="add-internship-drawer" style="display: none; background: #F8FAFC; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px; margin-bottom: 14px;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                <div>
+                  <label class="form-label">Role / Designation</label>
+                  <input type="text" id="int-input-role" class="form-input" placeholder="e.g. Software Engineering Intern">
+                </div>
+                <div>
+                  <label class="form-label">Company / Organization</label>
+                  <input type="text" id="int-input-company" class="form-input" placeholder="e.g. Microsoft India">
+                </div>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                <div>
+                  <label class="form-label">Duration (Months)</label>
+                  <input type="number" min="1" max="24" id="int-input-duration" class="form-input" value="3">
+                </div>
+                <div>
+                  <label class="form-label">Start Date</label>
+                  <input type="date" id="int-input-start" class="form-input">
+                </div>
+                <div>
+                  <label class="form-label">End Date</label>
+                  <input type="date" id="int-input-end" class="form-input">
+                </div>
+              </div>
+              <div style="margin-bottom: 10px;">
+                <label class="form-label">Responsibilities &amp; Tech Stack Used</label>
+                <textarea id="int-input-desc" class="form-input" style="height: 60px;" placeholder="Developed REST APIs and optimized database query execution..."></textarea>
+              </div>
+              <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                <button type="button" class="btn-outline btn-sm" onclick="toggleAddInternshipBox()">Cancel</button>
+                <button type="button" class="btn-primary btn-sm" onclick="handleSaveInternship()">Save Internship</button>
+              </div>
+            </div>
+
+            <div id="internships-list-container" style="display: flex; flex-direction: column; gap: 10px;">
+              <!-- Dynamically populated internships -->
+            </div>
+          </div>
+
+          <!-- Section 3: Student Projects -->
+          <div class="content-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <h3 class="panel-title">Technical Projects</h3>
+              <button class="btn-outline btn-sm" onclick="toggleAddProjectBox()">
+                <span>+ Add Project</span>
+              </button>
+            </div>
+
+            <!-- Add Project Drawer -->
+            <div id="add-project-drawer" style="display: none; background: #F8FAFC; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px; margin-bottom: 14px;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                <div>
+                  <label class="form-label">Project Title</label>
+                  <input type="text" id="prj-input-title" class="form-input" placeholder="e.g. StudyFlow AI">
+                </div>
+                <div>
+                  <label class="form-label">Technologies Used</label>
+                  <input type="text" id="prj-input-tech" class="form-input" placeholder="e.g. Python, Scikit-learn, React">
+                </div>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                <div>
+                  <label class="form-label">Project / GitHub URL</label>
+                  <input type="url" id="prj-input-url" class="form-input" placeholder="https://github.com/...">
+                </div>
+                <div>
+                  <label class="form-label">Role &amp; Duration</label>
+                  <input type="text" id="prj-input-role" class="form-input" placeholder="Full Stack Lead, 2 Months">
+                </div>
+              </div>
+              <div style="margin-bottom: 10px;">
+                <label class="form-label">Project Description</label>
+                <textarea id="prj-input-desc" class="form-input" style="height: 60px;" placeholder="Architected an end-to-end placement prediction portal..."></textarea>
+              </div>
+              <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                <button type="button" class="btn-outline btn-sm" onclick="toggleAddProjectBox()">Cancel</button>
+                <button type="button" class="btn-primary btn-sm" onclick="handleSaveProject()">Save Project</button>
+              </div>
+            </div>
+
+            <div id="projects-list-container" style="display: flex; flex-direction: column; gap: 10px;">
+              <!-- Dynamically populated projects -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================================================================= -->
+      <!-- PANE 2C: APTITUDE ASSESSMENT (PILLAR 3) -->
+      <!-- ================================================================= -->
+      <div class="view-container screen-pane" id="pane-student-aptitude" style="display: none;">
+        <div class="panel-header" style="margin-bottom: 16px;">
+          <div>
+            <h2 class="welcome-heading">Online Aptitude Examination Module</h2>
+            <p class="welcome-subtext">Quantitative aptitude, logical reasoning, and verbal ability assessment with timed evaluation and automatic scoring.</p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-outline btn-sm" onclick="loadAptitudeQuestions('All')">
+              <span>Restart Test</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Pillar 3 KPI Summary -->
+        <div class="kpi-grid-4" style="margin-bottom: 20px;">
+          <div class="kpi-card">
+            <div class="kpi-top-row">
+              <span class="kpi-label">Aptitude Pillar Score</span>
+              <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+            </div>
+            <div class="kpi-main-val" id="apt-kpi-score">--%</div>
+            <div class="kpi-context-row">
+              <span class="kpi-pill teal" id="apt-kpi-status-pill">Active Exam Ready</span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-top-row">
+              <span class="kpi-label">Formula Accuracy</span>
+              <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline></svg>
+            </div>
+            <div class="kpi-main-val" id="apt-kpi-accuracy">--%</div>
+            <div class="kpi-context-row">
+              <span class="kpi-pill blue">(Correct/Total) &times; 100</span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-top-row">
+              <span class="kpi-label">Tests Completed</span>
+              <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg>
+            </div>
+            <div class="kpi-main-val" id="apt-kpi-attempts-count">0</div>
+            <div class="kpi-context-row">
+              <span class="kpi-pill teal">SQLite Logged</span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-top-row">
+              <span class="kpi-label">Pillar Weight</span>
+              <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle></svg>
+            </div>
+            <div class="kpi-main-val">20%</div>
+            <div class="kpi-context-row">
+              <span class="kpi-pill blue">ML Feature Pillar 3</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Examination UI Card -->
+        <div class="aptitude-room" style="margin-bottom: 24px;">
+          <!-- Top Bar -->
+          <div class="aptitude-topbar">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span class="badge-status teal" id="apt-category-pill">Quantitative &amp; Logical</span>
+              <span style="font-size: 13px; font-weight: 700; color: #1E293B;" id="apt-question-counter">Question 1 of 15</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 16px;">
+              <div class="aptitude-timer" id="apt-timer-display">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                <span id="apt-timer-text">15:00</span>
+              </div>
+              <button class="btn-primary btn-sm" onclick="submitAptitudeAssessment()">
+                <span>Submit Test</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Main Examination Room Grid -->
+          <div style="display: grid; grid-template-columns: 1fr 280px; gap: 20px; padding: 20px;">
+            <!-- Active Question Column -->
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #2563EB;" id="apt-q-category">Quantitative Aptitude</span>
+                <span class="badge-status neutral" id="apt-q-difficulty">Medium Difficulty</span>
+              </div>
+
+              <div id="apt-q-text" style="font-size: 15px; font-weight: 600; color: #0F172A; line-height: 1.6; margin-bottom: 20px; min-height: 60px;">
+                Loading assessment questions...
+              </div>
+
+              <!-- MCQ Options -->
+              <div id="apt-options-container">
+                <div class="mcq-option" onclick="selectAptitudeOption('A')">
+                  <div class="mcq-letter">A</div>
+                  <div class="mcq-text" id="apt-opt-a-text">Option A</div>
+                </div>
+                <div class="mcq-option" onclick="selectAptitudeOption('B')">
+                  <div class="mcq-letter">B</div>
+                  <div class="mcq-text" id="apt-opt-b-text">Option B</div>
+                </div>
+                <div class="mcq-option" onclick="selectAptitudeOption('C')">
+                  <div class="mcq-letter">C</div>
+                  <div class="mcq-text" id="apt-opt-c-text">Option C</div>
+                </div>
+                <div class="mcq-option" onclick="selectAptitudeOption('D')">
+                  <div class="mcq-letter">D</div>
+                  <div class="mcq-text" id="apt-opt-d-text">Option D</div>
+                </div>
+              </div>
+
+              <!-- Navigation Controls -->
+              <div style="display: flex; justify-content: space-between; margin-top: 20px;">
+                <button type="button" class="btn-outline btn-sm" onclick="prevAptitudeQuestion()">
+                  <span>&larr; Previous</span>
+                </button>
+                <div style="display: flex; gap: 8px;">
+                  <button type="button" class="btn-outline btn-sm" onclick="clearAptitudeSelection()">Clear</button>
+                  <button type="button" class="btn-primary btn-sm" onclick="nextAptitudeQuestion()">
+                    <span>Save &amp; Next &rarr;</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Question Palette Sidebar -->
+            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 14px;">
+              <h4 style="font-size: 12.5px; font-weight: 700; color: #1E293B; margin-bottom: 10px;">Question Palette</h4>
+              <div class="palette-grid" id="apt-palette-container">
+                <!-- 1 to 15 buttons -->
+              </div>
+              <div style="margin-top: 14px; font-size: 11px; display: flex; flex-direction: column; gap: 6px; color: var(--text-secondary);">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="width: 12px; height: 12px; background: #DCFCE7; border: 1px solid #86EFAC; border-radius: 3px; display: inline-block;"></span>
+                  <span>Answered Question</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="width: 12px; height: 12px; background: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 3px; display: inline-block;"></span>
+                  <span>Not Answered</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="width: 12px; height: 12px; background: #2563EB; border-radius: 3px; display: inline-block;"></span>
+                  <span>Current Question</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Assessment Results & Explanation Review Card -->
+        <div id="apt-results-container" style="display: none; margin-bottom: 24px;">
+          <div class="content-panel" style="border: 1.5px solid #86EFAC; background: #F0FDF4;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <span class="badge-status teal" style="font-size: 13px;">Evaluation Complete</span>
+                <h3 class="panel-title" style="margin: 0;">Aptitude Assessment Performance Summary</h3>
+              </div>
+              <button class="btn-primary btn-sm" onclick="navigateToRoute('/student/placement-prediction')">
+                <span>Unlock Placement Prediction &rarr;</span>
+              </button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 16px;">
+              <div style="background: #FFFFFF; border-radius: 8px; padding: 12px; text-align: center; border: 1px solid #BBF7D0;">
+                <div style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">Correct Answers</div>
+                <div style="font-size: 22px; font-weight: 800; color: #15803D;" id="apt-res-correct">0</div>
+              </div>
+              <div style="background: #FFFFFF; border-radius: 8px; padding: 12px; text-align: center; border: 1px solid #BBF7D0;">
+                <div style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">Incorrect Answers</div>
+                <div style="font-size: 22px; font-weight: 800; color: #DC2626;" id="apt-res-incorrect">0</div>
+              </div>
+              <div style="background: #FFFFFF; border-radius: 8px; padding: 12px; text-align: center; border: 1px solid #BBF7D0;">
+                <div style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">Accuracy Percentage</div>
+                <div style="font-size: 22px; font-weight: 800; color: #2563EB;" id="apt-res-accuracy">0%</div>
+              </div>
+              <div style="background: #FFFFFF; border-radius: 8px; padding: 12px; text-align: center; border: 1px solid #BBF7D0;">
+                <div style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">Time Taken</div>
+                <div style="font-size: 22px; font-weight: 800; color: #0F172A;" id="apt-res-time">0s</div>
+              </div>
+            </div>
+
+            <!-- Review Accordion -->
+            <h4 style="font-size: 13px; font-weight: 700; color: #1E293B; margin-bottom: 10px;">Question-by-Question Solution Explanations</h4>
+            <div id="apt-review-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 400px; overflow-y: auto;">
+              <!-- Dynamically populated review items -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Assessment History -->
+        <div class="content-panel">
+          <h3 class="panel-title" style="margin-bottom: 12px;">Aptitude Assessment History</h3>
+          <table class="data-table" style="width: 100%;">
+            <thead>
+              <tr>
+                <th>Date &amp; Time</th>
+                <th>Category</th>
+                <th>Score</th>
+                <th>Accuracy %</th>
+                <th>Time Taken</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="apt-history-tbody">
+              <tr>
+                <td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 16px;">No attempts recorded yet. Click 'Restart Test' to begin.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ================================================================= -->
+      <!-- PANE 2D: CODING ASSESSMENT (PILLAR 4) -->
+      <!-- ================================================================= -->
+      <div class="view-container screen-pane" id="pane-student-coding" style="display: none;">
+        <div class="panel-header" style="margin-bottom: 16px;">
+          <div>
+            <h2 class="welcome-heading">Online Coding Assessment Module</h2>
+            <p class="welcome-subtext">Algorithmic programming challenges in Python, Java, and C with isolated subprocess execution and test case verification.</p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-primary btn-sm" onclick="submitCodingSolution()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span>Submit Solution</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Pillar 4 KPI Summary -->
+        <div class="kpi-grid-4" style="margin-bottom: 20px;">
+          <div class="kpi-card">
+            <div class="kpi-top-row">
+              <span class="kpi-label">Coding Pillar Rating</span>
+              <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+            </div>
+            <div class="kpi-main-val" id="code-kpi-score">--%</div>
+            <div class="kpi-context-row">
+              <span class="kpi-pill teal" id="code-kpi-status-pill">Active Compiler</span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-top-row">
+              <span class="kpi-label">Test Cases Passed</span>
+              <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+            <div class="kpi-main-val" id="code-kpi-passed">0</div>
+            <div class="kpi-context-row">
+              <span class="kpi-pill teal">Automated Test Harness</span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-top-row">
+              <span class="kpi-label">Submissions Logged</span>
+              <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg>
+            </div>
+            <div class="kpi-main-val" id="code-kpi-submissions-count">0</div>
+            <div class="kpi-context-row">
+              <span class="kpi-pill blue">SQLite Benchmarks</span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-top-row">
+              <span class="kpi-label">Pillar Weight</span>
+              <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle></svg>
+            </div>
+            <div class="kpi-main-val">25%</div>
+            <div class="kpi-context-row">
+              <span class="kpi-pill blue">ML Feature Pillar 4</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Coding IDE -->
+        <div class="coding-ide-container" style="margin-bottom: 24px;">
+          <!-- Left: Problem Statement -->
+          <div class="coding-problem-pane">
+            <div style="margin-bottom: 12px;">
+              <label class="form-label">Select Programming Problem</label>
+              <select id="code-problem-select" class="form-input" onchange="switchCodingQuestion(this.value)">
+                <option value="code_q1">1. Two Sum (Easy)</option>
+                <option value="code_q2">2. Valid Parentheses (Easy)</option>
+                <option value="code_q3">3. Longest Substring Without Repeating (Medium)</option>
+                <option value="code_q4">4. Maximum Subarray Sum (Kadane's) (Medium)</option>
+              </select>
+            </div>
+
+            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+              <span class="badge-status teal" id="code-problem-diff">Easy</span>
+              <span class="badge-status neutral">Python &bull; Java &bull; C</span>
+            </div>
+
+            <h3 style="font-size: 15px; font-weight: 700; color: #1E293B; margin-bottom: 8px;" id="code-problem-title">Two Sum</h3>
+            <p style="font-size: 12.5px; line-height: 1.6; color: #334155; margin-bottom: 14px;" id="code-problem-desc">
+              Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.
+            </p>
+
+            <div style="margin-bottom: 12px;">
+              <div style="font-size: 11.5px; font-weight: 700; color: #1E293B; margin-bottom: 4px;">Sample Input</div>
+              <pre style="background: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 6px; padding: 8px; font-size: 12px; margin: 0;" id="code-sample-input">nums = [2,7,11,15], target = 9</pre>
+            </div>
+
+            <div style="margin-bottom: 16px;">
+              <div style="font-size: 11.5px; font-weight: 700; color: #1E293B; margin-bottom: 4px;">Sample Output</div>
+              <pre style="background: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 6px; padding: 8px; font-size: 12px; margin: 0;" id="code-sample-output">[0, 1]</pre>
+            </div>
+
+            <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 6px; padding: 10px; font-size: 11.5px; line-height: 1.5; color: #1E3A8A;">
+              <strong>Security Protocol:</strong> Code runs in a sandboxed, isolated subprocess. Network operations, disk modification, and system library imports are strictly prohibited.
+            </div>
+          </div>
+
+          <!-- Right: Code Editor & Runner -->
+          <div class="coding-editor-pane">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <label class="form-label" style="margin: 0;">Language:</label>
+                <select id="code-lang-select" class="form-input" style="width: 140px; padding: 4px 8px; font-size: 12px;" onchange="switchCodingLanguage(this.value)">
+                  <option value="python" selected>Python 3.14</option>
+                  <option value="java">Java 17</option>
+                  <option value="c">C (GCC)</option>
+                </select>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button type="button" class="btn-outline btn-sm" onclick="resetCodingStarterCode()">Reset Code</button>
+                <button type="button" class="btn-outline btn-sm" style="background: #EFF6FF; border-color: #93C5FD; color: #1D4ED8;" onclick="runCodingTestCases()">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                  <span>Run Test Cases</span>
+                </button>
+                <button type="button" class="btn-primary btn-sm" onclick="submitCodingSolution()">
+                  <span>Submit Code</span>
+                </button>
+              </div>
+            </div>
+
+            <textarea id="code-editor-textarea" class="code-textarea" spellcheck="false" placeholder="Write your solution here..."></textarea>
+
+            <!-- Test Results Drawer -->
+            <div class="test-results-drawer" id="code-results-drawer" style="display: none;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span class="test-pill pass" id="code-res-pill">All Tests Passed</span>
+                  <span style="font-size: 12px; font-weight: 700; color: #1E293B;" id="code-res-score">Score: 100%</span>
+                </div>
+                <span style="font-size: 11px; color: var(--text-secondary);" id="code-res-time">Execution Time: 15ms</span>
+              </div>
+              <div id="code-test-cases-detail" style="font-size: 12px; display: flex; flex-direction: column; gap: 6px;">
+                <!-- Test cases pass / fail entries -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submission History Table -->
+        <div class="content-panel">
+          <h3 class="panel-title" style="margin-bottom: 12px;">Coding Submissions History</h3>
+          <table class="data-table" style="width: 100%;">
+            <thead>
+              <tr>
+                <th>Submitted At</th>
+                <th>Problem Title</th>
+                <th>Language</th>
+                <th>Tests Passed</th>
+                <th>Score</th>
+                <th>Execution Time</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="code-history-tbody">
+              <tr>
+                <td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 16px;">No coding submissions recorded yet. Select a problem and click 'Submit Code'.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ================================================================= -->
+      <!-- PANE 2E: PLACEMENT PREDICTION (COMBINED 4 PILLARS + ML + AI) -->
+      <!-- ================================================================= -->
+      <div class="view-container screen-pane" id="pane-student-placement-prediction" style="display: none;">
+        <div class="panel-header" style="margin-bottom: 16px;">
+          <div>
+            <h2 class="welcome-heading">AI Placement Prediction Engine</h2>
+            <p class="welcome-subtext">Calibrated Machine Learning placement probability synthesized across Academic, Profile, Aptitude, and Coding evaluation pillars.</p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-outline btn-sm" onclick="requestGroqExplanation()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+              <span>Explain with Groq AI</span>
+            </button>
+            <button class="btn-primary btn-sm" onclick="fetchPlacementPrediction()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+              <span>Recalculate Live Prediction</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Master ML Gauge Card -->
+        <div class="welcome-card" style="margin-bottom: 20px; background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 60%, #1D4ED8 100%);">
+          <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; flex-wrap: wrap; gap: 20px;">
+            <div>
+              <span class="welcome-badge-status" style="background: rgba(255,255,255,0.2); color: #FFFFFF;">Supervised ML Classification Model</span>
+              <h2 class="welcome-heading" style="color: #FFFFFF; font-size: 28px; margin-top: 6px;" id="ml-pred-prob">88% Placement Probability</h2>
+              <p class="welcome-subtext" style="color: #E2E8F0; max-width: 540px;" id="ml-pred-status-text">
+                Status: Placement Ready. Model predicts strong campus recruitment candidacy with 91.2% generalizability across 2,500 historical cohort benchmarks.
+              </p>
+              <div style="display: flex; gap: 10px; margin-top: 12px; font-size: 12px; color: #BFDBFE;">
+                <span>Confidence Interval: <strong id="ml-pred-ci">[76% - 99%]</strong> (&plusmn;12% margin)</span>
+                <span>&bull;</span>
+                <span>Algorithm: <strong>Calibrated Logistic &amp; Random Forest</strong></span>
+              </div>
+            </div>
+
+            <div style="background: rgba(255,255,255,0.12); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.25); border-radius: 12px; padding: 18px 24px; text-align: center; min-width: 200px;">
+              <div style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #DBEAFE;">Placement Status</div>
+              <div style="font-size: 22px; font-weight: 800; color: #FFFFFF; margin: 4px 0;" id="ml-pred-status-badge">Placement Ready</div>
+              <div style="font-size: 11px; color: #BFDBFE;">Advisory Decision Support</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4 Pillars Breakdown Grid -->
+        <div class="pillar-grid-4">
+          <!-- Pillar 1: Academic -->
+          <div class="pillar-card">
+            <div class="pillar-header">
+              <span class="pillar-title">1. Academic Performance</span>
+              <span class="pillar-weight-badge">30% ML</span>
+            </div>
+            <div class="pillar-score" id="pillar-acad-val">84 <span style="font-size: 13px; color: var(--text-secondary);">/ 100</span></div>
+            <div style="margin: 8px 0; background: #E2E8F0; height: 6px; border-radius: 999px; overflow: hidden;">
+              <div id="pillar-acad-bar" style="background: #2563EB; height: 100%; width: 84%; border-radius: 999px;"></div>
+            </div>
+            <div style="font-size: 11.5px; color: var(--text-secondary);" id="pillar-acad-sub">CGPA: 8.45 &bull; 0 Backlogs</div>
+          </div>
+
+          <!-- Pillar 2: Profile & Skills -->
+          <div class="pillar-card">
+            <div class="pillar-header">
+              <span class="pillar-title">2. Profile &amp; Skills</span>
+              <span class="pillar-weight-badge">25% ML</span>
+            </div>
+            <div class="pillar-score" id="pillar-prof-val">76 <span style="font-size: 13px; color: var(--text-secondary);">/ 100</span></div>
+            <div style="margin: 8px 0; background: #E2E8F0; height: 6px; border-radius: 999px; overflow: hidden;">
+              <div id="pillar-prof-bar" style="background: #0284C7; height: 100%; width: 76%; border-radius: 999px;"></div>
+            </div>
+            <div style="font-size: 11.5px; color: var(--text-secondary);" id="pillar-prof-sub">6 Skills &bull; 1 Internship &bull; 2 Projects</div>
+          </div>
+
+          <!-- Pillar 3: Aptitude -->
+          <div class="pillar-card">
+            <div class="pillar-header">
+              <span class="pillar-title">3. Aptitude Assessment</span>
+              <span class="pillar-weight-badge">20% ML</span>
+            </div>
+            <div class="pillar-score" id="pillar-apt-val">80 <span style="font-size: 13px; color: var(--text-secondary);">/ 100</span></div>
+            <div style="margin: 8px 0; background: #E2E8F0; height: 6px; border-radius: 999px; overflow: hidden;">
+              <div id="pillar-apt-bar" style="background: #10B981; height: 100%; width: 80%; border-radius: 999px;"></div>
+            </div>
+            <div style="font-size: 11.5px; color: var(--text-secondary);" id="pillar-apt-sub">80% Accuracy &bull; 15 Qs Evaluated</div>
+          </div>
+
+          <!-- Pillar 4: Coding -->
+          <div class="pillar-card">
+            <div class="pillar-header">
+              <span class="pillar-title">4. Coding Assessment</span>
+              <span class="pillar-weight-badge">25% ML</span>
+            </div>
+            <div class="pillar-score" id="pillar-code-val">88 <span style="font-size: 13px; color: var(--text-secondary);">/ 100</span></div>
+            <div style="margin: 8px 0; background: #E2E8F0; height: 6px; border-radius: 999px; overflow: hidden;">
+              <div id="pillar-code-bar" style="background: #8B5CF6; height: 100%; width: 88%; border-radius: 999px;"></div>
+            </div>
+            <div style="font-size: 11.5px; color: var(--text-secondary);" id="pillar-code-sub">All Core Test Cases Passed</div>
+          </div>
+        </div>
+
+        <!-- Groq AI Strategic Analysis Drawer -->
+        <div id="groq-ai-container" class="groq-ai-card" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="groq-badge">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="12 8 8 12 12 16 16 12 12 8"></polygon></svg>
+                Groq AI Strategic Advisor
+              </span>
+              <strong style="font-size: 14px; color: #1E3A8A;">Personalized Placement Roadmap &amp; Factor Breakdown</strong>
+            </div>
+            <span style="font-size: 11px; color: var(--text-secondary);" id="groq-model-label">Llama 3.3 70B Versatile</span>
+          </div>
+          <div id="groq-explanation-body" style="font-size: 13px; line-height: 1.6; color: #1E293B;">
+            Generating personalized preparation roadmap with Groq AI...
+          </div>
+        </div>
+
+        <!-- Deep Dive Grid: Strengths vs Recommendations -->
+        <div class="panel-grid-2">
+          <!-- Strengths & Risk Factors -->
+          <div class="content-panel">
+            <h3 class="panel-title" style="margin-bottom: 12px;">Key Predictive Drivers (SHAP Standardized Impact)</h3>
+            <div style="margin-bottom: 14px;">
+              <div style="font-size: 12px; font-weight: 700; color: #15803D; margin-bottom: 6px;">Positive Factors Bolstering Readiness:</div>
+              <div id="ml-strengths-container" style="display: flex; flex-direction: column; gap: 6px;">
+                <!-- Dynamically populated positive factors -->
+              </div>
+            </div>
+
+            <div>
+              <div style="font-size: 12px; font-weight: 700; color: #B91C1C; margin-bottom: 6px;">Risk Factors &amp; Gaps to Address:</div>
+              <div id="ml-risks-container" style="display: flex; flex-direction: column; gap: 6px;">
+                <!-- Dynamically populated risk factors -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Actionable Recommendations -->
+          <div class="content-panel">
+            <h3 class="panel-title" style="margin-bottom: 12px;">Actionable Preparation Recommendations</h3>
+            <div id="ml-recommendations-container" style="display: flex; flex-direction: column; gap: 8px;">
+              <!-- Dynamically populated recommendations -->
+            </div>
+            
+            <div style="margin-top: 18px; padding: 12px; background: #F8FAFC; border: 1px solid var(--border-subtle); border-radius: 8px; font-size: 11.5px; color: var(--text-secondary); line-height: 1.5;">
+              <strong>Ethical AI Guardrail:</strong> Supervised model predictions are strictly advisory decision-support indicators. Campus drive eligibility and final recruitment decisions are exclusively made by human faculty mentors and placement officers.
+            </div>
+          </div>
+        </div>
+
+        <!-- Prediction History Table -->
+        <div class="content-panel" style="margin-top: 20px;">
+          <h3 class="panel-title" style="margin-bottom: 12px;">Placement Prediction History</h3>
+          <table class="data-table" style="width: 100%;">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Probability %</th>
+                <th>Status</th>
+                <th>Academic</th>
+                <th>Profile</th>
+                <th>Aptitude</th>
+                <th>Coding</th>
+                <th>Model</th>
+              </tr>
+            </thead>
+            <tbody id="ml-history-tbody">
+              <tr>
+                <td colspan="8" style="text-align: center; color: var(--text-secondary); padding: 16px;">Loading prediction history...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- PANE: STUDENT PROFILE -->
       <div class="view-container screen-pane" id="pane-student-profile" style="display: none;">
         <div class="profile-header-banner">

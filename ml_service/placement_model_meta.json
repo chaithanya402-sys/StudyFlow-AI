@@ -1,0 +1,54 @@
+{
+  "features": [
+    "cgpa",
+    "tenth_percentage",
+    "twelfth_percentage",
+    "active_backlogs",
+    "previous_backlogs",
+    "internships_count",
+    "projects_count",
+    "certifications_count",
+    "aptitude_score",
+    "coding_score",
+    "communication_score"
+  ],
+  "metrics": {
+    "Logistic Regression (Baseline)": {
+      "accuracy": 0.998,
+      "precision": 0.998,
+      "recall": 1.0,
+      "f1_score": 0.999,
+      "roc_auc": 0.982
+    },
+    "Random Forest Classifier": {
+      "accuracy": 0.998,
+      "precision": 0.998,
+      "recall": 1.0,
+      "f1_score": 0.999,
+      "roc_auc": 0.4649
+    },
+    "Gradient Boosting (Advanced)": {
+      "accuracy": 0.998,
+      "precision": 0.998,
+      "recall": 1.0,
+      "f1_score": 0.999,
+      "roc_auc": 0.499
+    }
+  },
+  "feature_importances": {
+    "coding_score": 0.2675,
+    "tenth_percentage": 0.1512,
+    "cgpa": 0.1401,
+    "active_backlogs": 0.106,
+    "aptitude_score": 0.0742,
+    "twelfth_percentage": 0.0566,
+    "communication_score": 0.0523,
+    "projects_count": 0.0506,
+    "previous_backlogs": 0.0459,
+    "certifications_count": 0.0333,
+    "internships_count": 0.0223
+  },
+  "training_samples": 2000,
+  "test_samples": 500,
+  "model_type": "RandomForestClassifier & LogisticRegression Ensemble"
+}

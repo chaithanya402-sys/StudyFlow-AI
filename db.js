@@ -456,6 +456,159 @@ function initSchema() {
     CREATE INDEX IF NOT EXISTS idx_ml_prediction_log_student ON ml_prediction_log(student_id);
     CREATE INDEX IF NOT EXISTS idx_ml_prediction_log_timestamp ON ml_prediction_log(timestamp DESC);
     CREATE INDEX IF NOT EXISTS idx_ml_prediction_log_type ON ml_prediction_log(prediction_type);
+
+    -- 23. Academic Records Table
+    CREATE TABLE IF NOT EXISTS academic_records (
+      student_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      student_name TEXT,
+      department TEXT,
+      degree TEXT,
+      current_semester TEXT,
+      cgpa REAL,
+      tenth_percentage REAL,
+      twelfth_percentage REAL,
+      active_backlogs INTEGER DEFAULT 0,
+      previous_backlogs INTEGER DEFAULT 0,
+      indicators_json TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now'))
+    );
+
+    -- 24. Student Skills Table
+    CREATE TABLE IF NOT EXISTS student_skills (
+      id TEXT PRIMARY KEY,
+      student_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      skill_name TEXT NOT NULL,
+      category TEXT NOT NULL, -- 'programming', 'database', 'web', 'data_science'
+      proficiency_level TEXT NOT NULL, -- 'Beginner', 'Intermediate', 'Advanced', 'Expert'
+      years_experience REAL DEFAULT 1,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_student_skills_student ON student_skills(student_id);
+
+    -- 25. Student Internships Table
+    CREATE TABLE IF NOT EXISTS student_internships (
+      id TEXT PRIMARY KEY,
+      student_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      role TEXT NOT NULL,
+      company TEXT NOT NULL,
+      duration_months INTEGER DEFAULT 3,
+      description TEXT,
+      start_date TEXT,
+      end_date TEXT,
+      verified INTEGER DEFAULT 1,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_student_internships_student ON student_internships(student_id);
+
+    -- 26. Student Projects Table
+    CREATE TABLE IF NOT EXISTS student_projects (
+      id TEXT PRIMARY KEY,
+      student_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      title TEXT NOT NULL,
+      description TEXT,
+      technologies TEXT,
+      project_url TEXT,
+      duration TEXT,
+      role TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_student_projects_student ON student_projects(student_id);
+
+    -- 27. Aptitude Questions Table
+    CREATE TABLE IF NOT EXISTS aptitude_questions (
+      id TEXT PRIMARY KEY,
+      category TEXT NOT NULL, -- 'Quantitative', 'Logical', 'Verbal'
+      question_text TEXT NOT NULL,
+      option_a TEXT NOT NULL,
+      option_b TEXT NOT NULL,
+      option_c TEXT NOT NULL,
+      option_d TEXT NOT NULL,
+      correct_option TEXT NOT NULL,
+      explanation TEXT,
+      difficulty TEXT DEFAULT 'Medium'
+    );
+    CREATE INDEX IF NOT EXISTS idx_aptitude_questions_cat ON aptitude_questions(category);
+
+    -- 28. Aptitude Attempts Table
+    CREATE TABLE IF NOT EXISTS aptitude_attempts (
+      id TEXT PRIMARY KEY,
+      student_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      category TEXT NOT NULL,
+      total_questions INTEGER NOT NULL,
+      correct_answers INTEGER NOT NULL,
+      incorrect_answers INTEGER NOT NULL,
+      score REAL NOT NULL,
+      accuracy_percentage REAL NOT NULL,
+      time_taken_seconds INTEGER NOT NULL,
+      answers_json TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_aptitude_attempts_student ON aptitude_attempts(student_id);
+
+    -- 29. Coding Questions Table
+    CREATE TABLE IF NOT EXISTS coding_questions (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      difficulty TEXT NOT NULL, -- 'Easy', 'Medium', 'Hard'
+      language TEXT NOT NULL, -- 'Python', 'Java', 'C'
+      description TEXT NOT NULL,
+      sample_input TEXT,
+      sample_output TEXT,
+      starter_code_python TEXT,
+      starter_code_java TEXT,
+      starter_code_c TEXT,
+      test_cases_json TEXT NOT NULL
+    );
+
+    -- 30. Coding Submissions Table
+    CREATE TABLE IF NOT EXISTS coding_submissions (
+      id TEXT PRIMARY KEY,
+      student_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      question_id TEXT NOT NULL REFERENCES coding_questions(id) ON DELETE CASCADE,
+      question_title TEXT,
+      language TEXT NOT NULL,
+      code TEXT NOT NULL,
+      test_cases_passed INTEGER NOT NULL,
+      test_cases_total INTEGER NOT NULL,
+      score REAL NOT NULL,
+      execution_time_ms INTEGER NOT NULL,
+      status TEXT NOT NULL,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_coding_submissions_student ON coding_submissions(student_id);
+
+    -- 31. Placement Predictions Table
+    CREATE TABLE IF NOT EXISTS placement_predictions (
+      id TEXT PRIMARY KEY,
+      student_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      placement_probability REAL NOT NULL,
+      placement_status TEXT NOT NULL,
+      academic_score REAL NOT NULL,
+      profile_score REAL NOT NULL,
+      aptitude_score REAL NOT NULL,
+      coding_score REAL NOT NULL,
+      contributions_json TEXT,
+      factors_json TEXT,
+      recommendations_json TEXT,
+      model_used TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_placement_predictions_student ON placement_predictions(student_id);
+
+    -- 32. Resume Records Table
+    CREATE TABLE IF NOT EXISTS resume_records (
+      id TEXT PRIMARY KEY,
+      student_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      file_name TEXT,
+      file_url TEXT,
+      ats_score REAL,
+      extracted_skills_json TEXT,
+      missing_skills_json TEXT,
+      feedback_json TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_resume_records_student ON resume_records(student_id);
   `);
 
   // Safe runtime column migrations for student_profiles
@@ -531,6 +684,9 @@ function initSchema() {
 
   // Ensure standard Faculty accounts and subject assignments are seeded
   ensureFacultySubjectAssignments();
+
+  // Ensure aptitude and coding assessment questions are seeded
+  ensureAptitudeAndCodingQuestions();
 }
 
 function ensureFacultySubjectAssignments() {
@@ -578,6 +734,225 @@ function ensureFacultySubjectAssignments() {
   insertAssignment.run('fsa_4', 'fac_002', 'Prof. Anita Rao', 'Database Management Systems', 'Computer Science & Engineering');
   insertAssignment.run('fsa_5', 'fac_002', 'Prof. Anita Rao', 'Web & Mobile Technologies', 'Computer Science & Engineering');
   insertAssignment.run('fsa_6', 'fac_002', 'Prof. Anita Rao', 'Cybersecurity & Cryptography', 'Computer Science & Engineering');
+}
+
+function ensureAptitudeAndCodingQuestions() {
+  const aptCount = db.prepare('SELECT COUNT(*) as count FROM aptitude_questions').get().count;
+  if (aptCount === 0) {
+    const insertApt = db.prepare(`
+      INSERT INTO aptitude_questions (id, category, question_text, option_a, option_b, option_c, option_d, correct_option, explanation, difficulty)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    const aptQuestions = [
+      // Quantitative Aptitude
+      {
+        id: 'apt_q1', category: 'Quantitative',
+        question: 'A train running at 54 km/hr takes 20 seconds to cross a platform 150 meters long. What is the length of the train?',
+        a: '120 meters', b: '150 meters', c: '180 meters', d: '200 meters', correct: 'B',
+        exp: 'Speed = 54 * (5/18) = 15 m/s. Total distance = Speed * Time = 15 * 20 = 300 m. Train length = 300 - 150 = 150 meters.',
+        diff: 'Medium'
+      },
+      {
+        id: 'apt_q2', category: 'Quantitative',
+        question: 'A can complete a piece of work in 12 days and B can do it in 15 days. If they work together for 4 days, what fraction of the work is left unfinished?',
+        a: '2/5', b: '3/5', c: '1/3', d: '4/5', correct: 'A',
+        exp: 'Work per day = 1/12 + 1/15 = 9/60 = 3/20. In 4 days, work done = 4 * (3/20) = 3/5. Remaining work = 1 - 3/5 = 2/5.',
+        diff: 'Easy'
+      },
+      {
+        id: 'apt_q3', category: 'Quantitative',
+        question: 'The average of 5 consecutive odd numbers is 61. What is the difference between the highest and lowest numbers?',
+        a: '6', b: '8', c: '10', d: '12', correct: 'B',
+        exp: 'For any 5 consecutive odd numbers (n, n+2, n+4, n+6, n+8), difference between highest and lowest is always 8.',
+        diff: 'Easy'
+      },
+      {
+        id: 'apt_q4', category: 'Quantitative',
+        question: 'By selling an article for ₹720, a shopkeeper gains 20%. What was the cost price of the article?',
+        a: '₹580', b: '₹600', c: '₹620', d: '₹640', correct: 'B',
+        exp: 'CP = SP / (1 + Gain%) = 720 / 1.20 = ₹600.',
+        diff: 'Easy'
+      },
+      {
+        id: 'apt_q5', category: 'Quantitative',
+        question: 'A sum invested at 10% compound interest per annum compounded annually amounts to ₹2,420 in 2 years. Find the principal sum.',
+        a: '₹1,900', b: '₹2,000', c: '₹2,100', d: '₹2,200', correct: 'B',
+        exp: 'Amount = P * (1 + 0.10)^2 = P * 1.21. So P = 2420 / 1.21 = ₹2,000.',
+        diff: 'Medium'
+      },
+      // Logical Reasoning
+      {
+        id: 'apt_q6', category: 'Logical',
+        question: 'Find the next term in the sequence: 3, 7, 15, 31, 63, ?',
+        a: '125', b: '126', c: '127', d: '128', correct: 'C',
+        exp: 'Each term is generated by (previous * 2) + 1. (63 * 2) + 1 = 127.',
+        diff: 'Easy'
+      },
+      {
+        id: 'apt_q7', category: 'Logical',
+        question: 'In a certain code language, COMPUTER is written as RFUVQNPC. How is MEDICINE written in that code?',
+        a: 'EOJDEJFM', b: 'EOJDJEFM', c: 'MFEJDJOE', d: 'EOJDJEMF', correct: 'B',
+        exp: 'Reverse the word and shift each letter by +1, keeping first and last letter reversed positions.',
+        diff: 'Medium'
+      },
+      {
+        id: 'apt_q8', category: 'Logical',
+        question: 'Pointing to a photograph, a woman says: "He is the son of the only daughter of the father of my brother." How is the boy related to the woman?',
+        a: 'Son', b: 'Nephew', c: 'Brother', d: 'Cousin', correct: 'A',
+        exp: 'Father of brother = woman\'s father. Only daughter of her father = the woman herself. Her son = the boy.',
+        diff: 'Medium'
+      },
+      {
+        id: 'apt_q9', category: 'Logical',
+        question: 'Statements: All cats are dogs. Some dogs are birds. Conclusions: I. Some cats are birds. II. No cat is a bird.',
+        a: 'Only I follows', b: 'Only II follows', c: 'Either I or II follows', d: 'Neither follows', correct: 'C',
+        exp: 'Cats and birds form a complementary pair (Some and No). Hence Either I or II follows.',
+        diff: 'Medium'
+      },
+      {
+        id: 'apt_q10', category: 'Logical',
+        question: 'Five colleagues A, B, C, D, E sit in a row facing north. C is to the right of B. D is between A and B. E is to the left of A. Who sits in the middle position?',
+        a: 'A', b: 'B', c: 'C', d: 'D', correct: 'D',
+        exp: 'The order from left to right is E, A, D, B, C. The middle person is D.',
+        diff: 'Easy'
+      },
+      // Verbal Ability
+      {
+        id: 'apt_q11', category: 'Verbal',
+        question: 'Select the word which is most nearly OPPOSITE in meaning to EPHEMERAL:',
+        a: 'Transient', b: 'Permanent', c: 'Brief', d: 'Fleeting', correct: 'B',
+        exp: 'Ephemeral means lasting for a very short time. Its opposite is Permanent.',
+        diff: 'Easy'
+      },
+      {
+        id: 'apt_q12', category: 'Verbal',
+        question: 'Select the word which is most nearly SIMILAR in meaning to PRAGMATIC:',
+        a: 'Theoretical', b: 'Practical', c: 'Idealistic', d: 'Speculative', correct: 'B',
+        exp: 'Pragmatic means dealing with things sensibly and realistically based on practical considerations.',
+        diff: 'Easy'
+      },
+      {
+        id: 'apt_q13', category: 'Verbal',
+        question: 'Identify the grammatically correct sentence:',
+        a: 'Neither the manager nor the employees was aware of the policy change.',
+        b: 'Neither the manager nor the employees were aware of the policy change.',
+        c: 'Neither the manager or the employees was aware of the policy change.',
+        d: 'Neither the manager and the employees were aware of the policy change.',
+        correct: 'B',
+        exp: 'When subject terms are connected by "neither...nor", the verb agrees with the closer subject ("employees" -> plural "were").',
+        diff: 'Medium'
+      },
+      {
+        id: 'apt_q14', category: 'Verbal',
+        question: 'Choose the appropriate word to fill in the blank: The board decided to _____ the merger decision until the audit completes.',
+        a: 'defer', b: 'differ', c: 'default', d: 'defy', correct: 'A',
+        exp: 'Defer means to postpone or put off to a later time.',
+        diff: 'Easy'
+      },
+      {
+        id: 'apt_q15', category: 'Verbal',
+        question: 'Choose the one-word substitution: "A person who is fluent in multiple languages"',
+        a: 'Polymath', b: 'Polyglot', c: 'Linguist', d: 'Philologist', correct: 'B',
+        exp: 'A polyglot is someone who knows and is able to use several languages.',
+        diff: 'Easy'
+      }
+    ];
+
+    const aptTx = db.transaction(() => {
+      for (const q of aptQuestions) {
+        insertApt.run(q.id, q.category, q.question, q.a, q.b, q.c, q.d, q.correct, q.exp, q.diff);
+      }
+    });
+    aptTx();
+  }
+
+  const codeCount = db.prepare('SELECT COUNT(*) as count FROM coding_questions').get().count;
+  if (codeCount === 0) {
+    const insertCode = db.prepare(`
+      INSERT INTO coding_questions (id, title, difficulty, language, description, sample_input, sample_output, starter_code_python, starter_code_java, starter_code_c, test_cases_json)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    const codingQuestions = [
+      {
+        id: 'code_q1',
+        title: 'Two Sum Problem',
+        difficulty: 'Easy',
+        language: 'Python, Java, C',
+        description: 'Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target. You may assume each input would have exactly one solution, and you may not use the same element twice.',
+        sample_input: 'nums = [2, 7, 11, 15], target = 9',
+        sample_output: '[0, 1]',
+        py: 'def two_sum(nums, target):\n    # Write your solution here\n    seen = {}\n    for i, num in enumerate(nums):\n        complement = target - num\n        if complement in seen:\n            return [seen[complement], i]\n        seen[num] = i\n    return []\n',
+        java: 'import java.util.*;\n\npublic class Solution {\n    public static int[] twoSum(int[] nums, int target) {\n        Map<Integer, Integer> map = new HashMap<>();\n        for (int i = 0; i < nums.length; i++) {\n            int complement = target - nums[i];\n            if (map.containsKey(complement)) {\n                return new int[] { map.get(complement), i };\n            }\n            map.put(nums[i], i);\n        }\n        return new int[]{};\n    }\n}\n',
+        c: '#include <stdio.h>\n#include <stdlib.h>\n\nint* twoSum(int* nums, int numsSize, int target, int* returnSize) {\n    int* res = (int*)malloc(2 * sizeof(int));\n    *returnSize = 2;\n    for(int i = 0; i < numsSize; i++) {\n        for(int j = i + 1; j < numsSize; j++) {\n            if(nums[i] + nums[j] == target) {\n                res[0] = i; res[1] = j;\n                return res;\n            }\n        }\n    }\n    return NULL;\n}\n',
+        test_cases: JSON.stringify([
+          { input: '[2, 7, 11, 15], 9', expected: '[0, 1]' },
+          { input: '[3, 2, 4], 6', expected: '[1, 2]' },
+          { input: '[3, 3], 6', expected: '[0, 1]' }
+        ])
+      },
+      {
+        id: 'code_q2',
+        title: 'Valid Parentheses String Matching',
+        difficulty: 'Easy',
+        language: 'Python, Java, C',
+        description: 'Given a string s containing just the characters \'(\', \')\', \'{\', \'}\', \'[\' and \']\', determine if the input string is valid. Open brackets must be closed by the same type of brackets in the correct order.',
+        sample_input: 's = "()[]{}"',
+        sample_output: 'true',
+        py: 'def is_valid_parentheses(s):\n    stack = []\n    mapping = {")": "(", "}": "{", "]": "["}\n    for char in s:\n        if char in mapping:\n            top = stack.pop() if stack else "#"\n            if mapping[char] != top:\n                return False\n        else:\n            stack.append(char)\n    return not stack\n',
+        java: 'import java.util.*;\n\npublic class Solution {\n    public static boolean isValid(String s) {\n        Stack<Character> stack = new Stack<>();\n        for (char c : s.toCharArray()) {\n            if (c == \'(\') stack.push(\')\');\n            else if (c == \'{\') stack.push(\'}\');\n            else if (c == \'[\') stack.push(\']\');\n            else if (stack.isEmpty() || stack.pop() != c) return false;\n        }\n        return stack.isEmpty();\n    }\n}\n',
+        c: '#include <stdbool.h>\n#include <string.h>\n\nbool isValid(char * s) {\n    int len = strlen(s);\n    char stack[len + 1];\n    int top = -1;\n    for(int i = 0; i < len; i++) {\n        char c = s[i];\n        if(c == \'(\' || c == \'{\' || c == \'[\') stack[++top] = c;\n        else {\n            if(top < 0) return false;\n            char open = stack[top--];\n            if(c == \')\' && open != \'(\') return false;\n            if(c == \'}\' && open != \'{\') return false;\n            if(c == \']\' && open != \'[\') return false;\n        }\n    }\n    return top == -1;\n}\n',
+        test_cases: JSON.stringify([
+          { input: '"()"', expected: 'true' },
+          { input: '"()[]{}"', expected: 'true' },
+          { input: '"(]"', expected: 'false' },
+          { input: '"([)]"', expected: 'false' }
+        ])
+      },
+      {
+        id: 'code_q3',
+        title: 'Longest Substring Without Repeating Characters',
+        difficulty: 'Medium',
+        language: 'Python, Java, C',
+        description: 'Given a string s, find the length of the longest substring without duplicate characters.',
+        sample_input: 's = "abcabcbb"',
+        sample_output: '3',
+        py: 'def length_of_longest_substring(s):\n    char_map = {}\n    left = max_len = 0\n    for right, c in enumerate(s):\n        if c in char_map and char_map[c] >= left:\n            left = char_map[c] + 1\n        char_map[c] = right\n        max_len = max(max_len, right - left + 1)\n    return max_len\n',
+        java: 'import java.util.*;\n\npublic class Solution {\n    public static int lengthOfLongestSubstring(String s) {\n        int n = s.length(), maxLen = 0;\n        Map<Character, Integer> map = new HashMap<>();\n        for (int j = 0, i = 0; j < n; j++) {\n            if (map.containsKey(s.charAt(j))) {\n                i = Math.max(map.get(s.charAt(j)) + 1, i);\n            }\n            maxLen = Math.max(maxLen, j - i + 1);\n            map.put(s.charAt(j), j);\n        }\n        return maxLen;\n    }\n}\n',
+        c: '#include <string.h>\n\nint lengthOfLongestSubstring(char * s) {\n    int n = strlen(s), maxLen = 0, i = 0;\n    int lastPos[256];\n    for(int k = 0; k < 256; k++) lastPos[k] = -1;\n    for(int j = 0; j < n; j++) {\n        unsigned char c = (unsigned char)s[j];\n        if(lastPos[c] >= i) i = lastPos[c] + 1;\n        lastPos[c] = j;\n        int curLen = j - i + 1;\n        if(curLen > maxLen) maxLen = curLen;\n    }\n    return maxLen;\n}\n',
+        test_cases: JSON.stringify([
+          { input: '"abcabcbb"', expected: '3' },
+          { input: '"bbbbb"', expected: '1' },
+          { input: '"pwwkew"', expected: '3' }
+        ])
+      },
+      {
+        id: 'code_q4',
+        title: 'Maximum Subarray Sum (Kadane\'s Algorithm)',
+        difficulty: 'Medium',
+        language: 'Python, Java, C',
+        description: 'Given an integer array nums, find the contiguous subarray with the largest sum, and return its sum.',
+        sample_input: 'nums = [-2,1,-3,4,-1,2,1,-5,4]',
+        sample_output: '6',
+        py: 'def max_sub_array(nums):\n    max_sum = current_sum = nums[0]\n    for x in nums[1:]:\n        current_sum = max(x, current_sum + x)\n        max_sum = max(max_sum, current_sum)\n    return max_sum\n',
+        java: 'public class Solution {\n    public static int maxSubArray(int[] nums) {\n        int maxSoFar = nums[0], currMax = nums[0];\n        for (int i = 1; i < nums.length; i++) {\n            currMax = Math.max(nums[i], currMax + nums[i]);\n            maxSoFar = Math.max(maxSoFar, currMax);\n        }\n        return maxSoFar;\n    }\n}\n',
+        c: 'int maxSubArray(int* nums, int numsSize) {\n    int maxSoFar = nums[0], currMax = nums[0];\n    for(int i = 1; i < numsSize; i++) {\n        currMax = (nums[i] > currMax + nums[i]) ? nums[i] : (currMax + nums[i]);\n        if(currMax > maxSoFar) maxSoFar = currMax;\n    }\n    return maxSoFar;\n}\n',
+        test_cases: JSON.stringify([
+          { input: '[-2,1,-3,4,-1,2,1,-5,4]', expected: '6' },
+          { input: '[1]', expected: '1' },
+          { input: '[5,4,-1,7,8]', expected: '23' }
+        ])
+      }
+    ];
+
+    const codeTx = db.transaction(() => {
+      for (const q of codingQuestions) {
+        insertCode.run(q.id, q.title, q.difficulty, q.language, q.description, q.sample_input, q.sample_output, q.py, q.java, q.c, q.test_cases);
+      }
+    });
+    codeTx();
+  }
 }
 
 // Seed data from records.json and default initial dataset

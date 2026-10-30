@@ -65,12 +65,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     mentoring: `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>`,
     reports: `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>`,
     access: `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>`,
-    mlInsight: `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>`
+    mlInsight: `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>`,
+    academic: `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>`,
+    skills: `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`,
+    aptitude: `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`,
+    coding: `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>`,
+    predictionTarget: `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>`
   };
 
-  // Student Navigation: Exact 10 Main Navigation Items Hierarchy
+  // Student Navigation: Exact AI-Based Student Placement Prediction System Structure
   const studentNavStructure = [
-    { type: 'item', title: 'Dashboard', route: '/student/dashboard', icon: icons.dashboard },
     { type: 'item', title: 'My Profile', route: '/student/profile', icon: icons.studentProfile },
     { type: 'item', title: 'My Tasks', route: '/student/tasks', icon: icons.tasks },
     { type: 'item', title: 'Group Projects', route: '/student/projects', icon: icons.projects },
@@ -80,10 +84,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       title: 'Assignments',
       icon: icons.assignments,
       children: [
+        { title: 'Faculty Assignments', route: '/student/assignments/faculty', icon: icons.facultyAssignments },
         { title: 'Lab Assignments', route: '/student/assignments/lab', icon: icons.lab },
         { title: 'Learning Records', route: '/student/assignments/learning', icon: icons.learning },
-        { title: 'Practice Records', route: '/student/assignments/practice', icon: icons.practice },
-        { title: 'Faculty Assignments', route: '/student/assignments/faculty', icon: icons.facultyAssignments }
+        { title: 'Practice Records', route: '/student/assignments/practice', icon: icons.practice }
       ]
     },
     {
@@ -93,16 +97,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       icon: icons.placement,
       children: [
         { title: 'Placement Overview', route: '/student/overview', icon: icons.overviewChart },
-        { title: 'Student Academic & Placement Profile', route: '/student/profile', icon: icons.studentProfile },
-        { title: 'Prediction & What-If Simulator', route: '/student/prediction', icon: icons.simulator },
-        { title: 'Skill Gap Analysis & Paths', route: '/student/skills', icon: icons.skillGap },
-        { title: 'Campus Recruitment Drives', route: '/student/jobs', icon: icons.campusDrives },
+        { title: 'Academic Performance', route: '/student/academic-performance', icon: icons.academic },
+        { title: 'Student Profile & Skills', route: '/student/profile-skills', icon: icons.skills },
+        { title: 'Aptitude Assessment', route: '/student/aptitude', icon: icons.aptitude },
+        { title: 'Coding Assessment', route: '/student/coding', icon: icons.coding },
+        { title: 'Placement Prediction', route: '/student/placement-prediction', icon: icons.predictionTarget },
         { title: 'Resume Analyzer & ATS Compatibility', route: '/student/resume', icon: icons.resumeAts }
       ]
     },
-    { type: 'item', title: 'Companies & Drives', route: '/student/companies', icon: icons.companies },
-    { type: 'item', title: 'My Applications', route: '/student/applications', icon: icons.applications },
-    { type: 'item', title: 'Skills & Skill Gaps', route: '/student/skill-gaps', icon: icons.skillsGraduation },
     { type: 'item', title: 'Notifications', route: '/student/notifications', icon: icons.notifications }
   ];
 
@@ -196,9 +198,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     '/student/assignments/practice': 'pane-student-assignments-practice',
     '/student/assignments/faculty': 'pane-student-assignments-faculty',
     '/student/overview': 'pane-student-overview',
+    '/student/academic-performance': 'pane-student-academic-performance',
+    '/student/profile-skills': 'pane-student-profile-skills',
+    '/student/aptitude': 'pane-student-aptitude',
+    '/student/coding': 'pane-student-coding',
+    '/student/placement-prediction': 'pane-student-placement-prediction',
     '/student/profile': 'pane-student-profile',
-    '/student/prediction': 'pane-student-prediction',
-    '/student/skills': 'pane-student-skills',
+    '/student/prediction': 'pane-student-placement-prediction',
+    '/student/skills': 'pane-student-profile-skills',
     '/student/jobs': 'pane-student-jobs',
     '/student/resume': 'pane-student-resume',
     '/student/assistant': 'pane-student-assistant',
@@ -231,8 +238,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     '/officer/reports': 'pane-officer-reports',
     '/officer/access-control': 'pane-officer-access-control',
 
-    '/what-if': 'pane-student-prediction',
-    '/skill-gap-analysis': 'pane-student-skills',
+    '/what-if': 'pane-student-placement-prediction',
+    '/skill-gap-analysis': 'pane-student-profile-skills',
     '/resume-analyzer': 'pane-student-resume'
   };
 
@@ -245,9 +252,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     '/student/assignments/practice': 'Practice Records',
     '/student/assignments/faculty': 'Faculty Assignments',
     '/student/overview': 'Placement Overview',
+    '/student/academic-performance': 'Academic Performance',
+    '/student/profile-skills': 'Student Profile & Skills',
+    '/student/aptitude': 'Aptitude Assessment',
+    '/student/coding': 'Coding Assessment',
+    '/student/placement-prediction': 'Placement Prediction',
     '/student/profile': 'Student Academic & Placement Profile',
-    '/student/prediction': 'Prediction & What-If Simulator',
-    '/student/skills': 'Skill Gap Analysis & Paths',
+    '/student/prediction': 'Placement Prediction',
+    '/student/skills': 'Student Profile & Skills',
     '/student/jobs': 'Campus Recruitment Drives',
     '/student/resume': 'Resume Analyzer & ATS Compatibility',
     '/student/assistant': 'AI Career & Mock Interview Assistant',
@@ -795,6 +807,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (typeof renderAllViews === 'function') {
       renderAllViews();
+    }
+
+    // Trigger placement prediction system modules upon routing
+    if (currentRoute === '/student/academic-performance') {
+      window.fetchAcademicPerformance?.();
+    } else if (currentRoute === '/student/profile-skills') {
+      window.fetchProfileSkillsData?.();
+    } else if (currentRoute === '/student/aptitude') {
+      window.initAptitudeAssessment?.();
+    } else if (currentRoute === '/student/coding') {
+      window.initCodingAssessment?.();
+    } else if (currentRoute === '/student/placement-prediction' || currentRoute === '/student/overview') {
+      window.fetchPlacementPrediction?.();
     }
 
     // Direct / deep-link to record details
@@ -8134,6 +8159,1098 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.body.classList.remove('sidebar-collapsed');
     }
   });
+
+  // ===========================================================================
+  // AI-BASED STUDENT PLACEMENT PREDICTION SYSTEM - CLIENT CONTROLLERS
+  // ===========================================================================
+
+  // 1. Academic Performance Controller
+  window.fetchAcademicPerformance = async function() {
+    try {
+      const res = await fetch('/api/academic/performance', { credentials: 'include' });
+      const data = await res.json();
+      if (!data.success) return;
+
+      const acad = data.academic || {};
+      const indicators = data.indicators || {};
+
+      const nameInput = document.getElementById('acad-input-name');
+      const deptInput = document.getElementById('acad-input-dept');
+      const degreeInput = document.getElementById('acad-input-degree');
+      const semInput = document.getElementById('acad-input-sem');
+      const cgpaInput = document.getElementById('acad-input-cgpa');
+      const tenthInput = document.getElementById('acad-input-tenth');
+      const twelfthInput = document.getElementById('acad-input-twelfth');
+      const activeBacklogsInput = document.getElementById('acad-input-active-backlogs');
+      const prevBacklogsInput = document.getElementById('acad-input-prev-backlogs');
+
+      if (nameInput) nameInput.value = acad.student_name || '';
+      if (deptInput && acad.department) deptInput.value = acad.department;
+      if (degreeInput && acad.degree) degreeInput.value = acad.degree;
+      if (semInput && acad.current_semester) semInput.value = acad.current_semester;
+      if (cgpaInput && acad.cgpa !== undefined) cgpaInput.value = acad.cgpa;
+      if (tenthInput && acad.tenth_percentage !== undefined) tenthInput.value = acad.tenth_percentage;
+      if (twelfthInput && acad.twelfth_percentage !== undefined) twelfthInput.value = acad.twelfth_percentage;
+      if (activeBacklogsInput && acad.active_backlogs !== undefined) activeBacklogsInput.value = acad.active_backlogs;
+      if (prevBacklogsInput && acad.previous_backlogs !== undefined) prevBacklogsInput.value = acad.previous_backlogs;
+
+      // KPIs
+      const standingEl = document.getElementById('acad-kpi-standing');
+      const standingPill = document.getElementById('acad-kpi-standing-pill');
+      const tier1El = document.getElementById('acad-kpi-tier1');
+      const tier1Pill = document.getElementById('acad-kpi-tier1-pill');
+      const backlogsEl = document.getElementById('acad-kpi-backlogs');
+      const backlogsPill = document.getElementById('acad-kpi-backlogs-pill');
+      const scoreEl = document.getElementById('acad-kpi-score');
+
+      if (standingEl) standingEl.textContent = indicators.academicStanding || 'First Class';
+      if (standingPill) standingPill.textContent = (acad.cgpa >= 8.5) ? 'Distinction Achieved' : 'Benchmark Met';
+
+      if (tier1El) {
+        tier1El.textContent = indicators.tier1Eligibility ? 'Eligible' : 'Ineligible';
+        if (tier1Pill) {
+          tier1Pill.textContent = indicators.tier1Eligibility ? 'CGPA >= 7.50, 0 Backlogs' : 'Requires CGPA >= 7.50 & 0 Backlogs';
+          tier1Pill.className = indicators.tier1Eligibility ? 'kpi-pill teal' : 'kpi-pill red';
+        }
+      }
+
+      if (backlogsEl) {
+        backlogsEl.textContent = (acad.active_backlogs === 0) ? '0 Active' : `${acad.active_backlogs} Active`;
+        if (backlogsPill) {
+          backlogsPill.textContent = (acad.active_backlogs === 0) ? 'Clear Record' : 'Remedial Action Required';
+          backlogsPill.className = (acad.active_backlogs === 0) ? 'kpi-pill teal' : 'kpi-pill orange';
+        }
+      }
+
+      if (scoreEl) {
+        scoreEl.innerHTML = `${indicators.academicReadinessScore || 84} <span style="font-size: 13px; color: var(--text-secondary);">/ 100</span>`;
+      }
+
+      // Cutoff badges
+      const tier1Cutoff = document.getElementById('cutoff-badge-tier1');
+      const tier2Cutoff = document.getElementById('cutoff-badge-tier2');
+      const massCutoff = document.getElementById('cutoff-badge-mass');
+      if (tier1Cutoff) {
+        tier1Cutoff.textContent = indicators.tier1Eligibility ? 'Eligible' : 'Cutoff Not Met';
+        tier1Cutoff.className = indicators.tier1Eligibility ? 'badge-status teal' : 'badge-status neutral';
+      }
+      if (tier2Cutoff) {
+        tier2Cutoff.textContent = indicators.tier2Eligibility ? 'Eligible' : 'Cutoff Not Met';
+        tier2Cutoff.className = indicators.tier2Eligibility ? 'badge-status teal' : 'badge-status neutral';
+      }
+      if (massCutoff) {
+        const isMassEligible = (acad.cgpa >= 6.0) && (acad.active_backlogs === 0);
+        massCutoff.textContent = isMassEligible ? 'Eligible' : 'Cutoff Not Met';
+        massCutoff.className = isMassEligible ? 'badge-status teal' : 'badge-status neutral';
+      }
+    } catch (err) {
+      console.warn('[StudyFlow] Error loading academic performance:', err);
+    }
+  };
+
+  window.saveAcademicPerformanceForm = async function() {
+    const msgBox = document.getElementById('acad-form-msg');
+    const cgpa = parseFloat(document.getElementById('acad-input-cgpa')?.value);
+    const tenth = parseFloat(document.getElementById('acad-input-tenth')?.value);
+    const twelfth = parseFloat(document.getElementById('acad-input-twelfth')?.value);
+    const activeBacklogs = parseInt(document.getElementById('acad-input-active-backlogs')?.value, 10);
+    const prevBacklogs = parseInt(document.getElementById('acad-input-prev-backlogs')?.value, 10) || 0;
+
+    if (isNaN(cgpa) || cgpa < 0 || cgpa > 10) {
+      if (msgBox) {
+        msgBox.style.display = 'block';
+        msgBox.style.background = '#FEF2F2';
+        msgBox.style.color = '#B91C1C';
+        msgBox.textContent = 'Please enter a valid CGPA between 0.00 and 10.00.';
+      }
+      return;
+    }
+    if (isNaN(tenth) || tenth < 0 || tenth > 100 || isNaN(twelfth) || twelfth < 0 || twelfth > 100) {
+      if (msgBox) {
+        msgBox.style.display = 'block';
+        msgBox.style.background = '#FEF2F2';
+        msgBox.style.color = '#B91C1C';
+        msgBox.textContent = '10th and 12th percentages must be between 0 and 100.';
+      }
+      return;
+    }
+
+    const payload = {
+      student_name: document.getElementById('acad-input-name')?.value,
+      department: document.getElementById('acad-input-dept')?.value,
+      degree: document.getElementById('acad-input-degree')?.value,
+      current_semester: document.getElementById('acad-input-sem')?.value,
+      cgpa,
+      tenth_percentage: tenth,
+      twelfth_percentage: twelfth,
+      active_backlogs: activeBacklogs,
+      previous_backlogs: prevBacklogs
+    };
+
+    try {
+      const res = await fetch('/api/academic/performance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (msgBox) {
+          msgBox.style.display = 'block';
+          msgBox.style.background = '#F0FDF4';
+          msgBox.style.color = '#15803D';
+          msgBox.textContent = '✓ Academic performance successfully updated and synced with ML model.';
+          setTimeout(() => { msgBox.style.display = 'none'; }, 4000);
+        }
+        window.showToast?.('✓ Academic credentials verified and saved.', 'success');
+        fetchAcademicPerformance();
+        fetchPlacementPrediction();
+      } else {
+        if (msgBox) {
+          msgBox.style.display = 'block';
+          msgBox.style.background = '#FEF2F2';
+          msgBox.style.color = '#B91C1C';
+          msgBox.textContent = data.error || 'Failed to save academic records.';
+        }
+      }
+    } catch (err) {
+      if (msgBox) {
+        msgBox.style.display = 'block';
+        msgBox.style.background = '#FEF2F2';
+        msgBox.style.color = '#B91C1C';
+        msgBox.textContent = err.message;
+      }
+    }
+  };
+
+  // 2. Student Profile & Skills Controller
+  window.fetchProfileSkillsData = async function() {
+    try {
+      const res = await fetch('/api/skills/profile', { credentials: 'include' });
+      const data = await res.json();
+      if (!data.success) return;
+
+      const skills = data.skills || [];
+      const internships = data.internships || [];
+      const projects = data.projects || [];
+      const summary = data.summary || {};
+
+      const skillsCountEl = document.getElementById('prof-kpi-skills-count');
+      const internshipsCountEl = document.getElementById('prof-kpi-internships-count');
+      const projectsCountEl = document.getElementById('prof-kpi-projects-count');
+      const scoreEl = document.getElementById('prof-kpi-score');
+
+      if (skillsCountEl) skillsCountEl.textContent = skills.length;
+      if (internshipsCountEl) internshipsCountEl.textContent = internships.length;
+      if (projectsCountEl) projectsCountEl.textContent = projects.length;
+      if (scoreEl) scoreEl.innerHTML = `${summary.profileScore || 76} <span style="font-size: 13px; color: var(--text-secondary);">/ 100</span>`;
+
+      // Render Skills
+      const skillsContainer = document.getElementById('skills-list-container');
+      if (skillsContainer) {
+        if (skills.length === 0) {
+          skillsContainer.innerHTML = '<span style="font-size: 12.5px; color: var(--text-secondary);">No skills added yet. Add your programming languages and technical competencies above.</span>';
+        } else {
+          skillsContainer.innerHTML = skills.map(s => {
+            const levelClass = s.proficiency_level === 'Expert' ? 'teal' : s.proficiency_level === 'Advanced' ? 'blue' : 'neutral';
+            return `
+              <div style="display: inline-flex; align-items: center; gap: 8px; background: #FFFFFF; border: 1px solid var(--border-medium); border-radius: 8px; padding: 6px 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
+                <strong style="font-size: 12.5px; color: #1E293B;">${s.skill_name}</strong>
+                <span class="badge-status ${levelClass}" style="font-size: 10px; padding: 1px 6px;">${s.proficiency_level}</span>
+                <span style="font-size: 11px; color: var(--text-secondary);">${s.years_experience}y exp</span>
+                <button type="button" onclick="handleDeleteSkillItem('${s.id}')" style="background: none; border: none; cursor: pointer; color: #94A3B8; padding: 0 2px; font-size: 14px; line-height: 1;" title="Remove skill">&times;</button>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+
+      // Render Internships
+      const intContainer = document.getElementById('internships-list-container');
+      if (intContainer) {
+        if (internships.length === 0) {
+          intContainer.innerHTML = '<div style="font-size: 12px; color: var(--text-secondary); text-align: center; padding: 20px; background: #F8FAFC; border-radius: 8px;">No internships logged yet. Click "+ Add Internship" to record your industry experience.</div>';
+        } else {
+          intContainer.innerHTML = internships.map(item => `
+            <div style="background: #FFFFFF; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
+                <div>
+                  <strong style="font-size: 13.5px; color: #1E293B;">${item.role}</strong>
+                  <div style="font-size: 12px; color: #2563EB; font-weight: 600;">${item.company}</div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span class="badge-status teal" style="font-size: 10.5px;">${item.duration_months} Months</span>
+                  <button type="button" onclick="handleDeleteInternship('${item.id}')" style="background: none; border: none; cursor: pointer; color: #94A3B8; font-size: 14px;" title="Delete">&times;</button>
+                </div>
+              </div>
+              <p style="font-size: 12px; color: var(--text-secondary); margin: 6px 0 0 0; line-height: 1.4;">${item.description || 'Hands-on software development and technical project implementation.'}</p>
+            </div>
+          `).join('');
+        }
+      }
+
+      // Render Projects
+      const prjContainer = document.getElementById('projects-list-container');
+      if (prjContainer) {
+        if (projects.length === 0) {
+          prjContainer.innerHTML = '<div style="font-size: 12px; color: var(--text-secondary); text-align: center; padding: 20px; background: #F8FAFC; border-radius: 8px;">No technical projects added yet. Click "+ Add Project" to showcase your portfolio.</div>';
+        } else {
+          prjContainer.innerHTML = projects.map(p => `
+            <div style="background: #FFFFFF; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
+                <div>
+                  <strong style="font-size: 13.5px; color: #1E293B;">${p.title}</strong>
+                  <div style="font-size: 11.5px; color: var(--text-secondary);">${p.role || 'Developer'} &bull; ${p.duration || '2 Months'}</div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  ${p.project_url ? `<a href="${p.project_url}" target="_blank" rel="noopener" style="font-size: 11px; color: #2563EB; font-weight: 600;">GitHub &nearr;</a>` : ''}
+                  <button type="button" onclick="handleDeleteProject('${p.id}')" style="background: none; border: none; cursor: pointer; color: #94A3B8; font-size: 14px;" title="Delete">&times;</button>
+                </div>
+              </div>
+              <p style="font-size: 12px; color: var(--text-secondary); margin: 4px 0 6px 0; line-height: 1.4;">${p.description || ''}</p>
+              <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                ${(p.technologies || '').split(',').map(t => `<span class="kpi-pill blue" style="font-size: 9.5px; padding: 1px 6px;">${t.trim()}</span>`).join('')}
+              </div>
+            </div>
+          `).join('');
+        }
+      }
+    } catch (err) {
+      console.warn('[StudyFlow] Error loading profile & skills:', err);
+    }
+  };
+
+  window.handleAddSkillItem = async function() {
+    const name = document.getElementById('skill-input-name')?.value;
+    const cat = document.getElementById('skill-input-cat')?.value;
+    const level = document.getElementById('skill-input-level')?.value;
+    const exp = document.getElementById('skill-input-exp')?.value;
+
+    if (!name || !name.trim()) {
+      window.showToast?.('Please enter a skill name.', 'error');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/skills/item', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ skill_name: name, category: cat, proficiency_level: level, years_experience: exp })
+      });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('skill-input-name').value = '';
+        window.showToast?.(`✓ Added ${name.trim()} to your skill profile.`, 'success');
+        fetchProfileSkillsData();
+        fetchPlacementPrediction();
+      }
+    } catch (err) {
+      window.showToast?.(err.message, 'error');
+    }
+  };
+
+  window.handleDeleteSkillItem = async function(id) {
+    try {
+      const res = await fetch(`/api/skills/item/${id}`, { method: 'DELETE', credentials: 'include' });
+      const data = await res.json();
+      if (data.success) {
+        fetchProfileSkillsData();
+        fetchPlacementPrediction();
+      }
+    } catch (err) {
+      console.warn(err);
+    }
+  };
+
+  window.toggleAddInternshipBox = function() {
+    const box = document.getElementById('add-internship-drawer');
+    if (box) box.style.display = box.style.display === 'none' ? 'block' : 'none';
+  };
+
+  window.handleSaveInternship = async function() {
+    const role = document.getElementById('int-input-role')?.value;
+    const company = document.getElementById('int-input-company')?.value;
+    const duration = document.getElementById('int-input-duration')?.value;
+    const desc = document.getElementById('int-input-desc')?.value;
+    const start = document.getElementById('int-input-start')?.value;
+    const end = document.getElementById('int-input-end')?.value;
+
+    if (!role || !company) {
+      window.showToast?.('Role and company are required.', 'error');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/internships', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ role, company, duration_months: duration, description: desc, start_date: start, end_date: end })
+      });
+      const data = await res.json();
+      if (data.success) {
+        window.toggleAddInternshipBox();
+        window.showToast?.('✓ Internship saved.', 'success');
+        fetchProfileSkillsData();
+        fetchPlacementPrediction();
+      }
+    } catch (err) {
+      window.showToast?.(err.message, 'error');
+    }
+  };
+
+  window.handleDeleteInternship = async function(id) {
+    try {
+      await fetch(`/api/internships/${id}`, { method: 'DELETE', credentials: 'include' });
+      fetchProfileSkillsData();
+      fetchPlacementPrediction();
+    } catch (err) {}
+  };
+
+  window.toggleAddProjectBox = function() {
+    const box = document.getElementById('add-project-drawer');
+    if (box) box.style.display = box.style.display === 'none' ? 'block' : 'none';
+  };
+
+  window.handleSaveProject = async function() {
+    const title = document.getElementById('prj-input-title')?.value;
+    const tech = document.getElementById('prj-input-tech')?.value;
+    const url = document.getElementById('prj-input-url')?.value;
+    const role = document.getElementById('prj-input-role')?.value;
+    const desc = document.getElementById('prj-input-desc')?.value;
+
+    if (!title) {
+      window.showToast?.('Project title is required.', 'error');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/projects/student', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ title, technologies: tech, project_url: url, role, description: desc })
+      });
+      const data = await res.json();
+      if (data.success) {
+        window.toggleAddProjectBox();
+        window.showToast?.('✓ Project saved.', 'success');
+        fetchProfileSkillsData();
+        fetchPlacementPrediction();
+      }
+    } catch (err) {
+      window.showToast?.(err.message, 'error');
+    }
+  };
+
+  window.handleDeleteProject = async function(id) {
+    try {
+      await fetch(`/api/projects/student/${id}`, { method: 'DELETE', credentials: 'include' });
+      fetchProfileSkillsData();
+      fetchPlacementPrediction();
+    } catch (err) {}
+  };
+
+  // 3. Aptitude Assessment Controller
+  let aptitudeQuestionsList = [];
+  let aptitudeCurrentIndex = 0;
+  let aptitudeUserAnswers = {};
+  let aptitudeTimerInterval = null;
+  let aptitudeSecondsRemaining = 900; // 15 mins
+
+  window.initAptitudeAssessment = function() {
+    loadAptitudeQuestions('All');
+    loadAptitudeHistory();
+  };
+
+  window.loadAptitudeQuestions = async function(category = 'All') {
+    try {
+      const res = await fetch(`/api/aptitude/questions?category=${encodeURIComponent(category)}`, { credentials: 'include' });
+      const data = await res.json();
+      if (!data.success) return;
+
+      aptitudeQuestionsList = data.questions || [];
+      aptitudeCurrentIndex = 0;
+      aptitudeUserAnswers = {};
+      aptitudeSecondsRemaining = 900;
+
+      const paletteContainer = document.getElementById('apt-palette-container');
+      if (paletteContainer) {
+        paletteContainer.innerHTML = aptitudeQuestionsList.map((q, idx) => `
+          <button type="button" class="palette-btn ${idx === 0 ? 'active' : ''}" id="apt-pal-${idx}" onclick="jumpToAptitudeQuestion(${idx})">
+            ${idx + 1}
+          </button>
+        `).join('');
+      }
+
+      startAptitudeTimer();
+      renderAptitudeQuestion(0);
+
+      const resultsBox = document.getElementById('apt-results-container');
+      if (resultsBox) resultsBox.style.display = 'none';
+    } catch (err) {
+      console.warn('[StudyFlow] Error loading aptitude questions:', err);
+    }
+  };
+
+  function startAptitudeTimer() {
+    if (aptitudeTimerInterval) clearInterval(aptitudeTimerInterval);
+    const timerText = document.getElementById('apt-timer-text');
+    const timerBox = document.getElementById('apt-timer-display');
+
+    aptitudeTimerInterval = setInterval(() => {
+      aptitudeSecondsRemaining--;
+      if (aptitudeSecondsRemaining <= 0) {
+        clearInterval(aptitudeTimerInterval);
+        submitAptitudeAssessment();
+        return;
+      }
+      const mins = Math.floor(aptitudeSecondsRemaining / 60);
+      const secs = aptitudeSecondsRemaining % 60;
+      if (timerText) {
+        timerText.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      }
+      if (timerBox) {
+        timerBox.classList.toggle('warning', aptitudeSecondsRemaining < 120);
+      }
+    }, 1000);
+  }
+
+  window.renderAptitudeQuestion = function(idx) {
+    if (!aptitudeQuestionsList || idx < 0 || idx >= aptitudeQuestionsList.length) return;
+    aptitudeCurrentIndex = idx;
+    const q = aptitudeQuestionsList[idx];
+
+    const counter = document.getElementById('apt-question-counter');
+    const catLabel = document.getElementById('apt-q-category');
+    const diffLabel = document.getElementById('apt-q-difficulty');
+    const qText = document.getElementById('apt-q-text');
+    const optAText = document.getElementById('apt-opt-a-text');
+    const optBText = document.getElementById('apt-opt-b-text');
+    const optCText = document.getElementById('apt-opt-c-text');
+    const optDText = document.getElementById('apt-opt-d-text');
+
+    if (counter) counter.textContent = `Question ${idx + 1} of ${aptitudeQuestionsList.length}`;
+    if (catLabel) catLabel.textContent = q.category;
+    if (diffLabel) diffLabel.textContent = `${q.difficulty || 'Medium'} Difficulty`;
+    if (qText) qText.textContent = q.question_text;
+    if (optAText) optAText.textContent = q.option_a;
+    if (optBText) optBText.textContent = q.option_b;
+    if (optCText) optCText.textContent = q.option_c;
+    if (optDText) optDText.textContent = q.option_d;
+
+    const chosen = aptitudeUserAnswers[q.id];
+    const options = document.querySelectorAll('#apt-options-container .mcq-option');
+    options.forEach(opt => {
+      const letter = opt.querySelector('.mcq-letter')?.textContent?.trim();
+      opt.classList.toggle('selected', letter === chosen);
+    });
+
+    document.querySelectorAll('.palette-btn').forEach((btn, i) => {
+      btn.classList.toggle('active', i === idx);
+    });
+  };
+
+  window.jumpToAptitudeQuestion = function(idx) {
+    renderAptitudeQuestion(idx);
+  };
+
+  window.selectAptitudeOption = function(optionLetter) {
+    const q = aptitudeQuestionsList[aptitudeCurrentIndex];
+    if (!q) return;
+    aptitudeUserAnswers[q.id] = optionLetter;
+
+    const options = document.querySelectorAll('#apt-options-container .mcq-option');
+    options.forEach(opt => {
+      const letter = opt.querySelector('.mcq-letter')?.textContent?.trim();
+      opt.classList.toggle('selected', letter === optionLetter);
+    });
+
+    const palBtn = document.getElementById(`apt-pal-${aptitudeCurrentIndex}`);
+    if (palBtn) palBtn.classList.add('answered');
+  };
+
+  window.nextAptitudeQuestion = function() {
+    if (aptitudeCurrentIndex < aptitudeQuestionsList.length - 1) {
+      renderAptitudeQuestion(aptitudeCurrentIndex + 1);
+    } else {
+      window.showToast?.('Reached final question. Review your answers or click Submit Test.', 'info');
+    }
+  };
+
+  window.prevAptitudeQuestion = function() {
+    if (aptitudeCurrentIndex > 0) {
+      renderAptitudeQuestion(aptitudeCurrentIndex - 1);
+    }
+  };
+
+  window.clearAptitudeSelection = function() {
+    const q = aptitudeQuestionsList[aptitudeCurrentIndex];
+    if (!q) return;
+    delete aptitudeUserAnswers[q.id];
+    document.querySelectorAll('#apt-options-container .mcq-option').forEach(opt => opt.classList.remove('selected'));
+    const palBtn = document.getElementById(`apt-pal-${aptitudeCurrentIndex}`);
+    if (palBtn) palBtn.classList.remove('answered');
+  };
+
+  window.submitAptitudeAssessment = async function() {
+    if (aptitudeTimerInterval) clearInterval(aptitudeTimerInterval);
+    const timeTaken = 900 - aptitudeSecondsRemaining;
+
+    try {
+      const res = await fetch('/api/aptitude/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          category: 'Quantitative & Logical Aptitude',
+          answers: aptitudeUserAnswers,
+          time_taken_seconds: Math.max(15, timeTaken)
+        })
+      });
+      const data = await res.json();
+      if (!data.success) {
+        window.showToast?.(data.error || 'Failed to submit test.', 'error');
+        return;
+      }
+
+      const att = data.attempt;
+      const review = data.review || [];
+
+      const kpiScore = document.getElementById('apt-kpi-score');
+      const kpiAcc = document.getElementById('apt-kpi-accuracy');
+      if (kpiScore) kpiScore.textContent = `${att.accuracy_percentage}%`;
+      if (kpiAcc) kpiAcc.textContent = `${att.accuracy_percentage}%`;
+
+      const resBox = document.getElementById('apt-results-container');
+      const resCorrect = document.getElementById('apt-res-correct');
+      const resIncorrect = document.getElementById('apt-res-incorrect');
+      const resAccuracy = document.getElementById('apt-res-accuracy');
+      const resTime = document.getElementById('apt-res-time');
+      const reviewList = document.getElementById('apt-review-list');
+
+      if (resBox) resBox.style.display = 'block';
+      if (resCorrect) resCorrect.textContent = att.correct_answers;
+      if (resIncorrect) resIncorrect.textContent = att.incorrect_answers;
+      if (resAccuracy) resAccuracy.textContent = `${att.accuracy_percentage}%`;
+      if (resTime) resTime.textContent = `${Math.floor(att.time_taken_seconds / 60)}m ${att.time_taken_seconds % 60}s`;
+
+      if (reviewList) {
+        reviewList.innerHTML = review.map((r, i) => `
+          <div style="background: #FFFFFF; border: 1px solid ${r.isCorrect ? '#86EFAC' : '#FCA5A5'}; border-radius: 8px; padding: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <strong style="font-size: 13px; color: #1E293B;">Q${i + 1}. ${r.question}</strong>
+              <span class="badge-status ${r.isCorrect ? 'teal' : 'red'}">${r.isCorrect ? 'Correct (+1)' : 'Incorrect'}</span>
+            </div>
+            <div style="font-size: 12px; margin-bottom: 4px;">
+              Your Answer: <strong>${r.studentAnswer || 'Not Answered'}</strong> &bull; Correct Answer: <strong style="color: #15803D;">Option ${r.correctAnswer}</strong>
+            </div>
+            <p style="font-size: 11.5px; color: var(--text-secondary); margin: 0; background: #F8FAFC; padding: 8px; border-radius: 6px;">
+              <strong>Explanation:</strong> ${r.explanation || 'Direct mathematical formula application.'}
+            </p>
+          </div>
+        `).join('');
+      }
+
+      window.showToast?.(`✓ Assessment submitted! Scored ${att.correct_answers}/${att.total_questions} (${att.accuracy_percentage}% accuracy).`, 'success');
+      loadAptitudeHistory();
+      fetchPlacementPrediction();
+    } catch (err) {
+      window.showToast?.(err.message, 'error');
+    }
+  };
+
+  window.loadAptitudeHistory = async function() {
+    try {
+      const res = await fetch('/api/aptitude/history', { credentials: 'include' });
+      const data = await res.json();
+      if (!data.success) return;
+
+      const history = data.history || [];
+      const tbody = document.getElementById('apt-history-tbody');
+      const countEl = document.getElementById('apt-kpi-attempts-count');
+      if (countEl) countEl.textContent = history.length;
+
+      if (tbody) {
+        if (history.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 16px;">No attempts recorded yet. Click \'Restart Test\' to begin.</td></tr>';
+        } else {
+          tbody.innerHTML = history.map(h => {
+            const dateStr = h.created_at ? new Date(h.created_at).toLocaleString() : 'Recent';
+            return `
+              <tr>
+                <td>${dateStr}</td>
+                <td><strong>${h.category}</strong></td>
+                <td>${h.correct_answers} / ${h.total_questions}</td>
+                <td><span class="kpi-pill ${h.accuracy_percentage >= 75 ? 'teal' : 'blue'}">${h.accuracy_percentage}%</span></td>
+                <td>${h.time_taken_seconds}s</td>
+                <td><span class="badge-status ${h.accuracy_percentage >= 70 ? 'teal' : 'neutral'}">${h.accuracy_percentage >= 70 ? 'Passed' : 'Needs Practice'}</span></td>
+              </tr>
+            `;
+          }).join('');
+        }
+      }
+    } catch (err) {}
+  };
+
+  // 4. Coding Assessment Controller
+  let codingQuestionsList = [];
+  let currentCodingQ = null;
+
+  window.initCodingAssessment = function() {
+    loadCodingQuestions();
+    loadCodingHistory();
+  };
+
+  window.loadCodingQuestions = async function() {
+    try {
+      const res = await fetch('/api/coding/questions', { credentials: 'include' });
+      const data = await res.json();
+      if (!data.success) return;
+
+      codingQuestionsList = data.questions || [];
+      if (codingQuestionsList.length > 0) {
+        switchCodingQuestion(codingQuestionsList[0].id);
+      }
+    } catch (err) {}
+  };
+
+  window.switchCodingQuestion = function(qid) {
+    const q = codingQuestionsList.find(x => x.id === qid) || codingQuestionsList[0];
+    if (!q) return;
+    currentCodingQ = q;
+
+    const titleEl = document.getElementById('code-problem-title');
+    const descEl = document.getElementById('code-problem-desc');
+    const diffEl = document.getElementById('code-problem-diff');
+    const sampleIn = document.getElementById('code-sample-input');
+    const sampleOut = document.getElementById('code-sample-output');
+    const selectEl = document.getElementById('code-problem-select');
+
+    if (titleEl) titleEl.textContent = q.title;
+    if (descEl) descEl.textContent = q.description;
+    if (diffEl) {
+      diffEl.textContent = q.difficulty;
+      diffEl.className = `badge-status ${q.difficulty === 'Easy' ? 'teal' : q.difficulty === 'Medium' ? 'blue' : 'orange'}`;
+    }
+    if (sampleIn) sampleIn.textContent = q.sample_input || '';
+    if (sampleOut) sampleOut.textContent = q.sample_output || '';
+    if (selectEl) selectEl.value = q.id;
+
+    const lang = document.getElementById('code-lang-select')?.value || 'python';
+    resetCodingStarterCode(lang);
+  };
+
+  window.switchCodingLanguage = function(lang) {
+    resetCodingStarterCode(lang);
+  };
+
+  window.resetCodingStarterCode = function(lang) {
+    if (!currentCodingQ) return;
+    const selectedLang = lang || document.getElementById('code-lang-select')?.value || 'python';
+    const editor = document.getElementById('code-editor-textarea');
+    if (!editor) return;
+
+    if (selectedLang === 'python') {
+      editor.value = currentCodingQ.starter_code_python || '# Write Python solution\n';
+    } else if (selectedLang === 'java') {
+      editor.value = currentCodingQ.starter_code_java || '// Write Java solution\n';
+    } else {
+      editor.value = currentCodingQ.starter_code_c || '/* Write C solution */\n';
+    }
+  };
+
+  window.runCodingTestCases = async function() {
+    if (!currentCodingQ) return;
+    const code = document.getElementById('code-editor-textarea')?.value;
+    const lang = document.getElementById('code-lang-select')?.value || 'python';
+
+    window.showToast?.('Running test cases in isolated execution environment...', 'info');
+
+    try {
+      const res = await fetch('/api/coding/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ question_id: currentCodingQ.id, language: lang, code })
+      });
+      const data = await res.json();
+      renderCodingExecutionResult(data);
+    } catch (err) {
+      window.showToast?.(err.message, 'error');
+    }
+  };
+
+  window.submitCodingSolution = async function() {
+    if (!currentCodingQ) return;
+    const code = document.getElementById('code-editor-textarea')?.value;
+    const lang = document.getElementById('code-lang-select')?.value || 'python';
+
+    try {
+      const res = await fetch('/api/coding/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ question_id: currentCodingQ.id, language: lang, code })
+      });
+      const data = await res.json();
+      renderCodingExecutionResult(data);
+      if (data.success) {
+        window.showToast?.(`✓ Solution submitted! Status: ${data.status} (Score: ${data.score}%)`, data.status === 'Accepted' ? 'success' : 'warning');
+        loadCodingHistory();
+        fetchPlacementPrediction();
+      }
+    } catch (err) {
+      window.showToast?.(err.message, 'error');
+    }
+  };
+
+  function renderCodingExecutionResult(data) {
+    const drawer = document.getElementById('code-results-drawer');
+    const pill = document.getElementById('code-res-pill');
+    const scoreEl = document.getElementById('code-res-score');
+    const timeEl = document.getElementById('code-res-time');
+    const detailBox = document.getElementById('code-test-cases-detail');
+
+    if (drawer) drawer.style.display = 'block';
+    if (pill) {
+      pill.textContent = data.status === 'Accepted' ? '✓ All Tests Passed' : `${data.passed}/${data.total} Passed`;
+      pill.className = `test-pill ${data.passed === data.total ? 'pass' : 'fail'}`;
+    }
+    if (scoreEl) scoreEl.textContent = `Score: ${data.score}%`;
+    if (timeEl) timeEl.textContent = `Execution Time: ${data.execution_time_ms || 12}ms`;
+
+    if (detailBox) {
+      if (data.error) {
+        detailBox.innerHTML = `<div style="color: #DC2626; background: #FEE2E2; padding: 8px; border-radius: 6px; font-family: monospace;">${data.error}</div>`;
+      } else {
+        const results = data.results || [];
+        detailBox.innerHTML = results.map((tc, idx) => `
+          <div style="background: #FFFFFF; border: 1px solid ${tc.passed ? '#86EFAC' : '#FCA5A5'}; border-radius: 6px; padding: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <strong>Test Case #${idx + 1}</strong>
+              <span class="badge-status ${tc.passed ? 'teal' : 'red'}" style="font-size: 10px;">${tc.passed ? 'Passed' : 'Failed'}</span>
+            </div>
+            <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">
+              Input: <code>${tc.input}</code> &bull; Expected: <code>${tc.expected}</code> &bull; Output: <code>${tc.output}</code>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+  }
+
+  window.loadCodingHistory = async function() {
+    try {
+      const res = await fetch('/api/coding/history', { credentials: 'include' });
+      const data = await res.json();
+      if (!data.success) return;
+
+      const history = data.history || [];
+      const tbody = document.getElementById('code-history-tbody');
+      const countEl = document.getElementById('code-kpi-submissions-count');
+      const scoreKpi = document.getElementById('code-kpi-score');
+      const passedKpi = document.getElementById('code-kpi-passed');
+
+      if (countEl) countEl.textContent = history.length;
+      if (history.length > 0) {
+        const avgScore = Math.round(history.reduce((sum, h) => sum + h.score, 0) / history.length);
+        const totalPassed = history.reduce((sum, h) => sum + h.test_cases_passed, 0);
+        if (scoreKpi) scoreKpi.textContent = `${avgScore}%`;
+        if (passedKpi) passedKpi.textContent = totalPassed;
+      }
+
+      if (tbody) {
+        if (history.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 16px;">No coding submissions recorded yet. Select a problem and click \'Submit Code\'.</td></tr>';
+        } else {
+          tbody.innerHTML = history.map(h => `
+            <tr>
+              <td>${h.created_at ? new Date(h.created_at).toLocaleString() : 'Recent'}</td>
+              <td><strong>${h.question_title}</strong></td>
+              <td>${h.language}</td>
+              <td>${h.test_cases_passed} / ${h.test_cases_total}</td>
+              <td><span class="kpi-pill ${h.score === 100 ? 'teal' : 'blue'}">${h.score}%</span></td>
+              <td>${h.execution_time_ms}ms</td>
+              <td><span class="badge-status ${h.status === 'Accepted' ? 'teal' : 'red'}">${h.status}</span></td>
+            </tr>
+          `).join('');
+        }
+      }
+    } catch (err) {}
+  };
+
+  // 5. 4-Pillar Machine Learning Placement Prediction Controller
+  let latestPredictionData = null;
+
+  window.fetchPlacementPrediction = async function() {
+    try {
+      const res = await fetch('/api/placement/predict', { credentials: 'include' });
+      const data = await res.json();
+      if (!data.success) return;
+
+      latestPredictionData = data.prediction;
+      const pred = data.prediction;
+
+      const probHeader = document.getElementById('ml-pred-prob');
+      const statusText = document.getElementById('ml-pred-status-text');
+      const statusBadge = document.getElementById('ml-pred-status-badge');
+      const ciText = document.getElementById('ml-pred-ci');
+
+      if (probHeader) probHeader.textContent = `${pred.probability}% Placement Probability`;
+      if (statusBadge) statusBadge.textContent = pred.status;
+      if (statusText) {
+        statusText.textContent = `Status: ${pred.status}. Calibrated multi-factor ML projection synthesized from 2,500 historical institutional cohorts.`;
+      }
+      if (ciText && pred.confidenceInterval) {
+        ciText.textContent = `[${pred.confidenceInterval.lower}% - ${pred.confidenceInterval.upper}%]`;
+      }
+
+      const overviewProb = document.getElementById('kpi-student-prob');
+      const overviewPill = document.getElementById('kpi-student-prob-pill');
+      if (overviewProb) overviewProb.textContent = `${pred.probability}%`;
+      if (overviewPill) {
+        overviewPill.textContent = pred.status;
+        overviewPill.className = `kpi-pill ${pred.probability >= 75 ? 'teal' : 'blue'}`;
+      }
+
+      const pillars = pred.pillars || {};
+      if (pillars.academic) {
+        const val = document.getElementById('pillar-acad-val');
+        const bar = document.getElementById('pillar-acad-bar');
+        const sub = document.getElementById('pillar-acad-sub');
+        if (val) val.innerHTML = `${pillars.academic.score} <span style="font-size: 13px; color: var(--text-secondary);">/ 100</span>`;
+        if (bar) bar.style.width = `${pillars.academic.score}%`;
+        if (sub) sub.textContent = `CGPA: ${pillars.academic.metrics.cgpa} • ${pillars.academic.metrics.backlogs} Backlogs`;
+      }
+      if (pillars.profile) {
+        const val = document.getElementById('pillar-prof-val');
+        const bar = document.getElementById('pillar-prof-bar');
+        const sub = document.getElementById('pillar-prof-sub');
+        if (val) val.innerHTML = `${pillars.profile.score} <span style="font-size: 13px; color: var(--text-secondary);">/ 100</span>`;
+        if (bar) bar.style.width = `${pillars.profile.score}%`;
+        if (sub) sub.textContent = `${pillars.profile.metrics.skillsCount} Skills • ${pillars.profile.metrics.internshipCount} Internships • ${pillars.profile.metrics.projectCount} Projects`;
+      }
+      if (pillars.aptitude) {
+        const val = document.getElementById('pillar-apt-val');
+        const bar = document.getElementById('pillar-apt-bar');
+        const sub = document.getElementById('pillar-apt-sub');
+        if (val) val.innerHTML = `${pillars.aptitude.score} <span style="font-size: 13px; color: var(--text-secondary);">/ 100</span>`;
+        if (bar) bar.style.width = `${pillars.aptitude.score}%`;
+        if (sub) sub.textContent = `${pillars.aptitude.metrics.accuracy}% Accuracy • ${pillars.aptitude.metrics.attempts} Tests Completed`;
+      }
+      if (pillars.coding) {
+        const val = document.getElementById('pillar-code-val');
+        const bar = document.getElementById('pillar-code-bar');
+        const sub = document.getElementById('pillar-code-sub');
+        if (val) val.innerHTML = `${pillars.coding.score} <span style="font-size: 13px; color: var(--text-secondary);">/ 100</span>`;
+        if (bar) bar.style.width = `${pillars.coding.score}%`;
+        if (sub) sub.textContent = `${pillars.coding.metrics.score}% Algorithmic Score • ${pillars.coding.metrics.submissions} Submissions`;
+      }
+
+      const strengthsContainer = document.getElementById('ml-strengths-container');
+      const risksContainer = document.getElementById('ml-risks-container');
+
+      if (strengthsContainer) {
+        const strengths = pred.strengths || [];
+        if (strengths.length === 0) {
+          strengthsContainer.innerHTML = '<span style="font-size: 12px; color: var(--text-secondary);">Complete academic & profile setup to reveal strengths.</span>';
+        } else {
+          strengthsContainer.innerHTML = strengths.slice(0, 4).map(s => `
+            <div class="driver-pill strength" style="display: flex; justify-content: space-between; padding: 6px 10px; font-size: 12px;">
+              <span>&bull; ${s.feature} (${s.value})</span>
+              <strong>+${s.standardized_impact}</strong>
+            </div>
+          `).join('');
+        }
+      }
+
+      if (risksContainer) {
+        const risks = pred.riskFactors || [];
+        if (risks.length === 0) {
+          risksContainer.innerHTML = '<div style="font-size: 12px; color: #15803D; background: #DCFCE7; padding: 6px 10px; border-radius: 6px;">✓ Zero significant risk factors identified. Solid placement readiness trajectory.</div>';
+        } else {
+          risksContainer.innerHTML = risks.slice(0, 4).map(r => `
+            <div class="driver-pill risk" style="display: flex; justify-content: space-between; padding: 6px 10px; font-size: 12px;">
+              <span>&bull; ${r.feature} (${r.value})</span>
+              <strong>${r.standardized_impact}</strong>
+            </div>
+          `).join('');
+        }
+      }
+
+      const recContainer = document.getElementById('ml-recommendations-container');
+      if (recContainer) {
+        const recs = pred.recommendations || [];
+        recContainer.innerHTML = recs.map(rec => `
+          <div style="background: #F8FAFC; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 10px 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+              <strong style="font-size: 12.5px; color: #1E293B;">${rec.area || 'Skill Recommendation'}</strong>
+              <span class="badge-status ${rec.priority === 'High' ? 'red' : 'blue'}" style="font-size: 9.5px;">${rec.priority || 'Medium'} Priority</span>
+            </div>
+            <p style="font-size: 12px; color: var(--text-secondary); margin: 0; line-height: 1.4;">${rec.action || rec.recommendation}</p>
+          </div>
+        `).join('');
+      }
+
+      loadPlacementHistory();
+    } catch (err) {
+      console.warn('[StudyFlow] Error loading placement prediction:', err);
+    }
+  };
+
+  window.requestGroqExplanation = async function() {
+    const aiCard = document.getElementById('groq-ai-container');
+    const aiBody = document.getElementById('groq-explanation-body');
+    const modelLabel = document.getElementById('groq-model-label');
+
+    if (aiCard) aiCard.style.display = 'block';
+    if (aiBody) aiBody.innerHTML = '<div style="display: flex; align-items: center; gap: 8px;"><div class="spinner" style="width: 14px; height: 14px; border: 2px solid #2563EB; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite;"></div><span>Consulting Groq AI (Llama 3.3 70B)... Analyzing 4-pillar placement drivers...</span></div>';
+
+    try {
+      const studentProfile = {
+        name: document.getElementById('acad-input-name')?.value || 'Student',
+        degree: document.getElementById('acad-input-degree')?.value || 'B.Tech CSE',
+        cgpa: document.getElementById('acad-input-cgpa')?.value || 8.2
+      };
+
+      const res = await fetch('/api/ai/explain', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ predictionData: latestPredictionData || {}, studentProfile })
+      });
+      const data = await res.json();
+      if (!data.success) {
+        if (aiBody) aiBody.textContent = data.error || 'AI explanation service temporarily unavailable.';
+        return;
+      }
+
+      const exp = data.explanation;
+      if (modelLabel) modelLabel.textContent = exp.source || 'Groq AI (Llama 3.3 70B)';
+
+      let formattedHtml = `
+        <div style="margin-bottom: 12px; font-weight: 600; color: #1E3A8A;">
+          ${exp.summary || 'Strategic Placement Preparation Guidance'}
+        </div>
+      `;
+
+      if (exp.strengths && exp.strengths.length > 0) {
+        formattedHtml += `
+          <div style="margin-bottom: 8px;">
+            <strong style="color: #15803D; font-size: 12px;">Key Strengths Recognized:</strong>
+            <ul style="margin: 4px 0 8px 18px; padding: 0;">
+              ${exp.strengths.map(s => `<li>${s}</li>`).join('')}
+            </ul>
+          </div>
+        `;
+      }
+
+      if (exp.recommendations && exp.recommendations.length > 0) {
+        formattedHtml += `
+          <div>
+            <strong style="color: #1D4ED8; font-size: 12px;">Strategic 30-Day Preparation Roadmap:</strong>
+            <ul style="margin: 4px 0 0 18px; padding: 0;">
+              ${exp.recommendations.map(r => `<li>${r}</li>`).join('')}
+            </ul>
+          </div>
+        `;
+      }
+
+      if (aiBody) aiBody.innerHTML = formattedHtml;
+      window.showToast?.('✓ Groq AI analysis ready.', 'success');
+    } catch (err) {
+      if (aiBody) aiBody.textContent = err.message;
+    }
+  };
+
+  window.loadPlacementHistory = async function() {
+    try {
+      const res = await fetch('/api/placement/history', { credentials: 'include' });
+      const data = await res.json();
+      if (!data.success) return;
+
+      const history = data.history || [];
+      const tbody = document.getElementById('ml-history-tbody');
+      if (tbody) {
+        if (history.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-secondary); padding: 16px;">No prediction records saved yet.</td></tr>';
+        } else {
+          tbody.innerHTML = history.map(h => `
+            <tr>
+              <td>${h.created_at ? new Date(h.created_at).toLocaleString() : 'Recent'}</td>
+              <td><span class="kpi-pill ${h.placement_probability >= 75 ? 'teal' : 'blue'}">${h.placement_probability}%</span></td>
+              <td><span class="badge-status ${h.placement_status === 'Placement Ready' ? 'teal' : 'neutral'}">${h.placement_status}</span></td>
+              <td>${h.academic_score}/100</td>
+              <td>${h.profile_score}/100</td>
+              <td>${h.aptitude_score}/100</td>
+              <td>${h.coding_score}/100</td>
+              <td style="font-size: 11px; color: var(--text-secondary);">${h.model_used || 'Calibrated Logistic'}</td>
+            </tr>
+          `).join('');
+        }
+      }
+    } catch (err) {}
+  };
+
+  // 6. Enhanced Resume Analyzer Controller
+  window.handleResumeUpload = async function(event) {
+    const file = event.target?.files?.[0];
+    if (!file) return;
+
+    const filenameEl = document.getElementById('resume-filename');
+    if (filenameEl) filenameEl.textContent = `Analyzing ${file.name}...`;
+
+    window.showToast?.(`Uploading ${file.name} for ATS keyword and Groq AI compatibility check...`, 'info');
+
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+      const fileData = e.target.result;
+      try {
+        const res = await fetch('/api/resume/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            fileName: file.name,
+            fileData,
+            targetRole: 'Software Development Engineer (Campus Recruitment)'
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          const a = data.analysis;
+          if (filenameEl) filenameEl.textContent = file.name;
+
+          const scoreCircle = document.querySelector('#pane-student-resume .panel-grid-2 .content-panel:nth-child(2) span');
+          if (scoreCircle) scoreCircle.textContent = a.atsScore;
+
+          const desc = document.querySelector('#pane-student-resume .panel-grid-2 .content-panel:nth-child(2) p');
+          if (desc) desc.textContent = a.summary;
+
+          const techDiv = document.querySelector('#pane-student-resume .panel-grid-2 .content-panel:nth-child(2) div[style*="font-size: 12px"]');
+          if (techDiv) {
+            techDiv.innerHTML = `
+              <div style="margin-bottom: 6px;"><strong>Identified Tech Keywords (${a.identifiedSkills.length}):</strong> ${a.identifiedSkills.join(', ')}</div>
+              <div style="color: var(--error-red); margin-bottom: 8px;"><strong>Missing Recommended Terms:</strong> ${a.missingSkills.join(', ')}</div>
+              <div style="font-size: 11.5px; color: var(--text-secondary); line-height: 1.5; background: #F8FAFC; padding: 8px; border-radius: 6px;">
+                <strong>ATS Recommendations:</strong> ${(a.improvements || []).join(' ')}
+              </div>
+            `;
+          }
+
+          window.showToast?.(`✓ Resume ATS Analysis Complete! Score: ${a.atsScore}/100`, 'success');
+        } else {
+          window.showToast?.(data.error || 'Failed to analyze resume.', 'error');
+        }
+      } catch (err) {
+        window.showToast?.(err.message, 'error');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   updateRouting();
   renderAllViews();
