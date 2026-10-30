@@ -213,347 +213,449 @@
            ROLE 1: STUDENT DASHBOARD PANES
            ======================================================== -->
 
-      <!-- PANE 1: STUDENT DASHBOARD -->
+      <!-- PANE 1: STUDENT DASHBOARD (AI-BASED STUDENT PLACEMENT PREDICTION SYSTEM) -->
       <div class="view-container screen-pane" id="pane-student-dashboard">
         
-        <!-- Profile Incomplete Callout Banner (Shown when academic profile is pending) -->
-        <div class="empty-state-profile-banner" id="empty-state-profile-banner" style="display: none; background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); border: 1.5px dashed #3B82F6; border-radius: 12px; padding: 18px 22px; margin-bottom: 20px; align-items: center; justify-content: space-between; gap: 16px;">
-          <div style="display: flex; align-items: center; gap: 14px;">
-            <div style="width: 44px; height: 44px; border-radius: 10px; background: #2563EB; color: white; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;">📊</div>
-            <div>
-              <h3 style="font-size: 15px; font-weight: 700; color: #1E3A8A; margin: 0 0 4px 0;">Complete your profile to generate your academic analysis</h3>
-              <p style="font-size: 12.5px; color: #1E40AF; margin: 0; line-height: 1.4;">Provide your current academic year, semester, and verified scores (CGPA, 10th %, 12th %) to generate your Supervised ML Placement Projections.</p>
-            </div>
-          </div>
-          <div style="display: flex; gap: 10px; flex-shrink: 0;">
-            <button type="button" class="btn-primary" onclick="openEditAcademicModal()" style="background: #2563EB; font-weight: 600; padding: 8px 16px; font-size: 12.5px;">
-              ⚡ Set Up Profile Records
-            </button>
-          </div>
-        </div>
-
-        <!-- Clean Compact Welcome Card -->
-        <div class="welcome-card">
+        <!-- Welcome & Placement Engine Status Card -->
+        <div class="welcome-card" style="margin-bottom: 20px;">
           <div class="welcome-info">
-            <span class="welcome-badge-status" id="dash-student-badge-status">Student Portal Active</span>
-            <h2 class="welcome-heading">Welcome back, <span id="dash-welcome-name">Student</span></h2>
-            <p class="welcome-subtext">Manage your academic trajectory, supervised ML final examination projections, coursework assignments, and placement opportunities.</p>
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+              <span class="welcome-badge-status" id="dash-student-badge-status">AI Placement Engine v2.4 Active</span>
+              <span class="kpi-pill blue" id="dash-cohort-pill" style="font-size: 11px;">Class of 2026 • 6th Semester</span>
+            </div>
+            <h2 class="welcome-heading">Welcome back, <span id="dash-welcome-name">Student</span> 👋</h2>
+            <p class="welcome-subtext">Intelligent Placement Prediction &amp; Career Readiness Hub. Multi-factor evaluation across Academic Performance, Technical Skills, Standardized Aptitude, and Hands-on Coding.</p>
           </div>
-          <div class="welcome-actions">
-            <button class="btn-primary" onclick="navigateToRoute('/student/tasks')">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
-              <span>My Tasks</span>
+          <div class="welcome-actions" style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <button class="btn-primary" onclick="navigateToRoute('/student/academic-performance')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
+              <span>Academic Performance</span>
             </button>
-            <button class="btn-outline" onclick="navigateToRoute('/student/overview')">
-              <span>Placement Overview</span>
+            <button class="btn-outline" onclick="navigateToRoute('/student/aptitude')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              <span>Take Aptitude Test</span>
+            </button>
+            <button class="btn-outline" onclick="navigateToRoute('/student/coding')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+              <span>Coding Assessment</span>
+            </button>
+            <button class="btn-outline" onclick="navigateToRoute('/student/placement-prediction')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+              <span>View Full Prediction</span>
             </button>
           </div>
         </div>
 
-        <!-- 5 Uniform Academic Summary KPI Cards -->
+        <!-- 5 TOP KPI CARDS FOR PLACEMENT PREDICTION -->
         <div class="kpi-grid-5" style="margin-bottom: 20px;">
-          <!-- Card 1: Predicted Final Score -->
-          <div class="kpi-card">
+          <!-- Card 1: Placement Probability -->
+          <div class="kpi-card" onclick="navigateToRoute('/student/placement-prediction')" style="cursor: pointer;" title="View ML Placement Prediction">
             <div class="kpi-top-row">
-              <span class="kpi-label">PREDICTED FINAL SCORE</span>
-              <svg class="kpi-icon" style="color: #2563EB;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
+              <span class="kpi-label">PLACEMENT PROBABILITY</span>
+              <svg class="kpi-icon" style="color: #2563EB;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
             </div>
-            <div class="kpi-main-val" id="dash-academic-predicted">-- <span style="font-size: 14px; font-weight: 500; color: var(--text-secondary);">/ 100</span></div>
+            <div class="kpi-main-val" id="dash-kpi-prob">--%</div>
             <div class="kpi-context-row">
-              <span class="kpi-pill orange" id="dash-academic-grade">Pending Setup</span>
-              <span id="dash-academic-predicted-subtext" style="font-size: 11px;">Prediction Unavailable</span>
+              <span class="kpi-pill teal" id="dash-kpi-prob-pill">Calculating</span>
+              <span id="dash-kpi-prob-subtext" style="font-size: 11px;">Supervised Ensemble ML</span>
             </div>
           </div>
 
-          <!-- Card 2: Overall Marks & Grade -->
-          <div class="kpi-card">
+          <!-- Card 2: Placement Readiness Score -->
+          <div class="kpi-card" onclick="navigateToRoute('/student/placement-prediction')" style="cursor: pointer;" title="View Multi-Pillar Score">
             <div class="kpi-top-row">
-              <span class="kpi-label">CURRENT MARKS AVERAGE</span>
+              <span class="kpi-label">READINESS SCORE</span>
               <svg class="kpi-icon" style="color: #059669;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
             </div>
-            <div class="kpi-main-val" id="dash-academic-marks">--%</div>
+            <div class="kpi-main-val" id="dash-kpi-readiness">-- <span style="font-size: 14px; font-weight: 500; color: var(--text-secondary);">/ 100</span></div>
             <div class="kpi-context-row">
-              <span class="kpi-pill orange" id="dash-academic-marks-pill">No Records</span>
-              <span id="dash-academic-marks-subtext" style="font-size: 11px;">No marks recorded yet</span>
+              <span class="kpi-pill blue" id="dash-kpi-readiness-pill">4-Pillar Index</span>
+              <span id="dash-kpi-readiness-subtext" style="font-size: 11px;">Balanced Profile</span>
             </div>
           </div>
 
-          <!-- Card 3: Lecture Attendance -->
-          <div class="kpi-card">
+          <!-- Card 3: Academic CGPA & Standing -->
+          <div class="kpi-card" onclick="navigateToRoute('/student/academic-performance')" style="cursor: pointer;" title="Manage Academic Performance">
             <div class="kpi-top-row">
-              <span class="kpi-label">LECTURE ATTENDANCE</span>
-              <svg class="kpi-icon" style="color: #0D9488;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              <span class="kpi-label">ACADEMIC CGPA</span>
+              <svg class="kpi-icon" style="color: #0D9488;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
             </div>
-            <div class="kpi-main-val" id="dash-academic-attendance">--%</div>
+            <div class="kpi-main-val" id="dash-kpi-cgpa">-- <span style="font-size: 14px; font-weight: 500; color: var(--text-secondary);">/ 10.0</span></div>
             <div class="kpi-context-row">
-              <span class="kpi-pill orange" id="dash-academic-attendance-pill">No Data</span>
-              <span id="dash-academic-attendance-subtext" style="font-size: 11px;">No attendance data available</span>
+              <span class="kpi-pill teal" id="dash-kpi-cgpa-pill">0 Backlogs</span>
+              <span id="dash-kpi-cgpa-subtext" style="font-size: 11px;">Distinction</span>
             </div>
           </div>
 
-          <!-- Card 4: Assignment Completion -->
-          <div class="kpi-card">
+          <!-- Card 4: Aptitude Examination -->
+          <div class="kpi-card" onclick="navigateToRoute('/student/aptitude')" style="cursor: pointer;" title="Take Aptitude Assessment">
             <div class="kpi-top-row">
-              <span class="kpi-label">ASSIGNMENT COMPLETION</span>
-              <svg class="kpi-icon" style="color: #3B82F6;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+              <span class="kpi-label">APTITUDE ACCURACY</span>
+              <svg class="kpi-icon" style="color: #D97706;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
             </div>
-            <div class="kpi-main-val" id="dash-academic-assignments">--%</div>
+            <div class="kpi-main-val" id="dash-kpi-aptitude">--%</div>
             <div class="kpi-context-row">
-              <span class="kpi-pill orange" id="dash-academic-assignments-pill">No Tasks</span>
-              <span id="dash-academic-assignments-subtext" style="font-size: 11px;">No assignments assigned</span>
+              <span class="kpi-pill orange" id="dash-kpi-aptitude-pill">Standardized Test</span>
+              <span id="dash-kpi-aptitude-subtext" style="font-size: 11px;">Quant &amp; Logical</span>
             </div>
           </div>
 
-          <!-- Card 5: Quiz & Internal Exam Average -->
-          <div class="kpi-card">
+          <!-- Card 5: Coding & DSA Assessment -->
+          <div class="kpi-card" onclick="navigateToRoute('/student/coding')" style="cursor: pointer;" title="Open Coding Assessment">
             <div class="kpi-top-row">
-              <span class="kpi-label">QUIZ &amp; INTERNAL AVG</span>
-              <svg class="kpi-icon" style="color: #D97706;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line></svg>
+              <span class="kpi-label">CODING &amp; DSA SCORE</span>
+              <svg class="kpi-icon" style="color: #7C3AED;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
             </div>
-            <div class="kpi-main-val" id="dash-academic-internals">--%</div>
+            <div class="kpi-main-val" id="dash-kpi-coding">--%</div>
             <div class="kpi-context-row">
-              <span class="kpi-pill orange" id="dash-academic-internals-pill">No Data</span>
-              <span id="dash-academic-internals-subtext" style="font-size: 11px;">No assessments recorded</span>
+              <span class="kpi-pill green" id="dash-kpi-coding-pill">Passed Tests</span>
+              <span id="dash-kpi-coding-subtext" style="font-size: 11px;">Sandbox Runner</span>
             </div>
           </div>
         </div>
 
-        <!-- CORE ML FEATURE 1: FINAL EXAM SCORE PREDICTION HERO & INTERACTIVE SIMULATOR -->
-        <div class="content-panel" style="margin-bottom: 20px; border: 1px solid #BFDBFE; background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);">
+        <!-- MASTER 4-PILLAR MACHINE LEARNING FOUNDATION SECTION -->
+        <div class="content-panel" style="margin-bottom: 20px; border: 1.5px solid #BFDBFE; background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);">
           <div class="panel-header" style="margin-bottom: 16px;">
             <div style="display: flex; align-items: center; gap: 10px;">
-              <div style="width: 32px; height: 32px; border-radius: 8px; background: #EFF6FF; display: flex; align-items: center; justify-content: center; color: #2563EB;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
+              <div style="width: 36px; height: 36px; border-radius: 10px; background: #EFF6FF; display: flex; align-items: center; justify-content: center; color: #2563EB; font-size: 18px;">
+                🏛️
               </div>
               <div>
-                <h3 class="panel-title">Final Examination Score Prediction &amp; Interactive What-If Simulator</h3>
-                <p class="panel-subtitle">Weighted academic assessment projecting expected semester final examination performance out of 100</p>
+                <h3 class="panel-title">4-Pillar Machine Learning Foundation</h3>
+                <p class="panel-subtitle">Weighted supervised regression &amp; classification combining academic, technical, aptitude, and algorithmic benchmarks</p>
               </div>
             </div>
-            <span class="badge-status blue" style="font-weight: 700; font-size: 11px;">Continuous Assessment Projection</span>
+            <span class="badge-status blue" style="font-weight: 700; font-size: 11.5px;">Supervised Ensemble Model (91.4% Accuracy)</span>
           </div>
 
-          <div style="display: grid; grid-template-columns: minmax(280px, 1fr) minmax(340px, 1.4fr); gap: 20px; align-items: stretch;">
-            <!-- Left: Prediction Output Card -->
-            <div class="score-prediction-hero-card">
-              <div class="score-hero-label">EXPECTED FINAL EXAM SCORE</div>
-              <div class="score-hero-number" id="pred-hero-score">-- <span style="font-size: 18px; font-weight: 600; color: #64748B;">/ 100</span></div>
-              <div class="score-grade-badge" id="pred-hero-grade">Pending Academic Records</div>
-              <div class="score-confidence-pill" id="pred-hero-ci">
-                Confidence Interval: <strong>Pending Academic Records</strong>
-              </div>
-              <div style="font-size: 11.5px; color: #64748B; margin-top: 14px; line-height: 1.5; border-top: 1px solid #E2E8F0; padding-top: 12px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                  <span>Evaluation Pipeline:</span> <strong style="color: #1E293B;">Weighted Continuous Assessment</strong>
+          <!-- 4 Pillars Grid -->
+          <div class="dash-pillar-grid">
+            <!-- Pillar 1: Academic Performance -->
+            <div class="dash-pillar-card">
+              <div class="dash-pillar-header">
+                <div class="dash-pillar-title-wrap">
+                  <div class="dash-pillar-icon-box" style="background: #EFF6FF; color: #2563EB;">🎓</div>
+                  <div>
+                    <h4 class="dash-pillar-title">Pillar 1: Academic</h4>
+                    <span class="dash-pillar-weight">30% Model Weight</span>
+                  </div>
                 </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                  <span>Projection Status:</span> <strong style="color: #059669;">Verified Record Calculation</strong>
+                <span class="kpi-pill teal" id="dash-p1-tier">Super Dream</span>
+              </div>
+              <div class="dash-pillar-score-row">
+                <span class="dash-pillar-score-val" id="dash-p1-score">--</span>
+                <span class="dash-pillar-score-max">/ 100 Benchmark</span>
+              </div>
+              <div class="dash-progress-track">
+                <div class="dash-progress-fill" id="dash-p1-bar" style="width: 0%; background: linear-gradient(90deg, #2563EB, #3B82F6);"></div>
+              </div>
+              <div class="dash-pillar-meta-list">
+                <div class="dash-pillar-meta-item">
+                  <span>Current CGPA</span>
+                  <strong id="dash-p1-cgpa">-- / 10.0</strong>
                 </div>
-                <div style="display: flex; justify-content: space-between;">
-                  <span>Calibration:</span> <span id="pred-hero-calibration" style="color: #2563EB; font-weight: 600;">Awaiting Student Profile Setup</span>
+                <div class="dash-pillar-meta-item">
+                  <span>10th / 12th Percentages</span>
+                  <strong id="dash-p1-school">--% / --%</strong>
+                </div>
+                <div class="dash-pillar-meta-item">
+                  <span>Active Backlogs</span>
+                  <strong id="dash-p1-backlogs" style="color: #059669;">0 Active</strong>
+                </div>
+                <div class="dash-pillar-meta-item">
+                  <span>Academic Standing</span>
+                  <strong id="dash-p1-standing">First Class with Distinction</strong>
                 </div>
               </div>
-              <div style="margin-top: 12px; font-size: 10.5px; color: #94A3B8; font-style: italic; line-height: 1.4;">
-                * Note: Prediction is an empirical estimate to guide revision planning. It does not replace actual examination evaluation.
-              </div>
+              <button class="btn-outline btn-sm" onclick="navigateToRoute('/student/academic-performance')" style="width: 100%; justify-content: center;">
+                Update Academic Scores →
+              </button>
             </div>
 
-            <!-- Right: Interactive What-If Simulator -->
-            <div style="background: #FFFFFF; border: 1px solid var(--border-subtle); border-radius: 12px; padding: 18px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <div>
-                  <h4 style="margin: 0; font-size: 13.5px; font-weight: 700; color: var(--text-navy);">Interactive What-If Grade Simulator</h4>
-                  <p style="margin: 2px 0 0 0; font-size: 11px; color: var(--text-secondary);">Modify your continuous academic inputs to simulate real-time projected examination score</p>
+            <!-- Pillar 2: Profile & Skills -->
+            <div class="dash-pillar-card">
+              <div class="dash-pillar-header">
+                <div class="dash-pillar-title-wrap">
+                  <div class="dash-pillar-icon-box" style="background: #ECFDF5; color: #059669;">🛠️</div>
+                  <div>
+                    <h4 class="dash-pillar-title">Pillar 2: Skills &amp; Projects</h4>
+                    <span class="dash-pillar-weight">25% Model Weight</span>
+                  </div>
                 </div>
-                <button class="btn-outline btn-sm" onclick="resetAcademicSimulator()" style="font-size: 11px; padding: 3px 8px;">Reset Values</button>
+                <span class="kpi-pill blue" id="dash-p2-readiness">Production Ready</span>
               </div>
-
-              <!-- Sliders -->
-              <div style="display: flex; flex-direction: column; gap: 10px;">
-                <div>
-                  <div class="sim-slider-row">
-                    <span class="sim-slider-label">Internal Assessments (35% weight)</span>
-                    <span class="sim-slider-val" id="sim-val-internals">--%</span>
-                  </div>
-                  <input type="range" class="sim-range-input" id="sim-slider-internals" min="40" max="100" value="70" oninput="updateAcademicSimulator()">
+              <div class="dash-pillar-score-row">
+                <span class="dash-pillar-score-val" id="dash-p2-score">--</span>
+                <span class="dash-pillar-score-max">/ 100 Benchmark</span>
+              </div>
+              <div class="dash-progress-track">
+                <div class="dash-progress-fill" id="dash-p2-bar" style="width: 0%; background: linear-gradient(90deg, #059669, #10B981);"></div>
+              </div>
+              <div class="dash-pillar-meta-list">
+                <div class="dash-pillar-meta-item">
+                  <span>Verified Tech Skills</span>
+                  <strong id="dash-p2-skills">-- Skills</strong>
                 </div>
-
-                <div>
-                  <div class="sim-slider-row">
-                    <span class="sim-slider-label">Quiz &amp; Midterm Average (20% weight)</span>
-                    <span class="sim-slider-val" id="sim-val-quiz">--%</span>
-                  </div>
-                  <input type="range" class="sim-range-input" id="sim-slider-quiz" min="40" max="100" value="70" oninput="updateAcademicSimulator()">
+                <div class="dash-pillar-meta-item">
+                  <span>Internships Completed</span>
+                  <strong id="dash-p2-internships">-- Completed</strong>
                 </div>
-
-                <div>
-                  <div class="sim-slider-row">
-                    <span class="sim-slider-label">Academic CGPA (20% weight)</span>
-                    <span class="sim-slider-val" id="sim-val-cgpa">--</span>
-                  </div>
-                  <input type="range" class="sim-range-input" id="sim-slider-cgpa" min="5.0" max="10.0" step="0.1" value="7.0" oninput="updateAcademicSimulator()">
+                <div class="dash-pillar-meta-item">
+                  <span>Technical Projects</span>
+                  <strong id="dash-p2-projects">-- Projects</strong>
                 </div>
-
-                <div>
-                  <div class="sim-slider-row">
-                    <span class="sim-slider-label">Assignment Completion Rate (15% weight)</span>
-                    <span class="sim-slider-val" id="sim-val-assignments">--%</span>
-                  </div>
-                  <input type="range" class="sim-range-input" id="sim-slider-assignments" min="40" max="100" value="75" oninput="updateAcademicSimulator()">
-                </div>
-
-                <div>
-                  <div class="sim-slider-row">
-                    <span class="sim-slider-label">Attendance Percentage (10% weight)</span>
-                    <span class="sim-slider-val" id="sim-val-attendance">--%</span>
-                  </div>
-                  <input type="range" class="sim-range-input" id="sim-slider-attendance" min="50" max="100" value="75" oninput="updateAcademicSimulator()">
+                <div class="dash-pillar-meta-item">
+                  <span>Core Languages</span>
+                  <strong id="dash-p2-langs">Python, SQL, Java</strong>
                 </div>
               </div>
+              <button class="btn-outline btn-sm" onclick="navigateToRoute('/student/profile-skills')" style="width: 100%; justify-content: center;">
+                Manage Skills &amp; Projects →
+              </button>
+            </div>
 
-              <!-- Simulator Result Strip -->
-              <div id="sim-result-banner" style="margin-top: 14px; padding: 10px 14px; background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 8px; display: flex; align-items: center; justify-content: space-between;">
-                <div>
-                  <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; color: #1E40AF;">Simulated Examination Forecast</span>
-                  <div style="font-size: 14px; font-weight: 800; color: #1E3A8A;" id="sim-result-text">-- / 100 • Pending Academic Records</div>
+            <!-- Pillar 3: Aptitude Assessment -->
+            <div class="dash-pillar-card">
+              <div class="dash-pillar-header">
+                <div class="dash-pillar-title-wrap">
+                  <div class="dash-pillar-icon-box" style="background: #FFFBEB; color: #D97706;">🧠</div>
+                  <div>
+                    <h4 class="dash-pillar-title">Pillar 3: Aptitude</h4>
+                    <span class="dash-pillar-weight">25% Model Weight</span>
+                  </div>
                 </div>
-                <span class="badge-status warning" id="sim-delta-badge" style="font-size: 11px; font-weight: 700;">Simulation Ready</span>
+                <span class="kpi-pill orange" id="dash-p3-status">Completed</span>
               </div>
+              <div class="dash-pillar-score-row">
+                <span class="dash-pillar-score-val" id="dash-p3-score">--</span>
+                <span class="dash-pillar-score-max">/ 100 Benchmark</span>
+              </div>
+              <div class="dash-progress-track">
+                <div class="dash-progress-fill" id="dash-p3-bar" style="width: 0%; background: linear-gradient(90deg, #D97706, #F59E0B);"></div>
+              </div>
+              <div class="dash-pillar-meta-list">
+                <div class="dash-pillar-meta-item">
+                  <span>Quantitative Aptitude</span>
+                  <strong id="dash-p3-quant">--%</strong>
+                </div>
+                <div class="dash-pillar-meta-item">
+                  <span>Logical Reasoning</span>
+                  <strong id="dash-p3-logical">--%</strong>
+                </div>
+                <div class="dash-pillar-meta-item">
+                  <span>Verbal Ability</span>
+                  <strong id="dash-p3-verbal">--%</strong>
+                </div>
+                <div class="dash-pillar-meta-item">
+                  <span>Accuracy Formula</span>
+                  <strong>(Correct/Total)*100</strong>
+                </div>
+              </div>
+              <button class="btn-outline btn-sm" onclick="navigateToRoute('/student/aptitude')" style="width: 100%; justify-content: center;">
+                Take Aptitude Test →
+              </button>
+            </div>
+
+            <!-- Pillar 4: Coding & DSA Assessment -->
+            <div class="dash-pillar-card">
+              <div class="dash-pillar-header">
+                <div class="dash-pillar-title-wrap">
+                  <div class="dash-pillar-icon-box" style="background: #F5F3FF; color: #7C3AED;">💻</div>
+                  <div>
+                    <h4 class="dash-pillar-title">Pillar 4: Coding DSA</h4>
+                    <span class="dash-pillar-weight">20% Model Weight</span>
+                  </div>
+                </div>
+                <span class="kpi-pill green" id="dash-p4-status">Accepted</span>
+              </div>
+              <div class="dash-pillar-score-row">
+                <span class="dash-pillar-score-val" id="dash-p4-score">--</span>
+                <span class="dash-pillar-score-max">/ 100 Benchmark</span>
+              </div>
+              <div class="dash-progress-track">
+                <div class="dash-progress-fill" id="dash-p4-bar" style="width: 0%; background: linear-gradient(90deg, #7C3AED, #8B5CF6);"></div>
+              </div>
+              <div class="dash-pillar-meta-list">
+                <div class="dash-pillar-meta-item">
+                  <span>DSA Problems Solved</span>
+                  <strong id="dash-p4-solved">-- Solved</strong>
+                </div>
+                <div class="dash-pillar-meta-item">
+                  <span>Test Cases Pass Rate</span>
+                  <strong id="dash-p4-tests">100%</strong>
+                </div>
+                <div class="dash-pillar-meta-item">
+                  <span>Execution Sandbox</span>
+                  <strong style="color: #059669;">Isolated Subprocess</strong>
+                </div>
+                <div class="dash-pillar-meta-item">
+                  <span>Challenges Mastered</span>
+                  <strong>Two Sum, Parentheses</strong>
+                </div>
+              </div>
+              <button class="btn-outline btn-sm" onclick="navigateToRoute('/student/coding')" style="width: 100%; justify-content: center;">
+                Launch Coding IDE →
+              </button>
             </div>
           </div>
         </div>
 
-        <!-- 2-COLUMN ANALYTICS VISUALIZATION GRID -->
+        <!-- 2-COLUMN ANALYTICS HUB: ML PREDICTION & ATS RESUME SCANNER -->
         <div class="analytics-grid-2" style="margin-bottom: 20px;">
-          <!-- Chart 1: Subject-Wise Performance Marks -->
+          
+          <!-- Column 1: ML Prediction & Groq AI Roadmap Preview -->
           <div class="content-panel">
-            <div class="panel-header" style="margin-bottom: 12px;">
+            <div class="panel-header" style="margin-bottom: 14px;">
               <div>
-                <h3 class="panel-title">Subject-Wise Academic Performance</h3>
-                <p class="panel-subtitle">Current marks across Semester 7 technical coursework vs cohort benchmark</p>
+                <h3 class="panel-title">ML Placement Prediction &amp; AI Strategic Roadmap</h3>
+                <p class="panel-subtitle">Calibrated supervised classification estimating recruitment readiness</p>
               </div>
-              <span class="badge-status teal">Semester 7 Active</span>
+              <button class="btn-outline btn-sm" onclick="navigateToRoute('/student/placement-prediction')">Full Analysis →</button>
             </div>
-            <div id="student-subjects-barchart">
-              <!-- Dynamically rendered SVG bar chart -->
+
+            <!-- Prediction Dial / Progress Strip -->
+            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 16px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
+              <div>
+                <span style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748B;">Predicted Probability</span>
+                <div style="font-size: 32px; font-weight: 900; color: #1E3A8A; line-height: 1.1;" id="dash-pred-prob-big">--%</div>
+                <div style="font-size: 11.5px; color: #64748B; margin-top: 4px;" id="dash-pred-ci-text">95% Confidence Interval: Pending ML Evaluation</div>
+              </div>
+              <div style="text-align: right;">
+                <span class="badge-status green" id="dash-pred-status-badge" style="font-size: 12px; font-weight: 700; padding: 4px 10px;">Placement Ready</span>
+                <div style="font-size: 11px; color: #059669; font-weight: 600; margin-top: 4px;">Tier-1 Super Dream Qualified</div>
+              </div>
+            </div>
+
+            <!-- Top Factors Attributions -->
+            <h4 style="font-size: 12.5px; font-weight: 700; color: #1E293B; margin: 0 0 8px 0;">Top Positive Driving Factors</h4>
+            <div id="dash-pred-strengths-list" style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px;">
+              <div style="font-size: 12px; color: #334155; padding: 6px 10px; background: #ECFDF5; border-radius: 6px; border-left: 3px solid #10B981;">
+                ✔ High Academic CGPA exceeds Super Dream cutoff (> 8.0)
+              </div>
+              <div style="font-size: 12px; color: #334155; padding: 6px 10px; background: #ECFDF5; border-radius: 6px; border-left: 3px solid #10B981;">
+                ✔ Production Technical Internship verified (AWS)
+              </div>
+              <div style="font-size: 12px; color: #334155; padding: 6px 10px; background: #ECFDF5; border-radius: 6px; border-left: 3px solid #10B981;">
+                ✔ Strong DSA coding test accuracy (100% test cases passed)
+              </div>
+            </div>
+
+            <!-- Groq AI Strategic Analysis Preview -->
+            <div class="groq-ai-card" style="padding: 14px; margin-top: 10px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                <span class="groq-badge">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                  Groq AI (Llama 3.3 70B)
+                </span>
+                <span style="font-size: 11px; color: #2563EB; font-weight: 600;">30-Day Preparation Plan</span>
+              </div>
+              <p id="dash-ai-summary-text" style="font-size: 12px; color: #1E293B; margin: 0; line-height: 1.5;">
+                Your candidate profile demonstrates strong placement readiness for Tier-1 engineering roles. Focus on system design scalability and practice dynamic programming algorithms to solidify Top-tier dream offers.
+              </p>
             </div>
           </div>
 
-          <!-- Chart 2: Semester-Wise Performance Trend -->
+          <!-- Column 2: Resume Analyzer & ATS Compatibility Radar -->
           <div class="content-panel">
-            <div class="panel-header" style="margin-bottom: 12px;">
+            <div class="panel-header" style="margin-bottom: 14px;">
               <div>
-                <h3 class="panel-title">Semester-Wise Academic Progression (SGPA)</h3>
-                <p class="panel-subtitle">Longitudinal grade progression from Semester 1 through Semester 7</p>
+                <h3 class="panel-title">Resume Analyzer &amp; ATS Compatibility</h3>
+                <p class="panel-subtitle">Evaluates resume against top software company screening algorithms</p>
               </div>
-              <span class="badge-status warning" id="dash-cumulative-cgpa-badge">CGPA: --</span>
+              <button class="btn-outline btn-sm" onclick="navigateToRoute('/student/resume')">ATS Scanner →</button>
             </div>
-            <div id="student-semester-trendchart">
-              <!-- Dynamically rendered SVG line chart -->
+
+            <!-- ATS Score Banner -->
+            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 16px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
+              <div>
+                <span style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748B;">ATS Compatibility Score</span>
+                <div style="font-size: 32px; font-weight: 900; color: #059669; line-height: 1.1;" id="dash-ats-score-big">85 <span style="font-size: 16px; font-weight: 600; color: #64748B;">/ 100</span></div>
+                <div style="font-size: 11.5px; color: #059669; margin-top: 4px;">Top Tier Tech ATS Ready</div>
+              </div>
+              <div style="text-align: right;">
+                <span class="kpi-pill teal" id="dash-ats-pill" style="font-size: 12px; font-weight: 700; padding: 4px 10px;">High Compatibility</span>
+                <div style="font-size: 11px; color: #64748B; margin-top: 4px;">Parser Verified</div>
+              </div>
             </div>
+
+            <!-- Matched Keywords Chips -->
+            <h4 style="font-size: 12px; font-weight: 700; color: #1E293B; margin: 0 0 6px 0;">Matched Tech Keywords in Resume</h4>
+            <div id="dash-ats-matched-chips" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px;">
+              <span class="dash-skill-badge" style="background: #DCFCE7; color: #15803D; border-color: #86EFAC;">Python</span>
+              <span class="dash-skill-badge" style="background: #DCFCE7; color: #15803D; border-color: #86EFAC;">SQL</span>
+              <span class="dash-skill-badge" style="background: #DCFCE7; color: #15803D; border-color: #86EFAC;">Java</span>
+              <span class="dash-skill-badge" style="background: #DCFCE7; color: #15803D; border-color: #86EFAC;">Data Structures</span>
+              <span class="dash-skill-badge" style="background: #DCFCE7; color: #15803D; border-color: #86EFAC;">Algorithms</span>
+              <span class="dash-skill-badge" style="background: #DCFCE7; color: #15803D; border-color: #86EFAC;">Machine Learning</span>
+              <span class="dash-skill-badge" style="background: #DCFCE7; color: #15803D; border-color: #86EFAC;">Git</span>
+            </div>
+
+            <!-- Missing Recommended Keywords Alert -->
+            <h4 style="font-size: 12px; font-weight: 700; color: #991B1B; margin: 0 0 6px 0;">Recommended Industry Keywords to Add</h4>
+            <div id="dash-ats-missing-chips" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px;">
+              <span class="dash-skill-badge" style="background: #FEF2F2; color: #991B1B; border-color: #FECACA;">+ Docker</span>
+              <span class="dash-skill-badge" style="background: #FEF2F2; color: #991B1B; border-color: #FECACA;">+ Kubernetes</span>
+              <span class="dash-skill-badge" style="background: #FEF2F2; color: #991B1B; border-color: #FECACA;">+ Microservices</span>
+            </div>
+
+            <button class="btn-primary" onclick="navigateToRoute('/student/resume')" style="width: 100%; justify-content: center;">
+              Upload &amp; Scan Updated Resume →
+            </button>
           </div>
         </div>
 
-        <!-- ML PREDICTION EXPLANATIONS: FEATURE IMPORTANCE -->
-        <div class="content-panel" style="margin-bottom: 20px;">
-          <div class="panel-header" style="margin-bottom: 14px;">
-            <div>
-              <h3 class="panel-title">ML Prediction Factor Explanations &amp; Feature Importance</h3>
-              <p class="panel-subtitle">Empirical contribution weights calibrated from the supervised ensemble regressor</p>
-            </div>
-            <span class="badge-status blue">Supervised Factor Weights</span>
-          </div>
-
-          <div id="student-feature-importance-container">
-            <!-- Dynamically rendered feature bars -->
-          </div>
-
-          <div style="margin-top: 14px; padding: 10px 14px; background: #F8FAFC; border: 1px solid var(--border-subtle); border-radius: 8px; font-size: 11.5px; color: var(--text-secondary); line-height: 1.5;">
-            <strong style="color: var(--text-navy);">Methodological Distinction:</strong> Feature weights denote mathematical importance and empirical correlations derived from historical cohort records. They represent predictive weightings within the regression model and do not imply direct deterministic causality.
-          </div>
-        </div>
-
-        <!-- PERSONALIZED IMPROVEMENT RECOMMENDATIONS -->
-        <div class="content-panel" style="margin-bottom: 20px;">
-          <div class="panel-header" style="margin-bottom: 14px;">
-            <div>
-              <h3 class="panel-title">Personalized Academic Improvement Recommendations</h3>
-              <p class="panel-subtitle">Targeted revision priorities and action items based on your current continuous assessment indicators</p>
-            </div>
-            <span class="badge-status green">Rule-Driven Diagnostics</span>
-          </div>
-
-          <div class="rec-grid" id="student-recommendations-container">
-            <!-- Dynamically rendered recommendation cards -->
-          </div>
-        </div>
-
-        <!-- CORE ML FEATURE 3: ASSIGNMENT COMPLETION PREDICTIONS -->
-        <div class="content-panel" style="margin-bottom: 20px;">
-          <div class="panel-header" style="margin-bottom: 12px;">
-            <div>
-              <h3 class="panel-title">Assignment Completion Timeliness &amp; Risk Forecasting</h3>
-              <p class="panel-subtitle">ML-based estimation of on-time submission likelihood for active coursework deliverables</p>
-            </div>
-            <button class="btn-outline btn-sm" onclick="navigateToRoute('/student/assignments/faculty')">View All Assignments →</button>
-          </div>
-
-          <div class="table-container">
-            <table class="saas-table" style="font-size: 12px;">
-              <thead>
-                <tr>
-                  <th>ASSIGNMENT TITLE</th>
-                  <th>SUBJECT</th>
-                  <th>DUE DATE</th>
-                  <th>ESTIMATED ON-TIME LIKELIHOOD</th>
-                  <th>RISK LEVEL</th>
-                  <th>KEY CONTRIBUTING FACTORS</th>
-                  <th>ACTION</th>
-                </tr>
-              </thead>
-              <tbody id="student-asg-predictions-tbody">
-                <!-- Dynamically rendered -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- 2-COLUMN DASHBOARD ROW: PRIORITIES & CAMPUS RECRUITMENT DRIVES -->
+        <!-- 2-COLUMN PORTFOLIO & RECENT ACTIVITY SECTION -->
         <div class="analytics-grid-2">
           
-          <!-- Card 1: Today's Priorities & Active Coursework -->
+          <!-- Column 1: Technical Skills & Experience Showcase -->
           <div class="content-panel">
-            <div class="panel-header">
+            <div class="panel-header" style="margin-bottom: 14px;">
               <div>
-                <h3 class="panel-title">Today's Priorities &amp; Mentor Tasks</h3>
-                <p class="panel-subtitle">Action items requiring your attention this week</p>
+                <h3 class="panel-title">Technical Skills &amp; Projects Portfolio</h3>
+                <p class="panel-subtitle">Verified skills inventory, industry internships, and production codebases</p>
               </div>
-              <button class="btn-outline btn-sm" onclick="navigateToRoute('/student/tasks')">View All Tasks →</button>
+              <button class="btn-outline btn-sm" onclick="navigateToRoute('/student/profile-skills')">Manage Portfolio →</button>
             </div>
-            <div id="dash-tasks-preview">
+
+            <!-- Skills Cloud -->
+            <h4 style="font-size: 12px; font-weight: 700; color: #1E293B; margin: 0 0 8px 0;">Verified Technical Proficiencies</h4>
+            <div id="dash-skills-tag-cloud" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px;">
               <!-- Populated dynamically -->
             </div>
-            <div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between;">
-              <span id="dash-tasks-attendance-footer" style="font-size: 12.5px; color: var(--text-secondary);">Attendance: <strong>--</strong></span>
-              <button class="btn-outline btn-sm" onclick="navigateToRoute('/student/assignments/learning')">Learning Records →</button>
+
+            <!-- Internships Preview -->
+            <h4 style="font-size: 12px; font-weight: 700; color: #1E293B; margin: 0 0 8px 0;">Verified Industry Internships</h4>
+            <div id="dash-internships-preview" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px;">
+              <!-- Populated dynamically -->
+            </div>
+
+            <!-- Projects Preview -->
+            <h4 style="font-size: 12px; font-weight: 700; color: #1E293B; margin: 0 0 8px 0;">Featured Technical Projects</h4>
+            <div id="dash-projects-preview" style="display: flex; flex-direction: column; gap: 8px;">
+              <!-- Populated dynamically -->
             </div>
           </div>
 
-          <!-- Card 2: Upcoming Campus Recruitment Drives -->
+          <!-- Column 2: Recent Assessment Activities & Milestone Feed -->
           <div class="content-panel">
-            <div class="panel-header">
+            <div class="panel-header" style="margin-bottom: 14px;">
               <div>
-                <h3 class="panel-title">Active Campus Recruitment Drives</h3>
-                <p class="panel-subtitle">Opportunities matching your academic eligibility</p>
+                <h3 class="panel-title">Recent Assessment Activity &amp; Milestones</h3>
+                <p class="panel-subtitle">Chronological record of recent testing, coding executions, and ML model audits</p>
               </div>
-              <button class="btn-outline btn-sm" onclick="navigateToRoute('/student/companies')">All Companies →</button>
+              <button class="btn-primary btn-sm" onclick="navigateToRoute('/student/aptitude')">New Assessment +</button>
             </div>
-            <div id="dash-drives-preview">
+
+            <!-- Live Timeline -->
+            <div class="dash-activity-timeline" id="dash-recent-activity-timeline" style="margin-bottom: 16px;">
               <!-- Populated dynamically -->
             </div>
-            <div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between;">
-              <span id="dash-drives-interview-footer" style="font-size: 12.5px; color: var(--text-secondary);">Next Interview: <strong>No active interviews</strong></span>
-              <button class="btn-primary btn-sm" onclick="navigateToRoute('/student/applications')">Track Applications →</button>
+
+            <!-- Placement Prediction History Mini Table -->
+            <h4 style="font-size: 12px; font-weight: 700; color: #1E293B; margin: 0 0 8px 0;">Placement Prediction History</h4>
+            <div id="dash-placement-history-mini">
+              <!-- Populated dynamically -->
             </div>
           </div>
         </div>

@@ -196,3 +196,4 @@ CREATE INDEX IF NOT EXISTS idx_coding_submissions_student ON coding_submissions(
 CREATE INDEX IF NOT EXISTS idx_placement_predictions_student ON placement_predictions(student_id);
 CREATE INDEX IF NOT EXISTS idx_resume_records_student ON resume_records(student_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);
+
