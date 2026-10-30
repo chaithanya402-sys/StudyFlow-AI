@@ -8,6 +8,7 @@ const { exec } = require('child_process');
 const { db } = require('./db.js');
 const { predictFinalExamScore, predictPlacementOutcome, getPlacementModelBenchmark, EXAM_METRICS, PLACEMENT_METRICS } = require('./mlEngine.js');
 const groqClient = require('./groqClient.js');
+const localCodeExecutionEngine = require('./localCodeExecutionEngine');
 
 // Load local development settings without requiring a runtime dependency.
 const envFile = path.join(__dirname, '.env');
@@ -5280,29 +5281,101 @@ app.get('/api/aptitude/history', requireRole(['student', 'faculty', 'officer']),
   }
 });
 
-// 4. Coding Assessment Endpoints
+// 4. Online Coding Assessment & Local Code Execution Endpoints
 app.get('/api/coding/questions', requireRole(['student', 'faculty', 'officer']), (req, res) => {
   try {
     const questions = db.prepare(`
-      SELECT id, title, difficulty, language, description, sample_input, sample_output,
+      SELECT id, title, difficulty, language, supported_languages, description,
+             input_format, output_format, constraints, sample_input, sample_output,
              starter_code_python, starter_code_java, starter_code_c,
-             json_array_length(test_cases_json) as test_case_count
+             time_limit_ms, memory_limit_mb
       FROM coding_questions
       ORDER BY id ASC
     `).all();
-    res.json({ success: true, questions });
+
+    // Attach public test cases and total test case count (never expose hidden cases)
+    const questionsWithPublicCases = questions.map(q => {
+      let publicCases = [];
+      let totalCasesCount = 0;
+
+      try {
+        publicCases = db.prepare(`
+          SELECT id, input_data as input, expected_output as expected
+          FROM coding_test_cases
+          WHERE question_id = ? AND is_hidden = 0
+          ORDER BY id ASC
+        `).all(q.id);
+
+        const totalRow = db.prepare('SELECT COUNT(*) as count FROM coding_test_cases WHERE question_id = ?').get(q.id);
+        totalCasesCount = totalRow ? totalRow.count : 0;
+      } catch (err) {}
+
+      // Fallback to sample_input/sample_output or test_cases_json if table empty
+      if (publicCases.length === 0) {
+        publicCases = [
+          { id: `tc_${q.id}_1`, input: q.sample_input || '', expected: q.sample_output || '' }
+        ];
+        totalCasesCount = Math.max(publicCases.length, 3);
+      }
+
+      return {
+        ...q,
+        public_test_cases: publicCases,
+        test_case_count: totalCasesCount
+      };
+    });
+
+    res.json({ success: true, questions: questionsWithPublicCases });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-app.post(['/api/coding/run', '/api/coding/submit'], requireRole(['student']), async (req, res) => {
+app.get('/api/coding/questions/:id', requireRole(['student', 'faculty', 'officer']), (req, res) => {
   try {
-    const isSubmit = req.path.endsWith('/submit');
+    const question = db.prepare(`
+      SELECT id, title, difficulty, language, supported_languages, description,
+             input_format, output_format, constraints, sample_input, sample_output,
+             starter_code_python, starter_code_java, starter_code_c,
+             time_limit_ms, memory_limit_mb
+      FROM coding_questions
+      WHERE id = ?
+    `).get(req.params.id);
+
+    if (!question) {
+      return res.status(404).json({ success: false, error: 'Coding problem not found.' });
+    }
+
+    let publicCases = db.prepare(`
+      SELECT id, input_data as input, expected_output as expected
+      FROM coding_test_cases
+      WHERE question_id = ? AND is_hidden = 0
+      ORDER BY id ASC
+    `).all(question.id);
+
+    if (publicCases.length === 0) {
+      publicCases = [{ input: question.sample_input, expected: question.sample_output }];
+    }
+
+    res.json({
+      success: true,
+      question: {
+        ...question,
+        public_test_cases: publicCases
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Run Test Cases (Public/Sample cases only - does not log final submission)
+app.post('/api/coding/run', requireRole(['student']), async (req, res) => {
+  try {
     const { question_id, language, code } = req.body;
 
     if (!question_id || !code || !code.trim()) {
-      return res.status(400).json({ success: false, error: 'Question ID and program code are required.' });
+      return res.status(400).json({ success: false, error: 'Question ID and source code are required.' });
     }
 
     const question = db.prepare('SELECT * FROM coding_questions WHERE id = ?').get(question_id);
@@ -5310,80 +5383,29 @@ app.post(['/api/coding/run', '/api/coding/submit'], requireRole(['student']), as
       return res.status(404).json({ success: false, error: 'Coding question not found.' });
     }
 
-    let testCases = [];
-    try { testCases = JSON.parse(question.test_cases_json || '[]'); } catch(e){}
+    // Fetch ONLY public test cases (is_hidden = 0)
+    let publicTestCases = db.prepare(`
+      SELECT input_data as input, expected_output as expected
+      FROM coding_test_cases
+      WHERE question_id = ? AND is_hidden = 0
+      ORDER BY id ASC
+    `).all(question.id);
 
-    let evalResult;
-    const lang = (language || 'python').toLowerCase();
-
-    if (lang === 'python' || lang === 'py') {
-      evalResult = await executePythonCodeSecurely(code, testCases);
-    } else {
-      // Deterministic Algorithmic / Pattern analysis for Java and C
-      const codeClean = code.toLowerCase();
-      let passedCases = 0;
-      const results = testCases.map(tc => {
-        // High level semantic heuristic: verify problem-specific algorithmic tokens
-        let passed = false;
-        if (question.id === 'code_q1' && (codeClean.includes('hash') || codeClean.includes('map') || codeClean.includes('for') || codeClean.includes('diff'))) passed = true;
-        else if (question.id === 'code_q2' && (codeClean.includes('stack') || codeClean.includes('push') || codeClean.includes('pop'))) passed = true;
-        else if (question.id === 'code_q3' && (codeClean.includes('max') || codeClean.includes('index') || codeClean.includes('set') || codeClean.includes('map'))) passed = true;
-        else if (question.id === 'code_q4' && (codeClean.includes('max') && (codeClean.includes('sum') || codeClean.includes('current')))) passed = true;
-        else passed = true;
-
-        if (passed) passedCases++;
-        return {
-          input: tc.input,
-          expected: tc.expected,
-          output: passed ? tc.expected : 'Execution mismatch',
-          passed
-        };
-      });
-
-      evalResult = {
-        passed: passedCases,
-        total: testCases.length,
-        results,
-        executionTimeMs: 12
-      };
+    if (publicTestCases.length === 0) {
+      try {
+        const parsed = JSON.parse(question.test_cases_json || '[]');
+        publicTestCases = parsed.slice(0, 2);
+      } catch (e) {
+        publicTestCases = [{ input: question.sample_input, expected: question.sample_output }];
+      }
     }
 
-    const score = Math.round((evalResult.passed / (evalResult.total || 1)) * 100);
-    const status = evalResult.passed === evalResult.total ? 'Accepted' : 'Wrong Answer';
-
-    if (isSubmit) {
-      const submissionId = 'csub_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6);
-      db.prepare(`
-        INSERT INTO coding_submissions (
-          id, student_id, question_id, question_title, language, code,
-          test_cases_passed, test_cases_total, score, execution_time_ms, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(
-        submissionId,
-        req.user.id,
-        question.id,
-        question.title,
-        language || 'Python',
-        code,
-        evalResult.passed,
-        evalResult.total,
-        score,
-        evalResult.executionTimeMs || 15,
-        status
-      );
-
-      // Create notification
-      db.prepare(`
-        INSERT INTO notifications (id, user_id, target_role, category, type, title, message, date, action_url)
-        VALUES (?, ?, 'student', 'Coding', ?, ?, ?, 'Just now', '#/student/coding')
-      `).run(
-        'notif_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6),
-        req.user.id,
-        status === 'Accepted' ? 'success' : 'warning',
-        `Coding Problem Submitted: ${question.title}`,
-        `Status: ${status} (${evalResult.passed}/${evalResult.total} test cases passed. Score: ${score}%).`
-      );
-    }
+    const evalResult = await localCodeExecutionEngine.executeCode({
+      language: language || 'python',
+      code,
+      testCases: publicTestCases,
+      timeLimitMs: question.time_limit_ms || 3500
+    });
 
     res.json({
       success: true,
@@ -5392,29 +5414,240 @@ app.post(['/api/coding/run', '/api/coding/submit'], requireRole(['student']), as
       language: language || 'Python',
       passed: evalResult.passed,
       total: evalResult.total,
-      score,
-      status,
+      score: evalResult.score,
+      status: evalResult.status,
       execution_time_ms: evalResult.executionTimeMs || 15,
       results: evalResult.results,
       error: evalResult.error || null,
-      isSubmission: isSubmit
+      isSubmission: false
     });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-app.get('/api/coding/history', requireRole(['student', 'faculty', 'officer']), (req, res) => {
+// Submit Code (Full assessment against all test cases + persists submission)
+app.post('/api/coding/submit', requireRole(['student']), async (req, res) => {
+  try {
+    const { question_id, language, code } = req.body;
+
+    if (!question_id || !code || !code.trim()) {
+      return res.status(400).json({ success: false, error: 'Question ID and source code are required.' });
+    }
+
+    const question = db.prepare('SELECT * FROM coding_questions WHERE id = ?').get(question_id);
+    if (!question) {
+      return res.status(404).json({ success: false, error: 'Coding question not found.' });
+    }
+
+    // Fetch ALL test cases (both public and hidden)
+    let allTestCases = db.prepare(`
+      SELECT id, input_data as input, expected_output as expected, is_hidden
+      FROM coding_test_cases
+      WHERE question_id = ?
+      ORDER BY is_hidden ASC, id ASC
+    `).all(question.id);
+
+    if (allTestCases.length === 0) {
+      try {
+        allTestCases = JSON.parse(question.test_cases_json || '[]').map((tc, idx) => ({
+          ...tc,
+          is_hidden: idx >= 2 ? 1 : 0
+        }));
+      } catch (e) {
+        allTestCases = [{ input: question.sample_input, expected: question.sample_output, is_hidden: 0 }];
+      }
+    }
+
+    const evalResult = await localCodeExecutionEngine.executeCode({
+      language: language || 'python',
+      code,
+      testCases: allTestCases,
+      timeLimitMs: question.time_limit_ms || 3500
+    });
+
+    const passedCount = evalResult.passed;
+    const totalCount = evalResult.total;
+    const failedCount = totalCount - passedCount;
+    // Scoring Formula: Score = (Passed Test Cases / Total Test Cases) * 100
+    const score = Math.round((passedCount / totalCount) * 100);
+
+    const submissionId = 'csub_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6);
+    const execTime = (evalResult.executionTimeMs || 15) / 1000.0;
+
+    // Persist to coding_submissions
+    db.prepare(`
+      INSERT INTO coding_submissions (
+        id, student_id, question_id, question_title, programming_language, language,
+        source_code, code, total_test_cases, test_cases_total, passed_test_cases,
+        test_cases_passed, failed_test_cases, score, execution_time, execution_time_ms, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      submissionId,
+      req.user.id,
+      question.id,
+      question.title,
+      language || 'Python',
+      language || 'Python',
+      code,
+      code,
+      totalCount,
+      totalCount,
+      passedCount,
+      passedCount,
+      failedCount,
+      score,
+      execTime,
+      evalResult.executionTimeMs || 15,
+      evalResult.status
+    );
+
+    // Persist to coding_execution_logs
+    try {
+      db.prepare(`
+        INSERT INTO coding_execution_logs (
+          id, submission_id, compilation_status, runtime_status, error_type, execution_time
+        ) VALUES (?, ?, ?, ?, ?, ?)
+      `).run(
+        'log_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6),
+        submissionId,
+        evalResult.status === 'Compilation Error' ? 'Failed' : 'Success',
+        evalResult.status === 'Runtime Error' ? 'Failed' : 'Completed',
+        evalResult.error ? evalResult.status : 'None',
+        execTime
+      );
+    } catch (logErr) {}
+
+    // Persist student notification
+    try {
+      db.prepare(`
+        INSERT INTO notifications (id, user_id, target_role, category, type, title, message, date, action_url)
+        VALUES (?, ?, 'student', 'Coding', ?, ?, ?, 'Just now', '#/student/coding')
+      `).run(
+        'notif_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6),
+        req.user.id,
+        evalResult.status === 'Accepted' ? 'success' : 'warning',
+        `Coding Solution Submitted: ${question.title}`,
+        `Status: ${evalResult.status} (${passedCount}/${totalCount} tests passed. Score: ${score}%).`
+      );
+    } catch (notifErr) {}
+
+    // Mask hidden test case expected outputs from client response for security
+    const sanitizedResults = (evalResult.results || []).map((r, idx) => {
+      const tc = allTestCases[idx] || {};
+      if (tc.is_hidden) {
+        return {
+          input: '[Hidden Test Case]',
+          expected: '[Hidden Assessment Data]',
+          output: r.passed ? '[Passed Verification]' : '[Output Mismatch]',
+          passed: r.passed,
+          is_hidden: true
+        };
+      }
+      return {
+        ...r,
+        is_hidden: false
+      };
+    });
+
+    res.json({
+      success: true,
+      submission_id: submissionId,
+      question_id: question.id,
+      question_title: question.title,
+      language: language || 'Python',
+      passed: passedCount,
+      total: totalCount,
+      failed: failedCount,
+      score,
+      status: evalResult.status,
+      execution_time_ms: evalResult.executionTimeMs || 15,
+      execution_time: execTime,
+      results: sanitizedResults,
+      error: evalResult.error || null,
+      isSubmission: true
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Student Submissions History
+app.get(['/api/coding/submissions', '/api/coding/history'], requireRole(['student', 'faculty', 'officer']), (req, res) => {
   try {
     const studentId = (req.user.role === 'student') ? req.user.id : (req.query.studentId || req.user.id);
-    const history = db.prepare(`
-      SELECT id, question_id, question_title, language, test_cases_passed, test_cases_total, score, execution_time_ms, status, created_at
+    const submissions = db.prepare(`
+      SELECT id, question_id, question_title,
+             COALESCE(programming_language, language) as language,
+             COALESCE(passed_test_cases, test_cases_passed) as test_cases_passed,
+             COALESCE(total_test_cases, test_cases_total) as test_cases_total,
+             score, COALESCE(execution_time_ms, CAST(execution_time * 1000 AS INTEGER)) as execution_time_ms,
+             status, COALESCE(submitted_at, created_at) as created_at
       FROM coding_submissions
       WHERE student_id = ?
       ORDER BY created_at DESC
-      LIMIT 20
+      LIMIT 25
     `).all(studentId);
-    res.json({ success: true, history });
+
+    res.json({ success: true, history: submissions, submissions });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Coding Performance Statistics & Coding Pillar Rating
+app.get('/api/coding/statistics', requireRole(['student', 'faculty', 'officer']), (req, res) => {
+  try {
+    const studentId = (req.user.role === 'student') ? req.user.id : (req.query.studentId || req.user.id);
+
+    const statsRow = db.prepare(`
+      SELECT
+        COUNT(*) as total_submissions,
+        COUNT(DISTINCT question_id) as total_attempted,
+        COUNT(DISTINCT CASE WHEN status = 'Accepted' THEN question_id END) as total_accepted,
+        COALESCE(AVG(score), 0) as average_score,
+        COALESCE(SUM(COALESCE(passed_test_cases, test_cases_passed)), 0) as total_passed_tests,
+        COALESCE(SUM(COALESCE(total_test_cases, test_cases_total)), 0) as total_tests_evaluated,
+        COALESCE(AVG(COALESCE(execution_time_ms, 15)), 15) as average_execution_time_ms
+      FROM coding_submissions
+      WHERE student_id = ?
+    `).get(studentId);
+
+    const totalQuestionsCount = db.prepare('SELECT COUNT(*) as count FROM coding_questions').get().count || 6;
+    const accuracy = statsRow.total_tests_evaluated > 0
+      ? Math.round((statsRow.total_passed_tests / statsRow.total_tests_evaluated) * 100)
+      : 0;
+
+    // Pillar Rating Formula: weighted combination of average score, accuracy, and accepted problem ratio
+    const problemRatio = Math.min(100, Math.round((statsRow.total_accepted / (totalQuestionsCount || 1)) * 100));
+    const pillarRating = statsRow.total_submissions > 0
+      ? Math.min(100, Math.round(0.5 * statsRow.average_score + 0.3 * accuracy + 0.2 * problemRatio))
+      : 85; // Calibrated initial benchmark
+
+    res.json({
+      success: true,
+      statistics: {
+        total_attempted: statsRow.total_attempted,
+        total_accepted: statsRow.total_accepted,
+        total_submissions: statsRow.total_submissions,
+        average_score: Math.round(statsRow.average_score),
+        total_test_cases_passed: statsRow.total_passed_tests,
+        coding_accuracy: accuracy,
+        average_execution_time_ms: Math.round(statsRow.average_execution_time_ms),
+        coding_pillar_rating: pillarRating,
+        total_questions_available: totalQuestionsCount
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Check Local Compilers (Python, JDK, GCC, Docker)
+app.get('/api/coding/compilers', requireRole(['student', 'faculty', 'officer']), (req, res) => {
+  try {
+    const status = localCodeExecutionEngine.detectCompilers();
+    res.json({ success: true, compilers: status });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -5455,7 +5688,7 @@ app.get('/api/placement/predict', requireRole(['student', 'faculty', 'officer'])
     const codeRow = db.prepare(`
       SELECT COUNT(*) as submissions,
              COALESCE(AVG(score), 85) as avg_score,
-             COALESCE(SUM(test_cases_passed), 0) as passed_total
+             COALESCE(SUM(COALESCE(passed_test_cases, test_cases_passed)), 0) as passed_total
       FROM coding_submissions
       WHERE student_id = ?
     `).get(studentId);

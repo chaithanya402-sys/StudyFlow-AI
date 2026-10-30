@@ -8803,10 +8803,76 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 4. Coding Assessment Controller
   let codingQuestionsList = [];
   let currentCodingQ = null;
+  const codingCodeDrafts = {}; // questionId_language -> code
+  let codingCompilersInfo = null;
+
+  function sanitizeCodeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  function saveCurrentDraft() {
+    if (!currentCodingQ) return;
+    const editor = document.getElementById('code-editor-textarea');
+    const lang = document.getElementById('code-lang-select')?.value || 'python';
+    if (editor) {
+      codingCodeDrafts[`${currentCodingQ.id}_${lang}`] = editor.value;
+    }
+  }
+
+  function setupCodeEditorHotkeys() {
+    const editor = document.getElementById('code-editor-textarea');
+    if (!editor || editor.dataset.hotkeysBound) return;
+    editor.dataset.hotkeysBound = 'true';
+
+    editor.addEventListener('keydown', function(e) {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const start = this.selectionStart;
+        const end = this.selectionEnd;
+        const spaces = '    ';
+        this.value = this.value.substring(0, start) + spaces + this.value.substring(end);
+        this.selectionStart = this.selectionEnd = start + spaces.length;
+        saveCurrentDraft();
+      }
+    });
+
+    editor.addEventListener('input', function() {
+      saveCurrentDraft();
+    });
+  }
 
   window.initCodingAssessment = function() {
+    setupCodeEditorHotkeys();
+    loadCodingCompilers();
     loadCodingQuestions();
+    loadCodingStatistics();
     loadCodingHistory();
+  };
+
+  window.loadCodingCompilers = async function() {
+    try {
+      const res = await fetch('/api/coding/compilers', { credentials: 'include' });
+      const data = await res.json();
+      if (data.success && data.compilers) {
+        codingCompilersInfo = data.compilers;
+        const pill = document.getElementById('code-kpi-status-pill');
+        if (pill) {
+          if (data.compilers.python?.available) {
+            pill.textContent = `Python ${data.compilers.python.version || '3.x'} Active`;
+            pill.className = 'kpi-pill teal';
+          } else {
+            pill.textContent = 'Sandboxed Subprocess';
+            pill.className = 'kpi-pill blue';
+          }
+        }
+      }
+    } catch (e) {}
   };
 
   window.loadCodingQuestions = async function() {
@@ -8816,13 +8882,24 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (!data.success) return;
 
       codingQuestionsList = data.questions || [];
-      if (codingQuestionsList.length > 0) {
-        switchCodingQuestion(codingQuestionsList[0].id);
+      const selectEl = document.getElementById('code-problem-select');
+      if (selectEl && codingQuestionsList.length > 0) {
+        selectEl.innerHTML = codingQuestionsList.map((q, idx) => `
+          <option value="${q.id}">${idx + 1}. ${sanitizeCodeHtml(q.title)} (${q.difficulty})</option>
+        `).join('');
       }
-    } catch (err) {}
+
+      if (codingQuestionsList.length > 0) {
+        const currentId = selectEl?.value || codingQuestionsList[0].id;
+        switchCodingQuestion(currentId);
+      }
+    } catch (err) {
+      console.error('Failed to load coding questions:', err);
+    }
   };
 
   window.switchCodingQuestion = function(qid) {
+    saveCurrentDraft();
     const q = codingQuestionsList.find(x => x.id === qid) || codingQuestionsList[0];
     if (!q) return;
     currentCodingQ = q;
@@ -8845,34 +8922,57 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (selectEl) selectEl.value = q.id;
 
     const lang = document.getElementById('code-lang-select')?.value || 'python';
-    resetCodingStarterCode(lang);
+    loadDraftOrStarterCode(q, lang);
   };
 
   window.switchCodingLanguage = function(lang) {
-    resetCodingStarterCode(lang);
+    saveCurrentDraft();
+    if (!currentCodingQ) return;
+    loadDraftOrStarterCode(currentCodingQ, lang);
   };
 
-  window.resetCodingStarterCode = function(lang) {
-    if (!currentCodingQ) return;
-    const selectedLang = lang || document.getElementById('code-lang-select')?.value || 'python';
+  function loadDraftOrStarterCode(q, lang) {
     const editor = document.getElementById('code-editor-textarea');
-    if (!editor) return;
+    if (!editor || !q) return;
 
-    if (selectedLang === 'python') {
-      editor.value = currentCodingQ.starter_code_python || '# Write Python solution\n';
-    } else if (selectedLang === 'java') {
-      editor.value = currentCodingQ.starter_code_java || '// Write Java solution\n';
-    } else {
-      editor.value = currentCodingQ.starter_code_c || '/* Write C solution */\n';
+    const key = `${q.id}_${lang}`;
+    if (codingCodeDrafts[key] !== undefined) {
+      editor.value = codingCodeDrafts[key];
+      return;
     }
+
+    if (lang === 'python') {
+      editor.value = q.starter_code_python || '# Write your Python solution here\n';
+    } else if (lang === 'java') {
+      editor.value = q.starter_code_java || '// Write your Java solution here\n';
+    } else {
+      editor.value = q.starter_code_c || '/* Write your C solution here */\n';
+    }
+    codingCodeDrafts[key] = editor.value;
+  }
+
+  window.resetCodingStarterCode = function() {
+    if (!currentCodingQ) return;
+    const lang = document.getElementById('code-lang-select')?.value || 'python';
+    const key = `${currentCodingQ.id}_${lang}`;
+    delete codingCodeDrafts[key];
+    loadDraftOrStarterCode(currentCodingQ, lang);
+    window.showToast?.('Code reset to starter template.', 'info');
   };
 
   window.runCodingTestCases = async function() {
     if (!currentCodingQ) return;
-    const code = document.getElementById('code-editor-textarea')?.value;
+    const editor = document.getElementById('code-editor-textarea');
+    const code = editor?.value;
     const lang = document.getElementById('code-lang-select')?.value || 'python';
 
-    window.showToast?.('Running test cases in isolated execution environment...', 'info');
+    if (!code || !code.trim()) {
+      window.showToast?.('Please write some code before running test cases.', 'warning');
+      return;
+    }
+
+    saveCurrentDraft();
+    window.showToast?.('Executing code against sample test cases in sandbox...', 'info');
 
     try {
       const res = await fetch('/api/coding/run', {
@@ -8883,6 +8983,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
       const data = await res.json();
       renderCodingExecutionResult(data);
+      if (data.success) {
+        if (data.status === 'Accepted') {
+          window.showToast?.(`✓ All ${data.total} sample test cases passed!`, 'success');
+        } else {
+          window.showToast?.(`Tests finished: ${data.passed}/${data.total} passed (${data.status})`, 'warning');
+        }
+      } else {
+        window.showToast?.(data.error || 'Execution encountered an issue.', 'error');
+      }
     } catch (err) {
       window.showToast?.(err.message, 'error');
     }
@@ -8890,8 +8999,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   window.submitCodingSolution = async function() {
     if (!currentCodingQ) return;
-    const code = document.getElementById('code-editor-textarea')?.value;
+    const editor = document.getElementById('code-editor-textarea');
+    const code = editor?.value;
     const lang = document.getElementById('code-lang-select')?.value || 'python';
+
+    if (!code || !code.trim()) {
+      window.showToast?.('Please write some code before submitting your solution.', 'warning');
+      return;
+    }
+
+    saveCurrentDraft();
+    window.showToast?.('Running full test suite (including hidden edge cases)...', 'info');
 
     try {
       const res = await fetch('/api/coding/submit', {
@@ -8903,9 +9021,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       const data = await res.json();
       renderCodingExecutionResult(data);
       if (data.success) {
-        window.showToast?.(`✓ Solution submitted! Status: ${data.status} (Score: ${data.score}%)`, data.status === 'Accepted' ? 'success' : 'warning');
+        const isAccepted = data.status === 'Accepted';
+        window.showToast?.(`✓ Solution submitted! Status: ${data.status} (Score: ${data.score}%)`, isAccepted ? 'success' : 'warning');
+        loadCodingStatistics();
         loadCodingHistory();
-        fetchPlacementPrediction();
+        window.fetchPlacementPrediction?.();
+        window.fetchStudentComprehensiveDashboard?.();
+      } else {
+        window.showToast?.(data.error || 'Submission failed.', 'error');
       }
     } catch (err) {
       window.showToast?.(err.message, 'error');
@@ -8921,31 +9044,66 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (drawer) drawer.style.display = 'block';
     if (pill) {
-      pill.textContent = data.status === 'Accepted' ? '✓ All Tests Passed' : `${data.passed}/${data.total} Passed`;
-      pill.className = `test-pill ${data.passed === data.total ? 'pass' : 'fail'}`;
+      const isPass = data.status === 'Accepted' || (data.passed > 0 && data.passed === data.total);
+      pill.textContent = isPass ? '✓ All Tests Passed' : `${data.passed || 0}/${data.total || 0} Passed (${data.status || 'Failed'})`;
+      pill.className = `test-pill ${isPass ? 'pass' : 'fail'}`;
     }
-    if (scoreEl) scoreEl.textContent = `Score: ${data.score}%`;
+    if (scoreEl) scoreEl.textContent = `Score: ${data.score !== undefined ? data.score : (data.passed ? Math.round((data.passed / data.total) * 100) : 0)}%`;
     if (timeEl) timeEl.textContent = `Execution Time: ${data.execution_time_ms || 12}ms`;
 
     if (detailBox) {
-      if (data.error) {
-        detailBox.innerHTML = `<div style="color: #DC2626; background: #FEE2E2; padding: 8px; border-radius: 6px; font-family: monospace;">${data.error}</div>`;
+      if (data.error && (!data.results || data.results.length === 0)) {
+        detailBox.innerHTML = `
+          <div style="color: #DC2626; background: #FEE2E2; border: 1px solid #FCA5A5; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 11.5px; white-space: pre-wrap;">
+            <strong>Error Details:</strong>\n${sanitizeCodeHtml(data.error)}
+          </div>
+        `;
       } else {
         const results = data.results || [];
         detailBox.innerHTML = results.map((tc, idx) => `
-          <div style="background: #FFFFFF; border: 1px solid ${tc.passed ? '#86EFAC' : '#FCA5A5'}; border-radius: 6px; padding: 8px;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <strong>Test Case #${idx + 1}</strong>
-              <span class="badge-status ${tc.passed ? 'teal' : 'red'}" style="font-size: 10px;">${tc.passed ? 'Passed' : 'Failed'}</span>
+          <div style="background: #FFFFFF; border: 1px solid ${tc.passed ? '#86EFAC' : '#FCA5A5'}; border-radius: 6px; padding: 8px 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <strong style="color: #1E293B;">Test Case #${idx + 1} ${tc.is_hidden ? '(Hidden Test Case)' : ''}</strong>
+              <span class="badge-status ${tc.passed ? 'teal' : 'red'}" style="font-size: 10px; padding: 2px 6px;">
+                ${tc.passed ? '✓ Passed' : '✗ Failed'}
+              </span>
             </div>
-            <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">
-              Input: <code>${tc.input}</code> &bull; Expected: <code>${tc.expected}</code> &bull; Output: <code>${tc.output}</code>
-            </div>
+            ${tc.is_hidden ? `
+              <div style="font-size: 11px; color: var(--text-secondary);">
+                <em>Hidden test case inputs and expected outputs are masked for assessment integrity.</em>
+              </div>
+            ` : `
+              <div style="font-size: 11px; color: #334155; display: flex; flex-direction: column; gap: 2px;">
+                <div><span style="color: var(--text-secondary); font-weight: 600;">Input:</span> <code style="background: #F1F5F9; padding: 1px 4px; border-radius: 4px;">${sanitizeCodeHtml(tc.input || '')}</code></div>
+                <div><span style="color: var(--text-secondary); font-weight: 600;">Expected:</span> <code style="background: #F1F5F9; padding: 1px 4px; border-radius: 4px;">${sanitizeCodeHtml(tc.expected || '')}</code></div>
+                <div><span style="color: var(--text-secondary); font-weight: 600;">Your Output:</span> <code style="background: ${tc.passed ? '#F0FDF4' : '#FEF2F2'}; color: ${tc.passed ? '#166534' : '#991B1B'}; padding: 1px 4px; border-radius: 4px;">${sanitizeCodeHtml(tc.output || '(No output)')}</code></div>
+                ${tc.error ? `<div style="color: #DC2626; font-size: 10.5px; margin-top: 2px;">${sanitizeCodeHtml(tc.error)}</div>` : ''}
+              </div>
+            `}
           </div>
         `).join('');
       }
     }
   }
+
+  window.loadCodingStatistics = async function() {
+    try {
+      const res = await fetch('/api/coding/statistics', { credentials: 'include' });
+      const data = await res.json();
+      if (!data.success || !data.statistics) return;
+
+      const s = data.statistics;
+      const scoreKpi = document.getElementById('code-kpi-score');
+      const passedKpi = document.getElementById('code-kpi-passed');
+      const countEl = document.getElementById('code-kpi-submissions-count');
+
+      if (scoreKpi) scoreKpi.textContent = s.coding_pillar_rating ? `${s.coding_pillar_rating}%` : '--%';
+      if (passedKpi) passedKpi.textContent = s.total_test_cases_passed || 0;
+      if (countEl) countEl.textContent = s.total_submissions || 0;
+    } catch (err) {
+      console.error('Failed to load coding statistics:', err);
+    }
+  };
 
   window.loadCodingHistory = async function() {
     try {
@@ -8955,33 +9113,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const history = data.history || [];
       const tbody = document.getElementById('code-history-tbody');
-      const countEl = document.getElementById('code-kpi-submissions-count');
-      const scoreKpi = document.getElementById('code-kpi-score');
-      const passedKpi = document.getElementById('code-kpi-passed');
-
-      if (countEl) countEl.textContent = history.length;
-      if (history.length > 0) {
-        const avgScore = Math.round(history.reduce((sum, h) => sum + h.score, 0) / history.length);
-        const totalPassed = history.reduce((sum, h) => sum + h.test_cases_passed, 0);
-        if (scoreKpi) scoreKpi.textContent = `${avgScore}%`;
-        if (passedKpi) passedKpi.textContent = totalPassed;
-      }
 
       if (tbody) {
         if (history.length === 0) {
           tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 16px;">No coding submissions recorded yet. Select a problem and click \'Submit Code\'.</td></tr>';
         } else {
-          tbody.innerHTML = history.map(h => `
-            <tr>
-              <td>${h.created_at ? new Date(h.created_at).toLocaleString() : 'Recent'}</td>
-              <td><strong>${h.question_title}</strong></td>
-              <td>${h.language}</td>
-              <td>${h.test_cases_passed} / ${h.test_cases_total}</td>
-              <td><span class="kpi-pill ${h.score === 100 ? 'teal' : 'blue'}">${h.score}%</span></td>
-              <td>${h.execution_time_ms}ms</td>
-              <td><span class="badge-status ${h.status === 'Accepted' ? 'teal' : 'red'}">${h.status}</span></td>
-            </tr>
-          `).join('');
+          tbody.innerHTML = history.map(h => {
+            const isAccepted = h.status === 'Accepted';
+            return `
+              <tr>
+                <td>${h.created_at ? new Date(h.created_at).toLocaleString() : 'Recent'}</td>
+                <td><strong>${sanitizeCodeHtml(h.question_title || '')}</strong></td>
+                <td><span style="text-transform: capitalize;">${sanitizeCodeHtml(h.language || '')}</span></td>
+                <td>${h.test_cases_passed} / ${h.test_cases_total}</td>
+                <td><span class="kpi-pill ${h.score === 100 ? 'teal' : h.score >= 50 ? 'blue' : 'orange'}">${h.score}%</span></td>
+                <td>${h.execution_time_ms || 15}ms</td>
+                <td><span class="badge-status ${isAccepted ? 'teal' : 'red'}">${sanitizeCodeHtml(h.status || 'Submitted')}</span></td>
+              </tr>
+            `;
+          }).join('');
         }
       }
     } catch (err) {}

@@ -6,12 +6,13 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "test": "node test_security.js && node test_workflows.js && node test_ml_credibility.js && node test_submission_consistency.js && node test_placement_prediction_system.js",
+    "test": "node test_security.js && node test_workflows.js && node test_ml_credibility.js && node test_submission_consistency.js && node test_placement_prediction_system.js && node test_coding_engine.js",
     "test:security": "node test_security.js",
     "test:workflows": "node test_workflows.js",
     "test:ml": "node test_ml_credibility.js",
     "test:consistency": "node test_submission_consistency.js",
     "test:placement": "node test_placement_prediction_system.js",
+    "test:coding": "node test_coding_engine.js",
     "serve:py": "python server.py"
   },
   "keywords": [

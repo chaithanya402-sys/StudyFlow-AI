@@ -121,7 +121,18 @@ CREATE TABLE IF NOT EXISTS coding_questions (
   test_cases_json TEXT NOT NULL
 );
 
--- 9. Coding Submissions
+-- 9. Coding Test Cases (Public & Hidden)
+CREATE TABLE IF NOT EXISTS coding_test_cases (
+  id VARCHAR(64) PRIMARY KEY,
+  question_id VARCHAR(64) NOT NULL,
+  input TEXT NOT NULL,
+  expected_output TEXT NOT NULL,
+  is_hidden INT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (question_id) REFERENCES coding_questions(id) ON DELETE CASCADE
+);
+
+-- 10. Coding Submissions
 CREATE TABLE IF NOT EXISTS coding_submissions (
   id VARCHAR(64) PRIMARY KEY,
   student_id VARCHAR(64) NOT NULL,
@@ -133,10 +144,27 @@ CREATE TABLE IF NOT EXISTS coding_submissions (
   test_cases_total INT NOT NULL,
   score DECIMAL(5, 2) NOT NULL,
   execution_time_ms INT NOT NULL,
-  status VARCHAR(40) NOT NULL, -- 'Accepted', 'Wrong Answer', 'Runtime Error'
+  status VARCHAR(40) NOT NULL, -- 'Accepted', 'Partially Accepted', 'Wrong Answer', 'Compilation Error', 'Runtime Error', 'Time Limit Exceeded'
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (question_id) REFERENCES coding_questions(id) ON DELETE CASCADE
+);
+
+-- 11. Coding Execution Logs (Sandboxed Telemetry)
+CREATE TABLE IF NOT EXISTS coding_execution_logs (
+  id VARCHAR(64) PRIMARY KEY,
+  submission_id VARCHAR(64) NOT NULL,
+  student_id VARCHAR(64) NOT NULL,
+  question_id VARCHAR(64) NOT NULL,
+  language VARCHAR(50) NOT NULL,
+  execution_mode VARCHAR(50) DEFAULT 'subprocess',
+  stdout TEXT,
+  stderr TEXT,
+  exit_code INT DEFAULT 0,
+  execution_time_ms INT DEFAULT 0,
+  memory_peak_kb INT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (submission_id) REFERENCES coding_submissions(id) ON DELETE CASCADE
 );
 
 -- 10. Placement Predictions (ML Output)

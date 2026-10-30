@@ -553,13 +553,31 @@ function initSchema() {
       difficulty TEXT NOT NULL, -- 'Easy', 'Medium', 'Hard'
       language TEXT NOT NULL, -- 'Python', 'Java', 'C'
       description TEXT NOT NULL,
+      input_format TEXT,
+      output_format TEXT,
+      constraints TEXT,
       sample_input TEXT,
       sample_output TEXT,
+      supported_languages TEXT DEFAULT 'Python, Java, C',
       starter_code_python TEXT,
       starter_code_java TEXT,
       starter_code_c TEXT,
-      test_cases_json TEXT NOT NULL
+      test_cases_json TEXT NOT NULL,
+      time_limit_ms INTEGER DEFAULT 3000,
+      memory_limit_mb INTEGER DEFAULT 128,
+      created_at TEXT DEFAULT (datetime('now'))
     );
+
+    -- 29B. Explicit Test Cases Table (Public & Hidden)
+    CREATE TABLE IF NOT EXISTS coding_test_cases (
+      id TEXT PRIMARY KEY,
+      question_id TEXT NOT NULL REFERENCES coding_questions(id) ON DELETE CASCADE,
+      input_data TEXT NOT NULL,
+      expected_output TEXT NOT NULL,
+      is_hidden INTEGER DEFAULT 0, -- 0 = public sample, 1 = hidden test case
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_coding_test_cases_qid ON coding_test_cases(question_id);
 
     -- 30. Coding Submissions Table
     CREATE TABLE IF NOT EXISTS coding_submissions (
@@ -567,16 +585,35 @@ function initSchema() {
       student_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       question_id TEXT NOT NULL REFERENCES coding_questions(id) ON DELETE CASCADE,
       question_title TEXT,
-      language TEXT NOT NULL,
-      code TEXT NOT NULL,
-      test_cases_passed INTEGER NOT NULL,
-      test_cases_total INTEGER NOT NULL,
+      programming_language TEXT NOT NULL,
+      language TEXT,
+      source_code TEXT NOT NULL,
+      code TEXT,
+      total_test_cases INTEGER NOT NULL,
+      test_cases_total INTEGER,
+      passed_test_cases INTEGER NOT NULL,
+      test_cases_passed INTEGER,
+      failed_test_cases INTEGER DEFAULT 0,
       score REAL NOT NULL,
+      execution_time REAL,
       execution_time_ms INTEGER NOT NULL,
       status TEXT NOT NULL,
+      submitted_at TEXT DEFAULT (datetime('now')),
       created_at TEXT DEFAULT (datetime('now'))
     );
     CREATE INDEX IF NOT EXISTS idx_coding_submissions_student ON coding_submissions(student_id);
+
+    -- 30B. Coding Execution Logs Table
+    CREATE TABLE IF NOT EXISTS coding_execution_logs (
+      id TEXT PRIMARY KEY,
+      submission_id TEXT NOT NULL,
+      compilation_status TEXT,
+      runtime_status TEXT,
+      error_type TEXT,
+      execution_time REAL,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_coding_execution_logs_sub ON coding_execution_logs(submission_id);
 
     -- 31. Placement Predictions Table
     CREATE TABLE IF NOT EXISTS placement_predictions (
@@ -681,6 +718,66 @@ function initSchema() {
       WHERE student_status != 'Assigned' OR submission_url IS NOT NULL OR student_remarks IS NOT NULL;
     `);
   } catch (e) {}
+
+  // Safe runtime column migrations for coding assessment tables
+  try {
+    const codingQCols = db.prepare('PRAGMA table_info(coding_questions)').all().map(c => c.name);
+    for (const col of [
+      { name: 'input_format', def: 'TEXT' },
+      { name: 'output_format', def: 'TEXT' },
+      { name: 'constraints', def: 'TEXT' },
+      { name: 'supported_languages', def: "TEXT DEFAULT 'Python, Java, C'" },
+      { name: 'starter_code_python', def: 'TEXT' },
+      { name: 'starter_code_java', def: 'TEXT' },
+      { name: 'starter_code_c', def: 'TEXT' },
+      { name: 'time_limit_ms', def: 'INTEGER DEFAULT 3500' },
+      { name: 'memory_limit_mb', def: 'INTEGER DEFAULT 128' }
+    ]) {
+      if (!codingQCols.includes(col.name)) {
+        try { db.exec(`ALTER TABLE coding_questions ADD COLUMN ${col.name} ${col.def}`); } catch (e) {}
+      }
+    }
+
+    const codingSubCols = db.prepare('PRAGMA table_info(coding_submissions)').all().map(c => c.name);
+    for (const col of [
+      { name: 'question_title', def: 'TEXT' },
+      { name: 'programming_language', def: 'TEXT' },
+      { name: 'language', def: 'TEXT' },
+      { name: 'source_code', def: 'TEXT' },
+      { name: 'code', def: 'TEXT' },
+      { name: 'total_test_cases', def: 'INTEGER' },
+      { name: 'test_cases_total', def: 'INTEGER' },
+      { name: 'passed_test_cases', def: 'INTEGER' },
+      { name: 'test_cases_passed', def: 'INTEGER' },
+      { name: 'failed_test_cases', def: 'INTEGER DEFAULT 0' },
+      { name: 'execution_time', def: 'REAL' },
+      { name: 'execution_time_ms', def: 'INTEGER DEFAULT 15' },
+      { name: 'submitted_at', def: "TEXT DEFAULT (datetime('now'))" }
+    ]) {
+      if (!codingSubCols.includes(col.name)) {
+        try { db.exec(`ALTER TABLE coding_submissions ADD COLUMN ${col.name} ${col.def}`); } catch (e) {}
+      }
+    }
+
+    const codingLogCols = db.prepare('PRAGMA table_info(coding_execution_logs)').all().map(c => c.name);
+    for (const col of [
+      { name: 'student_id', def: 'TEXT' },
+      { name: 'question_id', def: 'TEXT' },
+      { name: 'language', def: 'TEXT' },
+      { name: 'execution_mode', def: "TEXT DEFAULT 'subprocess'" },
+      { name: 'stdout', def: 'TEXT' },
+      { name: 'stderr', def: 'TEXT' },
+      { name: 'exit_code', def: 'INTEGER DEFAULT 0' },
+      { name: 'execution_time_ms', def: 'INTEGER DEFAULT 0' },
+      { name: 'memory_peak_kb', def: 'INTEGER DEFAULT 0' }
+    ]) {
+      if (!codingLogCols.includes(col.name)) {
+        try { db.exec(`ALTER TABLE coding_execution_logs ADD COLUMN ${col.name} ${col.def}`); } catch (e) {}
+      }
+    }
+  } catch (e) {
+    console.error('Error migrating coding schema:', e.message);
+  }
 
   // Ensure standard Faculty accounts and subject assignments are seeded
   ensureFacultySubjectAssignments();
@@ -868,10 +965,21 @@ function ensureAptitudeAndCodingQuestions() {
   }
 
   const codeCount = db.prepare('SELECT COUNT(*) as count FROM coding_questions').get().count;
-  if (codeCount === 0) {
+  if (codeCount < 6) {
+    db.prepare('DELETE FROM coding_questions').run();
+    db.prepare('DELETE FROM coding_test_cases').run();
+
     const insertCode = db.prepare(`
-      INSERT INTO coding_questions (id, title, difficulty, language, description, sample_input, sample_output, starter_code_python, starter_code_java, starter_code_c, test_cases_json)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO coding_questions (
+        id, title, difficulty, language, description, input_format, output_format, constraints,
+        sample_input, sample_output, supported_languages, starter_code_python, starter_code_java,
+        starter_code_c, test_cases_json, time_limit_ms, memory_limit_mb
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    const insertTestCase = db.prepare(`
+      INSERT INTO coding_test_cases (id, question_id, input_data, expected_output, is_hidden)
+      VALUES (?, ?, ?, ?, ?)
     `);
 
     const codingQuestions = [
@@ -881,74 +989,150 @@ function ensureAptitudeAndCodingQuestions() {
         difficulty: 'Easy',
         language: 'Python, Java, C',
         description: 'Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target. You may assume each input would have exactly one solution, and you may not use the same element twice.',
+        input_format: 'nums (array of integers), target (integer)',
+        output_format: 'indices of the two numbers as an array [i, j]',
+        constraints: '2 <= nums.length <= 10^4, -10^9 <= nums[i] <= 10^9, -10^9 <= target <= 10^9',
         sample_input: 'nums = [2, 7, 11, 15], target = 9',
         sample_output: '[0, 1]',
         py: 'def two_sum(nums, target):\n    # Write your solution here\n    seen = {}\n    for i, num in enumerate(nums):\n        complement = target - num\n        if complement in seen:\n            return [seen[complement], i]\n        seen[num] = i\n    return []\n',
         java: 'import java.util.*;\n\npublic class Solution {\n    public static int[] twoSum(int[] nums, int target) {\n        Map<Integer, Integer> map = new HashMap<>();\n        for (int i = 0; i < nums.length; i++) {\n            int complement = target - nums[i];\n            if (map.containsKey(complement)) {\n                return new int[] { map.get(complement), i };\n            }\n            map.put(nums[i], i);\n        }\n        return new int[]{};\n    }\n}\n',
         c: '#include <stdio.h>\n#include <stdlib.h>\n\nint* twoSum(int* nums, int numsSize, int target, int* returnSize) {\n    int* res = (int*)malloc(2 * sizeof(int));\n    *returnSize = 2;\n    for(int i = 0; i < numsSize; i++) {\n        for(int j = i + 1; j < numsSize; j++) {\n            if(nums[i] + nums[j] == target) {\n                res[0] = i; res[1] = j;\n                return res;\n            }\n        }\n    }\n    return NULL;\n}\n',
-        test_cases: JSON.stringify([
-          { input: '[2, 7, 11, 15], 9', expected: '[0, 1]' },
-          { input: '[3, 2, 4], 6', expected: '[1, 2]' },
-          { input: '[3, 3], 6', expected: '[0, 1]' }
-        ])
+        test_cases: [
+          { input: '[2, 7, 11, 15], 9', expected: '[0, 1]', hidden: 0 },
+          { input: '[3, 2, 4], 6', expected: '[1, 2]', hidden: 0 },
+          { input: '[3, 3], 6', expected: '[0, 1]', hidden: 1 },
+          { input: '[1, 5, 8, 12, 17], 25', expected: '[2, 4]', hidden: 1 }
+        ]
       },
       {
         id: 'code_q2',
-        title: 'Valid Parentheses String Matching',
+        title: 'Reverse a String',
         difficulty: 'Easy',
         language: 'Python, Java, C',
-        description: 'Given a string s containing just the characters \'(\', \')\', \'{\', \'}\', \'[\' and \']\', determine if the input string is valid. Open brackets must be closed by the same type of brackets in the correct order.',
-        sample_input: 's = "()[]{}"',
-        sample_output: 'true',
-        py: 'def is_valid_parentheses(s):\n    stack = []\n    mapping = {")": "(", "}": "{", "]": "["}\n    for char in s:\n        if char in mapping:\n            top = stack.pop() if stack else "#"\n            if mapping[char] != top:\n                return False\n        else:\n            stack.append(char)\n    return not stack\n',
-        java: 'import java.util.*;\n\npublic class Solution {\n    public static boolean isValid(String s) {\n        Stack<Character> stack = new Stack<>();\n        for (char c : s.toCharArray()) {\n            if (c == \'(\') stack.push(\')\');\n            else if (c == \'{\') stack.push(\'}\');\n            else if (c == \'[\') stack.push(\']\');\n            else if (stack.isEmpty() || stack.pop() != c) return false;\n        }\n        return stack.isEmpty();\n    }\n}\n',
-        c: '#include <stdbool.h>\n#include <string.h>\n\nbool isValid(char * s) {\n    int len = strlen(s);\n    char stack[len + 1];\n    int top = -1;\n    for(int i = 0; i < len; i++) {\n        char c = s[i];\n        if(c == \'(\' || c == \'{\' || c == \'[\') stack[++top] = c;\n        else {\n            if(top < 0) return false;\n            char open = stack[top--];\n            if(c == \')\' && open != \'(\') return false;\n            if(c == \'}\' && open != \'{\') return false;\n            if(c == \']\' && open != \'[\') return false;\n        }\n    }\n    return top == -1;\n}\n',
-        test_cases: JSON.stringify([
-          { input: '"()"', expected: 'true' },
-          { input: '"()[]{}"', expected: 'true' },
-          { input: '"(]"', expected: 'false' },
-          { input: '"([)]"', expected: 'false' }
-        ])
+        description: 'Given a string s, write a function that reverses the string and returns the reversed result.',
+        input_format: 's (string)',
+        output_format: 'reversed string',
+        constraints: '1 <= s.length <= 10^5, s consists of printable ASCII characters',
+        sample_input: 's = "hello"',
+        sample_output: '"olleh"',
+        py: 'def reverse_string(s):\n    # Write your solution here\n    return s[::-1]\n',
+        java: 'public class Solution {\n    public static String reverseString(String s) {\n        return new StringBuilder(s).reverse().toString();\n    }\n}\n',
+        c: '#include <stdio.h>\n#include <string.h>\n\nchar* reverseString(char* s) {\n    int n = strlen(s);\n    for (int i = 0; i < n / 2; i++) {\n        char tmp = s[i];\n        s[i] = s[n - 1 - i];\n        s[n - 1 - i] = tmp;\n    }\n    return s;\n}\n',
+        test_cases: [
+          { input: '"hello"', expected: '"olleh"', hidden: 0 },
+          { input: '"StudyFlow"', expected: '"wolFydutS"', hidden: 0 },
+          { input: '"a"', expected: '"a"', hidden: 1 },
+          { input: '"racecar"', expected: '"racecar"', hidden: 1 },
+          { input: '"123456789"', expected: '"987654321"', hidden: 1 }
+        ]
       },
       {
         id: 'code_q3',
-        title: 'Longest Substring Without Repeating Characters',
-        difficulty: 'Medium',
+        title: 'Palindrome Number',
+        difficulty: 'Easy',
         language: 'Python, Java, C',
-        description: 'Given a string s, find the length of the longest substring without duplicate characters.',
-        sample_input: 's = "abcabcbb"',
-        sample_output: '3',
-        py: 'def length_of_longest_substring(s):\n    char_map = {}\n    left = max_len = 0\n    for right, c in enumerate(s):\n        if c in char_map and char_map[c] >= left:\n            left = char_map[c] + 1\n        char_map[c] = right\n        max_len = max(max_len, right - left + 1)\n    return max_len\n',
-        java: 'import java.util.*;\n\npublic class Solution {\n    public static int lengthOfLongestSubstring(String s) {\n        int n = s.length(), maxLen = 0;\n        Map<Character, Integer> map = new HashMap<>();\n        for (int j = 0, i = 0; j < n; j++) {\n            if (map.containsKey(s.charAt(j))) {\n                i = Math.max(map.get(s.charAt(j)) + 1, i);\n            }\n            maxLen = Math.max(maxLen, j - i + 1);\n            map.put(s.charAt(j), j);\n        }\n        return maxLen;\n    }\n}\n',
-        c: '#include <string.h>\n\nint lengthOfLongestSubstring(char * s) {\n    int n = strlen(s), maxLen = 0, i = 0;\n    int lastPos[256];\n    for(int k = 0; k < 256; k++) lastPos[k] = -1;\n    for(int j = 0; j < n; j++) {\n        unsigned char c = (unsigned char)s[j];\n        if(lastPos[c] >= i) i = lastPos[c] + 1;\n        lastPos[c] = j;\n        int curLen = j - i + 1;\n        if(curLen > maxLen) maxLen = curLen;\n    }\n    return maxLen;\n}\n',
-        test_cases: JSON.stringify([
-          { input: '"abcabcbb"', expected: '3' },
-          { input: '"bbbbb"', expected: '1' },
-          { input: '"pwwkew"', expected: '3' }
-        ])
+        description: 'Given an integer x, return true if x is a palindrome integer, and false otherwise. An integer is a palindrome when it reads the same backward as forward.',
+        input_format: 'x (integer)',
+        output_format: 'boolean (true or false)',
+        constraints: '-2^31 <= x <= 2^31 - 1',
+        sample_input: 'x = 121',
+        sample_output: 'true',
+        py: 'def is_palindrome(x):\n    # Write your solution here\n    if x < 0:\n        return False\n    return str(x) == str(x)[::-1]\n',
+        java: 'public class Solution {\n    public static boolean isPalindrome(int x) {\n        if (x < 0) return false;\n        int rev = 0, orig = x;\n        while (x > 0) {\n            rev = rev * 10 + x % 10;\n            x /= 10;\n        }\n        return rev == orig;\n    }\n}\n',
+        c: '#include <stdbool.h>\n\nbool isPalindrome(int x) {\n    if (x < 0) return false;\n    long rev = 0, orig = x;\n    while (x > 0) {\n        rev = rev * 10 + x % 10;\n        x /= 10;\n    }\n    return rev == orig;\n}\n',
+        test_cases: [
+          { input: '121', expected: 'true', hidden: 0 },
+          { input: '-121', expected: 'false', hidden: 0 },
+          { input: '10', expected: 'false', hidden: 1 },
+          { input: '0', expected: 'true', hidden: 1 },
+          { input: '12321', expected: 'true', hidden: 1 }
+        ]
       },
       {
         id: 'code_q4',
-        title: 'Maximum Subarray Sum (Kadane\'s Algorithm)',
+        title: 'Fibonacci Series',
+        difficulty: 'Easy',
+        language: 'Python, Java, C',
+        description: 'The Fibonacci numbers form a sequence such that each number is the sum of the two preceding ones, starting from 0 and 1. Given n, calculate F(n).',
+        input_format: 'n (integer)',
+        output_format: 'integer F(n)',
+        constraints: '0 <= n <= 30',
+        sample_input: 'n = 5',
+        sample_output: '5',
+        py: 'def fibonacci(n):\n    # Write your solution here\n    if n <= 0: return 0\n    if n == 1: return 1\n    a, b = 0, 1\n    for _ in range(2, n + 1):\n        a, b = b, a + b\n    return b\n',
+        java: 'public class Solution {\n    public static int fibonacci(int n) {\n        if (n <= 0) return 0;\n        if (n == 1) return 1;\n        int a = 0, b = 1;\n        for (int i = 2; i <= n; i++) {\n            int c = a + b;\n            a = b;\n            b = c;\n        }\n        return b;\n    }\n}\n',
+        c: 'int fibonacci(int n) {\n    if (n <= 0) return 0;\n    if (n == 1) return 1;\n    int a = 0, b = 1;\n    for (int i = 2; i <= n; i++) {\n        int c = a + b;\n        a = b;\n        b = c;\n    }\n    return b;\n}\n',
+        test_cases: [
+          { input: '2', expected: '1', hidden: 0 },
+          { input: '5', expected: '5', hidden: 0 },
+          { input: '0', expected: '0', hidden: 1 },
+          { input: '1', expected: '1', hidden: 1 },
+          { input: '8', expected: '21', hidden: 1 }
+        ]
+      },
+      {
+        id: 'code_q5',
+        title: 'Prime Number Check',
         difficulty: 'Medium',
         language: 'Python, Java, C',
-        description: 'Given an integer array nums, find the contiguous subarray with the largest sum, and return its sum.',
-        sample_input: 'nums = [-2,1,-3,4,-1,2,1,-5,4]',
-        sample_output: '6',
-        py: 'def max_sub_array(nums):\n    max_sum = current_sum = nums[0]\n    for x in nums[1:]:\n        current_sum = max(x, current_sum + x)\n        max_sum = max(max_sum, current_sum)\n    return max_sum\n',
-        java: 'public class Solution {\n    public static int maxSubArray(int[] nums) {\n        int maxSoFar = nums[0], currMax = nums[0];\n        for (int i = 1; i < nums.length; i++) {\n            currMax = Math.max(nums[i], currMax + nums[i]);\n            maxSoFar = Math.max(maxSoFar, currMax);\n        }\n        return maxSoFar;\n    }\n}\n',
-        c: 'int maxSubArray(int* nums, int numsSize) {\n    int maxSoFar = nums[0], currMax = nums[0];\n    for(int i = 1; i < numsSize; i++) {\n        currMax = (nums[i] > currMax + nums[i]) ? nums[i] : (currMax + nums[i]);\n        if(currMax > maxSoFar) maxSoFar = currMax;\n    }\n    return maxSoFar;\n}\n',
-        test_cases: JSON.stringify([
-          { input: '[-2,1,-3,4,-1,2,1,-5,4]', expected: '6' },
-          { input: '[1]', expected: '1' },
-          { input: '[5,4,-1,7,8]', expected: '23' }
-        ])
+        description: 'Given an integer n, determine whether n is a prime number. Return true if n is prime, and false otherwise.',
+        input_format: 'n (integer)',
+        output_format: 'boolean (true or false)',
+        constraints: '1 <= n <= 10^9',
+        sample_input: 'n = 7',
+        sample_output: 'true',
+        py: 'def is_prime(n):\n    # Write your solution here\n    if n <= 1: return False\n    if n <= 3: return True\n    if n % 2 == 0 or n % 3 == 0: return False\n    i = 5\n    while i * i <= n:\n        if n % i == 0 or n % (i + 2) == 0:\n            return False\n        i += 6\n    return True\n',
+        java: 'public class Solution {\n    public static boolean isPrime(int n) {\n        if (n <= 1) return false;\n        if (n <= 3) return true;\n        if (n % 2 == 0 || n % 3 == 0) return false;\n        for (int i = 5; i * i <= n; i += 6) {\n            if (n % i == 0 || n % (i + 2) == 0) return false;\n        }\n        return true;\n    }\n}\n',
+        c: '#include <stdbool.h>\n\nbool isPrime(int n) {\n    if (n <= 1) return false;\n    if (n <= 3) return true;\n    if (n % 2 == 0 || n % 3 == 0) return false;\n    for (int i = 5; i * i <= n; i += 6) {\n        if (n % i == 0 || n % (i + 2) == 0) return false;\n    }\n    return true;\n}\n',
+        test_cases: [
+          { input: '7', expected: 'true', hidden: 0 },
+          { input: '12', expected: 'false', hidden: 0 },
+          { input: '1', expected: 'false', hidden: 1 },
+          { input: '2', expected: 'true', hidden: 1 },
+          { input: '97', expected: 'true', hidden: 1 }
+        ]
+      },
+      {
+        id: 'code_q6',
+        title: 'Array Sorting (Quicksort / TimSort)',
+        difficulty: 'Hard',
+        language: 'Python, Java, C',
+        description: 'Given an array of integers nums, sort the array in ascending order and return the sorted array in O(n log n) time complexity.',
+        input_format: 'nums (array of integers)',
+        output_format: 'sorted array of integers',
+        constraints: '1 <= nums.length <= 5 * 10^4, -5 * 10^4 <= nums[i] <= 5 * 10^4',
+        sample_input: 'nums = [5, 2, 3, 1]',
+        sample_output: '[1, 2, 3, 5]',
+        py: 'def sort_array(nums):\n    # Write your solution here\n    return sorted(nums)\n',
+        java: 'import java.util.*;\n\npublic class Solution {\n    public static int[] sortArray(int[] nums) {\n        Arrays.sort(nums);\n        return nums;\n    }\n}\n',
+        c: '#include <stdlib.h>\n\nint cmp(const void* a, const void* b) {\n    return (*(int*)a - *(int*)b);\n}\n\nint* sortArray(int* nums, int numsSize, int* returnSize) {\n    qsort(nums, numsSize, sizeof(int), cmp);\n    *returnSize = numsSize;\n    return nums;\n}\n',
+        test_cases: [
+          { input: '[5, 2, 3, 1]', expected: '[1, 2, 3, 5]', hidden: 0 },
+          { input: '[5, 1, 1, 2, 0, 0]', expected: '[0, 0, 1, 1, 2, 5]', hidden: 0 },
+          { input: '[1]', expected: '[1]', hidden: 1 },
+          { input: '[-4, 0, 7, 4, 9, -5, -1, 0, -4, -1]', expected: '[-5, -4, -4, -1, -1, 0, 0, 4, 7, 9]', hidden: 1 }
+        ]
       }
     ];
 
     const codeTx = db.transaction(() => {
       for (const q of codingQuestions) {
-        insertCode.run(q.id, q.title, q.difficulty, q.language, q.description, q.sample_input, q.sample_output, q.py, q.java, q.c, q.test_cases);
+        insertCode.run(
+          q.id, q.title, q.difficulty, q.language, q.description,
+          q.input_format, q.output_format, q.constraints,
+          q.sample_input, q.sample_output, q.language,
+          q.py, q.java, q.c, JSON.stringify(q.test_cases), 3000, 128
+        );
+
+        q.test_cases.forEach((tc, idx) => {
+          insertTestCase.run(
+            `tc_${q.id}_${idx + 1}`,
+            q.id,
+            tc.input,
+            tc.expected,
+            tc.hidden ? 1 : 0
+          );
+        });
       }
     });
     codeTx();
