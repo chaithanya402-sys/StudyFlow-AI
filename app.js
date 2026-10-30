@@ -8801,8 +8801,83 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   // 4. Coding Assessment Controller
-  let codingQuestionsList = [];
-  let currentCodingQ = null;
+  const DEFAULT_CODING_QUESTIONS = [
+    {
+      id: 'code_q1',
+      title: 'Two Sum Problem',
+      difficulty: 'Easy',
+      language: 'Python, Java, C',
+      description: 'Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target. You may assume each input would have exactly one solution.',
+      sample_input: 'nums = [2, 7, 11, 15], target = 9',
+      sample_output: '[0, 1]',
+      starter_code_python: 'def two_sum(nums, target):\n    # Write your solution here\n    seen = {}\n    for i, num in enumerate(nums):\n        diff = target - num\n        if diff in seen:\n            return [seen[diff], i]\n        seen[num] = i\n    return []\n',
+      starter_code_java: 'import java.util.*;\n\npublic class Solution {\n    public static int[] twoSum(int[] nums, int target) {\n        Map<Integer, Integer> map = new HashMap<>();\n        for (int i = 0; i < nums.length; i++) {\n            int comp = target - nums[i];\n            if (map.containsKey(comp)) return new int[] { map.get(comp), i };\n            map.put(nums[i], i);\n        }\n        return new int[]{};\n    }\n}\n',
+      starter_code_c: '#include <stdio.h>\n#include <stdlib.h>\n\nint* twoSum(int* nums, int numsSize, int target, int* returnSize) {\n    int* res = (int*)malloc(2 * sizeof(int));\n    *returnSize = 2;\n    for(int i = 0; i < numsSize; i++) {\n        for(int j = i + 1; j < numsSize; j++) {\n            if(nums[i] + nums[j] == target) {\n                res[0] = i; res[1] = j;\n                return res;\n            }\n        }\n    }\n    return NULL;\n}\n'
+    },
+    {
+      id: 'code_q2',
+      title: 'Reverse a String',
+      difficulty: 'Easy',
+      language: 'Python, Java, C',
+      description: 'Given a string s, write a function that reverses the string and returns the reversed result.',
+      sample_input: 's = "hello"',
+      sample_output: '"olleh"',
+      starter_code_python: 'def reverse_string(s):\n    # Write your solution here\n    return s[::-1]\n',
+      starter_code_java: 'public class Solution {\n    public static String reverseString(String s) {\n        return new StringBuilder(s).reverse().toString();\n    }\n}\n',
+      starter_code_c: '#include <stdio.h>\n#include <string.h>\n\nchar* reverseString(char* s) {\n    int n = strlen(s);\n    for (int i = 0; i < n / 2; i++) {\n        char tmp = s[i];\n        s[i] = s[n - 1 - i];\n        s[n - 1 - i] = tmp;\n    }\n    return s;\n}\n'
+    },
+    {
+      id: 'code_q3',
+      title: 'Palindrome Number',
+      difficulty: 'Easy',
+      language: 'Python, Java, C',
+      description: 'Given an integer x, return true if x is a palindrome integer, and false otherwise. An integer is a palindrome when it reads the same backward as forward.',
+      sample_input: 'x = 121',
+      sample_output: 'true',
+      starter_code_python: 'def is_palindrome(x):\n    # Write your solution here\n    if x < 0: return False\n    return str(x) == str(x)[::-1]\n',
+      starter_code_java: 'public class Solution {\n    public static boolean isPalindrome(int x) {\n        if (x < 0) return false;\n        int rev = 0, orig = x;\n        while (x > 0) {\n            rev = rev * 10 + x % 10;\n            x /= 10;\n        }\n        return rev == orig;\n    }\n}\n',
+      starter_code_c: '#include <stdbool.h>\n\nbool isPalindrome(int x) {\n    if (x < 0) return false;\n    long rev = 0, orig = x;\n    while (x > 0) {\n        rev = rev * 10 + x % 10;\n        x /= 10;\n    }\n    return rev == orig;\n}\n'
+    },
+    {
+      id: 'code_q4',
+      title: 'Fibonacci Series',
+      difficulty: 'Easy',
+      language: 'Python, Java, C',
+      description: 'The Fibonacci numbers form a sequence such that each number is the sum of the two preceding ones, starting from 0 and 1. Given n, calculate F(n).',
+      sample_input: 'n = 5',
+      sample_output: '5',
+      starter_code_python: 'def fibonacci(n):\n    # Write your solution here\n    if n <= 0: return 0\n    if n == 1: return 1\n    a, b = 0, 1\n    for _ in range(2, n + 1):\n        a, b = b, a + b\n    return b\n',
+      starter_code_java: 'public class Solution {\n    public static int fibonacci(int n) {\n        if (n <= 0) return 0;\n        if (n == 1) return 1;\n        int a = 0, b = 1;\n        for (int i = 2; i <= n; i++) {\n            int c = a + b;\n            a = b;\n            b = c;\n        }\n        return b;\n    }\n}\n',
+      starter_code_c: 'int fibonacci(int n) {\n    if (n <= 0) return 0;\n    if (n == 1) return 1;\n    int a = 0, b = 1;\n    for (int i = 2; i <= n; i++) {\n        int c = a + b;\n        a = b;\n        b = c;\n    }\n    return b;\n}\n'
+    },
+    {
+      id: 'code_q5',
+      title: 'Prime Number Check',
+      difficulty: 'Medium',
+      language: 'Python, Java, C',
+      description: 'Given an integer n, determine whether n is a prime number. Return true if n is prime, and false otherwise.',
+      sample_input: 'n = 7',
+      sample_output: 'true',
+      starter_code_python: 'def is_prime(n):\n    # Write your solution here\n    if n <= 1: return False\n    if n <= 3: return True\n    if n % 2 == 0 or n % 3 == 0: return False\n    i = 5\n    while i * i <= n:\n        if n % i == 0 or n % (i + 2) == 0: return False\n        i += 6\n    return True\n',
+      starter_code_java: 'public class Solution {\n    public static boolean isPrime(int n) {\n        if (n <= 1) return false;\n        if (n <= 3) return true;\n        if (n % 2 == 0 || n % 3 == 0) return false;\n        for (int i = 5; i * i <= n; i += 6) {\n            if (n % i == 0 || n % (i + 2) == 0) return false;\n        }\n        return true;\n    }\n}\n',
+      starter_code_c: '#include <stdbool.h>\n\nbool isPrime(int n) {\n    if (n <= 1) return false;\n    if (n <= 3) return true;\n    if (n % 2 == 0 || n % 3 == 0) return false;\n    for (int i = 5; i * i <= n; i += 6) {\n        if (n % i == 0 || n % (i + 2) == 0) return false;\n    }\n    return true;\n}\n'
+    },
+    {
+      id: 'code_q6',
+      title: 'Array Sorting',
+      difficulty: 'Hard',
+      language: 'Python, Java, C',
+      description: 'Given an array of integers nums, sort the array in ascending numerical order and return the sorted array.',
+      sample_input: 'nums = [5, 2, 9, 1, 5, 6]',
+      sample_output: '[1, 2, 5, 5, 6, 9]',
+      starter_code_python: 'def sort_array(nums):\n    # Write your solution here\n    return sorted(nums)\n',
+      starter_code_java: 'import java.util.*;\n\npublic class Solution {\n    public static int[] sortArray(int[] nums) {\n        Arrays.sort(nums);\n        return nums;\n    }\n}\n',
+      starter_code_c: '#include <stdio.h>\n#include <stdlib.h>\n\nint cmp(const void* a, const void* b) { return (*(int*)a - *(int*)b); }\nint* sortArray(int* nums, int numsSize, int* returnSize) {\n    *returnSize = numsSize;\n    qsort(nums, numsSize, sizeof(int), cmp);\n    return nums;\n}\n'
+    }
+  ];
+
+  let codingQuestionsList = [...DEFAULT_CODING_QUESTIONS];
+  let currentCodingQ = DEFAULT_CODING_QUESTIONS[0];
   const codingCodeDrafts = {}; // questionId_language -> code
   let codingCompilersInfo = null;
 
@@ -8816,12 +8891,21 @@ document.addEventListener('DOMContentLoaded', async () => {
       .replace(/'/g, '&#039;');
   }
 
+  function getCurrentCodingQuestion() {
+    if (currentCodingQ) return currentCodingQ;
+    const selectEl = document.getElementById('code-problem-select');
+    const qid = selectEl?.value || 'code_q1';
+    let q = codingQuestionsList.find(x => x.id === qid) || DEFAULT_CODING_QUESTIONS.find(x => x.id === qid) || codingQuestionsList[0];
+    currentCodingQ = q;
+    return q;
+  }
+
   function saveCurrentDraft() {
-    if (!currentCodingQ) return;
+    const q = getCurrentCodingQuestion();
     const editor = document.getElementById('code-editor-textarea');
     const lang = document.getElementById('code-lang-select')?.value || 'python';
-    if (editor) {
-      codingCodeDrafts[`${currentCodingQ.id}_${lang}`] = editor.value;
+    if (editor && q) {
+      codingCodeDrafts[`${q.id}_${lang}`] = editor.value;
     }
   }
 
@@ -8849,6 +8933,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   window.initCodingAssessment = function() {
     setupCodeEditorHotkeys();
+    getCurrentCodingQuestion();
+
+    // Ensure editor has starter code if empty
+    const editor = document.getElementById('code-editor-textarea');
+    const lang = document.getElementById('code-lang-select')?.value || 'python';
+    if (editor && (!editor.value || !editor.value.trim())) {
+      loadDraftOrStarterCode(currentCodingQ, lang);
+    }
+
     loadCodingCompilers();
     loadCodingQuestions();
     loadCodingStatistics();
@@ -8879,28 +8972,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const res = await fetch('/api/coding/questions', { credentials: 'include' });
       const data = await res.json();
-      if (!data.success) return;
-
-      codingQuestionsList = data.questions || [];
-      const selectEl = document.getElementById('code-problem-select');
-      if (selectEl && codingQuestionsList.length > 0) {
-        selectEl.innerHTML = codingQuestionsList.map((q, idx) => `
-          <option value="${q.id}">${idx + 1}. ${sanitizeCodeHtml(q.title)} (${q.difficulty})</option>
-        `).join('');
-      }
-
-      if (codingQuestionsList.length > 0) {
-        const currentId = selectEl?.value || codingQuestionsList[0].id;
-        switchCodingQuestion(currentId);
+      if (data.success && Array.isArray(data.questions) && data.questions.length > 0) {
+        codingQuestionsList = data.questions;
       }
     } catch (err) {
-      console.error('Failed to load coding questions:', err);
+      console.warn('Using local coding questions inventory:', err.message);
     }
+
+    const selectEl = document.getElementById('code-problem-select');
+    if (selectEl && codingQuestionsList.length > 0) {
+      selectEl.innerHTML = codingQuestionsList.map((q, idx) => `
+        <option value="${q.id}">${idx + 1}. ${sanitizeCodeHtml(q.title)} (${q.difficulty})</option>
+      `).join('');
+    }
+
+    const currentId = selectEl?.value || codingQuestionsList[0].id;
+    switchCodingQuestion(currentId);
   };
 
   window.switchCodingQuestion = function(qid) {
     saveCurrentDraft();
-    const q = codingQuestionsList.find(x => x.id === qid) || codingQuestionsList[0];
+    const q = codingQuestionsList.find(x => x.id === qid) || DEFAULT_CODING_QUESTIONS.find(x => x.id === qid) || codingQuestionsList[0];
     if (!q) return;
     currentCodingQ = q;
 
@@ -8919,7 +9011,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     if (sampleIn) sampleIn.textContent = q.sample_input || '';
     if (sampleOut) sampleOut.textContent = q.sample_output || '';
-    if (selectEl) selectEl.value = q.id;
+    if (selectEl && selectEl.value !== q.id) selectEl.value = q.id;
 
     const lang = document.getElementById('code-lang-select')?.value || 'python';
     loadDraftOrStarterCode(q, lang);
@@ -8927,8 +9019,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   window.switchCodingLanguage = function(lang) {
     saveCurrentDraft();
-    if (!currentCodingQ) return;
-    loadDraftOrStarterCode(currentCodingQ, lang);
+    const q = getCurrentCodingQuestion();
+    loadDraftOrStarterCode(q, lang);
   };
 
   function loadDraftOrStarterCode(q, lang) {
@@ -8951,17 +9043,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     codingCodeDrafts[key] = editor.value;
   }
 
-  window.resetCodingStarterCode = function() {
-    if (!currentCodingQ) return;
-    const lang = document.getElementById('code-lang-select')?.value || 'python';
-    const key = `${currentCodingQ.id}_${lang}`;
+  window.resetCodingStarterCode = function(lang) {
+    const q = getCurrentCodingQuestion();
+    const selectedLang = lang || document.getElementById('code-lang-select')?.value || 'python';
+    const editor = document.getElementById('code-editor-textarea');
+    if (!editor || !q) return;
+
+    const key = `${q.id}_${selectedLang}`;
     delete codingCodeDrafts[key];
-    loadDraftOrStarterCode(currentCodingQ, lang);
+
+    if (selectedLang === 'python') {
+      editor.value = q.starter_code_python || '# Write your Python solution here\n';
+    } else if (selectedLang === 'java') {
+      editor.value = q.starter_code_java || '// Write your Java solution here\n';
+    } else {
+      editor.value = q.starter_code_c || '/* Write your C solution here */\n';
+    }
+    codingCodeDrafts[key] = editor.value;
     window.showToast?.('Code reset to starter template.', 'info');
   };
 
   window.runCodingTestCases = async function() {
-    if (!currentCodingQ) return;
+    const q = getCurrentCodingQuestion();
     const editor = document.getElementById('code-editor-textarea');
     const code = editor?.value;
     const lang = document.getElementById('code-lang-select')?.value || 'python';
@@ -8972,6 +9075,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     saveCurrentDraft();
+    const runBtn = document.querySelector('button[onclick*="runCodingTestCases"]');
+    if (runBtn) {
+      runBtn.disabled = true;
+      runBtn.dataset.originalHtml = runBtn.innerHTML;
+      runBtn.innerHTML = `<span>Executing...</span>`;
+    }
+
     window.showToast?.('Executing code against sample test cases in sandbox...', 'info');
 
     try {
@@ -8979,7 +9089,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ question_id: currentCodingQ.id, language: lang, code })
+        body: JSON.stringify({ question_id: q.id, language: lang, code })
       });
       const data = await res.json();
       renderCodingExecutionResult(data);
@@ -8993,12 +9103,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.showToast?.(data.error || 'Execution encountered an issue.', 'error');
       }
     } catch (err) {
-      window.showToast?.(err.message, 'error');
+      window.showToast?.('Error running code: ' + err.message, 'error');
+    } finally {
+      if (runBtn) {
+        runBtn.disabled = false;
+        if (runBtn.dataset.originalHtml) runBtn.innerHTML = runBtn.dataset.originalHtml;
+      }
     }
   };
 
   window.submitCodingSolution = async function() {
-    if (!currentCodingQ) return;
+    const q = getCurrentCodingQuestion();
     const editor = document.getElementById('code-editor-textarea');
     const code = editor?.value;
     const lang = document.getElementById('code-lang-select')?.value || 'python';
@@ -9009,6 +9124,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     saveCurrentDraft();
+    const submitBtns = document.querySelectorAll('button[onclick*="submitCodingSolution"]');
+    submitBtns.forEach(btn => {
+      btn.disabled = true;
+      btn.dataset.originalHtml = btn.innerHTML;
+      btn.innerHTML = `<span>Evaluating All Cases...</span>`;
+    });
+
     window.showToast?.('Running full test suite (including hidden edge cases)...', 'info');
 
     try {
@@ -9016,7 +9138,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ question_id: currentCodingQ.id, language: lang, code })
+        body: JSON.stringify({ question_id: q.id, language: lang, code })
       });
       const data = await res.json();
       renderCodingExecutionResult(data);
@@ -9031,7 +9153,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.showToast?.(data.error || 'Submission failed.', 'error');
       }
     } catch (err) {
-      window.showToast?.(err.message, 'error');
+      window.showToast?.('Error submitting code: ' + err.message, 'error');
+    } finally {
+      submitBtns.forEach(btn => {
+        btn.disabled = false;
+        if (btn.dataset.originalHtml) btn.innerHTML = btn.dataset.originalHtml;
+      });
     }
   };
 

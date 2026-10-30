@@ -188,60 +188,110 @@ function compareOutputs(actual, expected) {
 }
 
 /**
- * Execute Python solution
+ * Execute Python solution (supports both function-based and script stdout execution)
  */
 function executePython(code, testCases, runDir, timeoutMs = 3500) {
   return new Promise((resolve) => {
     const harnessFile = path.join(runDir, 'solution_runner.py');
-    const escapedCode = code.replace(/\\/g, '\\\\').replace(/"""/g, '\\"\\"\\"');
+    const userCodeFile = path.join(runDir, 'user_code.py');
+
+    try {
+      fs.writeFileSync(userCodeFile, code, 'utf8');
+    } catch (err) {
+      return resolve({
+        status: 'Runtime Error',
+        error: 'Failed to write user source file: ' + err.message,
+        passed: 0,
+        total: testCases.length,
+        results: [],
+        executionTimeMs: 0
+      });
+    }
 
     const harness = `
 import json
 import time
 import sys
-
-${code}
+import io
 
 test_cases = ${JSON.stringify(testCases)}
 results = []
 start_t = time.time()
 
-# Identify primary entrypoint function name
+with open('user_code.py', 'r', encoding='utf-8') as f:
+    user_code = f.read()
+
+# Check if user defined a function
 call_name = None
-for line in """${escapedCode}""".splitlines():
+for line in user_code.splitlines():
     line = line.strip()
     if line.startswith('def '):
         call_name = line[4:].split('(')[0].strip()
         break
 
-for tc in test_cases:
-    inp = tc.get('input', '') or tc.get('input_data', '')
-    exp = tc.get('expected', '') or tc.get('expected_output', '')
-    if not call_name:
-        results.append({
-            'input': str(inp),
-            'expected': str(exp),
-            'output': 'Error: No function definition found',
-            'passed': False
-        })
-        continue
+if call_name:
+    scope = {}
     try:
-        call_expr = f"{call_name}({inp})"
-        res = eval(call_expr)
-        res_str = json.dumps(res) if not isinstance(res, str) else res
-        results.append({
-            'input': str(inp),
-            'expected': str(exp),
-            'output': str(res) if not isinstance(res, (dict, list)) else json.dumps(res),
-            'passed': False # Will be verified by engine
-        })
-    except Exception as e:
-        results.append({
-            'input': str(inp),
-            'expected': str(exp),
-            'output': f"Runtime Error: {type(e).__name__}: {str(e)}",
-            'passed': False
-        })
+        exec(user_code, scope)
+        for tc in test_cases:
+            inp = tc.get('input', '') or tc.get('input_data', '')
+            exp = tc.get('expected', '') or tc.get('expected_output', '')
+            try:
+                call_expr = f"{call_name}({inp})"
+                res = eval(call_expr, scope)
+                res_str = json.dumps(res) if isinstance(res, (dict, list)) else str(res)
+                results.append({
+                    'input': str(inp),
+                    'expected': str(exp),
+                    'output': res_str,
+                    'passed': False
+                })
+            except Exception as e:
+                results.append({
+                    'input': str(inp),
+                    'expected': str(exp),
+                    'output': f"Runtime Error: {type(e).__name__}: {str(e)}",
+                    'passed': False
+                })
+    except Exception as def_err:
+        for tc in test_cases:
+            inp = tc.get('input', '') or tc.get('input_data', '')
+            exp = tc.get('expected', '') or tc.get('expected_output', '')
+            results.append({
+                'input': str(inp),
+                'expected': str(exp),
+                'output': f"Compilation/Syntax Error: {type(def_err).__name__}: {str(def_err)}",
+                'passed': False
+            })
+else:
+    for tc in test_cases:
+        inp = tc.get('input', '') or tc.get('input_data', '')
+        exp = tc.get('expected', '') or tc.get('expected_output', '')
+        captured_stdout = io.StringIO()
+        old_stdout = sys.stdout
+        old_stdin = sys.stdin
+        sys.stdout = captured_stdout
+        sys.stdin = io.StringIO(str(inp) + '\\n')
+        scope = {}
+        try:
+            exec(user_code, scope)
+            out_val = captured_stdout.getvalue().strip()
+            results.append({
+                'input': str(inp),
+                'expected': str(exp),
+                'output': out_val if out_val else '(No output printed. Hint: Use print() or define a solution function)',
+                'passed': False
+            })
+        except Exception as script_err:
+            results.append({
+                'input': str(inp),
+                'expected': str(exp),
+                'output': f"Runtime Error: {type(script_err).__name__}: {str(script_err)}",
+                'passed': False
+            })
+        finally:
+            sys.stdout = old_stdout
+            sys.stdin = old_stdin
 
 elapsed = int((time.time() - start_t) * 1000)
 print(json.dumps({'results': results, 'executionTimeMs': elapsed}))
@@ -646,3 +696,4 @@ module.exports = {
   normalizeOutput,
   compareOutputs
 };
+

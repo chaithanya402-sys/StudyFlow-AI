@@ -109,7 +109,7 @@ async function runCodingEngineTests() {
   // TEST 4: Execute Valid Python Solution
   await testAsync('Execute Python Two Sum with local interpreter', async () => {
     const pythonTwoSumCode = `
-def twoSum(nums, target):
+def two_sum(nums, target):
     seen = {}
     for i, num in enumerate(nums):
         diff = target - num
@@ -123,8 +123,8 @@ def twoSum(nums, target):
       language: 'python',
       code: pythonTwoSumCode,
       testCases: [
-        { input: 'nums = [2,7,11,15], target = 9', expected: '[0, 1]' },
-        { input: 'nums = [3,2,4], target = 6', expected: '[1, 2]' }
+        { input: '[2, 7, 11, 15], 9', expected: '[0, 1]' },
+        { input: '[3, 2, 4], 6', expected: '[1, 2]' }
       ],
       timeLimitMs: 3500
     });
@@ -134,6 +134,29 @@ def twoSum(nums, target):
     assert.strictEqual(result.total, 2, 'Total test cases should be 2');
     assert.strictEqual(result.score, 100, 'Score should be 100');
     assert(result.executionTimeMs >= 0, 'Execution time should be non-negative');
+  });
+
+  // TEST 4B: Execute Script-style print() Python code (User test scenario)
+  await testAsync('Execute Script-style print() code capturing stdout', async () => {
+    const userScriptCode = `
+a=10
+b=20
+c=a+b
+print(c)
+`;
+
+    const result = await localCodeExecutionEngine.executeCode({
+      language: 'python',
+      code: userScriptCode,
+      testCases: [
+        { input: '[2, 7, 11, 15], 9', expected: '[0, 1]' }
+      ],
+      timeLimitMs: 3500
+    });
+
+    assert.strictEqual(result.results.length, 1, 'Should have 1 result');
+    assert.strictEqual(result.results[0].output, '30', `Output should be 30, got: ${result.results[0].output}`);
+    assert.strictEqual(result.status, 'Wrong Answer', 'Status should be Wrong Answer');
   });
 
   // TEST 5: Database Seeding & Hidden Test Case Verification
