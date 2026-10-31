@@ -1603,8 +1603,8 @@
             <p class="welcome-subtext">Quantitative aptitude, logical reasoning, and verbal ability assessment with timed evaluation and automatic scoring.</p>
           </div>
           <div style="display: flex; gap: 8px;">
-            <button class="btn-outline btn-sm" onclick="loadAptitudeQuestions('All')">
-              <span>Restart Test</span>
+            <button class="btn-outline btn-sm" onclick="restartAptitudeTest()" title="Generate a fresh randomized set of 15 questions from the Excel question bank">
+              <span>New Question Set 🔄</span>
             </button>
           </div>
         </div>
@@ -1751,9 +1751,14 @@
                 <span class="badge-status teal" style="font-size: 13px;">Evaluation Complete</span>
                 <h3 class="panel-title" style="margin: 0;">Aptitude Assessment Performance Summary</h3>
               </div>
-              <button class="btn-primary btn-sm" onclick="navigateToRoute('/student/placement-prediction')">
-                <span>Unlock Placement Prediction &rarr;</span>
-              </button>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn-outline btn-sm" onclick="restartAptitudeTest()" style="background: #FFFFFF;">
+                  <span>Reattempt Test 🔄</span>
+                </button>
+                <button class="btn-primary btn-sm" onclick="navigateToRoute('/student/placement-prediction')">
+                  <span>Unlock Placement Prediction &rarr;</span>
+                </button>
+              </div>
             </div>
 
             <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 16px;">
@@ -1774,6 +1779,10 @@
                 <div style="font-size: 22px; font-weight: 800; color: #0F172A;" id="apt-res-time">0s</div>
               </div>
             </div>
+
+            <!-- 5-Category Breakdown Chips -->
+            <h4 style="font-size: 13px; font-weight: 700; color: #1E293B; margin-bottom: 8px;">Category Performance Breakdown</h4>
+            <div id="apt-res-category-breakdown" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 16px;"></div>
 
             <!-- Review Accordion -->
             <h4 style="font-size: 13px; font-weight: 700; color: #1E293B; margin-bottom: 10px;">Question-by-Question Solution Explanations</h4>

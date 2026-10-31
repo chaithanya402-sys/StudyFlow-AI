@@ -515,20 +515,26 @@ function initSchema() {
     );
     CREATE INDEX IF NOT EXISTS idx_student_projects_student ON student_projects(student_id);
 
-    -- 27. Aptitude Questions Table
+    -- 27. Aptitude Questions Table (Excel Question Bank & Real Cohort Benchmarks)
     CREATE TABLE IF NOT EXISTS aptitude_questions (
       id TEXT PRIMARY KEY,
-      category TEXT NOT NULL, -- 'Quantitative', 'Logical', 'Verbal'
+      category TEXT NOT NULL,
+      topic TEXT,
       question_text TEXT NOT NULL,
       option_a TEXT NOT NULL,
       option_b TEXT NOT NULL,
       option_c TEXT NOT NULL,
       option_d TEXT NOT NULL,
       correct_option TEXT NOT NULL,
+      correct_answer_text TEXT,
       explanation TEXT,
-      difficulty TEXT DEFAULT 'Medium'
+      difficulty TEXT DEFAULT 'Medium',
+      original_no INTEGER,
+      source TEXT DEFAULT 'placement_aptitude_800'
     );
     CREATE INDEX IF NOT EXISTS idx_aptitude_questions_cat ON aptitude_questions(category);
+    CREATE INDEX IF NOT EXISTS idx_aptitude_questions_topic ON aptitude_questions(topic);
+    CREATE INDEX IF NOT EXISTS idx_aptitude_questions_source ON aptitude_questions(source);
 
     -- 28. Aptitude Attempts Table
     CREATE TABLE IF NOT EXISTS aptitude_attempts (
@@ -538,13 +544,36 @@ function initSchema() {
       total_questions INTEGER NOT NULL,
       correct_answers INTEGER NOT NULL,
       incorrect_answers INTEGER NOT NULL,
+      unanswered_count INTEGER DEFAULT 0,
       score REAL NOT NULL,
       accuracy_percentage REAL NOT NULL,
       time_taken_seconds INTEGER NOT NULL,
       answers_json TEXT,
+      category_scores_json TEXT,
+      topic_accuracy_json TEXT,
+      status TEXT DEFAULT 'Completed',
+      assessment_id TEXT,
+      attempt_number INTEGER DEFAULT 1,
       created_at TEXT DEFAULT (datetime('now'))
     );
     CREATE INDEX IF NOT EXISTS idx_aptitude_attempts_student ON aptitude_attempts(student_id);
+
+    -- 28b. Aptitude Examination Sessions Table
+    CREATE TABLE IF NOT EXISTS aptitude_assessments (
+      id TEXT PRIMARY KEY,
+      student_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      status TEXT DEFAULT 'in_progress',
+      started_at TEXT DEFAULT (datetime('now')),
+      expires_at TEXT NOT NULL,
+      duration_seconds INTEGER DEFAULT 900,
+      questions_json TEXT NOT NULL,
+      answers_json TEXT DEFAULT '{}',
+      score REAL,
+      accuracy_percentage REAL,
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_aptitude_assessments_student ON aptitude_assessments(student_id);
 
     -- 29. Coding Questions Table
     CREATE TABLE IF NOT EXISTS coding_questions (
@@ -673,6 +702,25 @@ function initSchema() {
         // Column may already exist
       }
     }
+  }
+
+  // Safe runtime migrations for aptitude tables
+  try {
+    const qCols = db.prepare("PRAGMA table_info(aptitude_questions)").all().map(c => c.name);
+    if (!qCols.includes('topic')) db.exec("ALTER TABLE aptitude_questions ADD COLUMN topic TEXT");
+    if (!qCols.includes('correct_answer_text')) db.exec("ALTER TABLE aptitude_questions ADD COLUMN correct_answer_text TEXT");
+    if (!qCols.includes('original_no')) db.exec("ALTER TABLE aptitude_questions ADD COLUMN original_no INTEGER");
+    if (!qCols.includes('source')) db.exec("ALTER TABLE aptitude_questions ADD COLUMN source TEXT DEFAULT 'placement_aptitude_800'");
+
+    const attCols = db.prepare("PRAGMA table_info(aptitude_attempts)").all().map(c => c.name);
+    if (!attCols.includes('unanswered_count')) db.exec("ALTER TABLE aptitude_attempts ADD COLUMN unanswered_count INTEGER DEFAULT 0");
+    if (!attCols.includes('category_scores_json')) db.exec("ALTER TABLE aptitude_attempts ADD COLUMN category_scores_json TEXT");
+    if (!attCols.includes('topic_accuracy_json')) db.exec("ALTER TABLE aptitude_attempts ADD COLUMN topic_accuracy_json TEXT");
+    if (!attCols.includes('status')) db.exec("ALTER TABLE aptitude_attempts ADD COLUMN status TEXT DEFAULT 'Completed'");
+    if (!attCols.includes('assessment_id')) db.exec("ALTER TABLE aptitude_attempts ADD COLUMN assessment_id TEXT");
+    if (!attCols.includes('attempt_number')) db.exec("ALTER TABLE aptitude_attempts ADD COLUMN attempt_number INTEGER DEFAULT 1");
+  } catch (mErr) {
+    console.warn('[DB] Aptitude migration note:', mErr.message);
   }
 
   // Assignment cohort targeting. Keep the legacy target_class value and infer a
@@ -835,7 +883,52 @@ function ensureFacultySubjectAssignments() {
 
 function ensureAptitudeAndCodingQuestions() {
   const aptCount = db.prepare('SELECT COUNT(*) as count FROM aptitude_questions').get().count;
-  if (aptCount === 0) {
+  if (aptCount < 1000) {
+    const masterJsonPath = path.join(__dirname, 'data', 'aptitude_questions_master.json');
+    if (fs.existsSync(masterJsonPath)) {
+      try {
+        const raw = fs.readFileSync(masterJsonPath, 'utf8');
+        const qList = JSON.parse(raw);
+        const insertMaster = db.prepare(`
+          INSERT INTO aptitude_questions (
+            id, category, topic, question_text, option_a, option_b, option_c, option_d,
+            correct_option, correct_answer_text, explanation, difficulty, original_no, source
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ON CONFLICT(id) DO UPDATE SET
+            category = excluded.category,
+            topic = excluded.topic,
+            question_text = excluded.question_text,
+            option_a = excluded.option_a,
+            option_b = excluded.option_b,
+            option_c = excluded.option_c,
+            option_d = excluded.option_d,
+            correct_option = excluded.correct_option,
+            correct_answer_text = excluded.correct_answer_text,
+            explanation = excluded.explanation,
+            difficulty = excluded.difficulty,
+            original_no = excluded.original_no,
+            source = excluded.source
+        `);
+        const tx = db.transaction(() => {
+          for (const q of qList) {
+            insertMaster.run(
+              q.id, q.category, q.topic || 'General', q.question_text,
+              q.option_a, q.option_b, q.option_c, q.option_d,
+              q.correct_option, q.correct_answer_text || '', q.explanation || '',
+              q.difficulty || 'Medium', q.original_no || 0, q.source || 'placement_aptitude_800'
+            );
+          }
+        });
+        tx();
+        console.log(`[DB] Loaded ${qList.length} master aptitude questions into SQLite.`);
+      } catch (err) {
+        console.warn('[DB] Error auto-seeding master aptitude questions:', err.message);
+      }
+    }
+  }
+
+  const aptCountAfter = db.prepare('SELECT COUNT(*) as count FROM aptitude_questions').get().count;
+  if (aptCountAfter === 0) {
     const insertApt = db.prepare(`
       INSERT INTO aptitude_questions (id, category, question_text, option_a, option_b, option_c, option_d, correct_option, explanation, difficulty)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
