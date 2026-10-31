@@ -8880,6 +8880,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   let currentCodingQ = DEFAULT_CODING_QUESTIONS[0];
   const codingCodeDrafts = {}; // questionId_language -> code
   let codingCompilersInfo = null;
+  let isCodingExecuting = false;
 
   function sanitizeCodeHtml(str) {
     if (str === null || str === undefined) return '';
@@ -8911,7 +8912,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function setupCodeEditorHotkeys() {
     const editor = document.getElementById('code-editor-textarea');
-    if (!editor || editor.dataset.hotkeysBound) return;
+    if (!editor || !editor.dataset || editor.dataset.hotkeysBound) return;
     editor.dataset.hotkeysBound = 'true';
 
     editor.addEventListener('keydown', function(e) {
@@ -8931,7 +8932,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  window.initCodingAssessment = function() {
+  function initCodingAssessment() {
     setupCodeEditorHotkeys();
     getCurrentCodingQuestion();
 
@@ -8942,13 +8943,47 @@ document.addEventListener('DOMContentLoaded', async () => {
       loadDraftOrStarterCode(currentCodingQ, lang);
     }
 
+    // Direct event listeners for resilience
+    const runBtn = document.getElementById('btn-code-run');
+    if (runBtn && !runBtn.dataset.bound) {
+      runBtn.dataset.bound = 'true';
+      runBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        runCodingTestCases();
+      });
+    }
+    const submitBtn = document.getElementById('btn-code-submit');
+    if (submitBtn && !submitBtn.dataset.bound) {
+      submitBtn.dataset.bound = 'true';
+      submitBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        submitCodingSolution();
+      });
+    }
+    const submitHeaderBtn = document.getElementById('btn-code-submit-header');
+    if (submitHeaderBtn && !submitHeaderBtn.dataset.bound) {
+      submitHeaderBtn.dataset.bound = 'true';
+      submitHeaderBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        submitCodingSolution();
+      });
+    }
+    const resetBtn = document.getElementById('btn-code-reset');
+    if (resetBtn && !resetBtn.dataset.bound) {
+      resetBtn.dataset.bound = 'true';
+      resetBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        resetCodingStarterCode();
+      });
+    }
+
     loadCodingCompilers();
     loadCodingQuestions();
     loadCodingStatistics();
     loadCodingHistory();
-  };
+  }
 
-  window.loadCodingCompilers = async function() {
+  async function loadCodingCompilers() {
     try {
       const res = await fetch('/api/coding/compilers', { credentials: 'include' });
       const data = await res.json();
@@ -8966,9 +9001,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
     } catch (e) {}
-  };
+  }
 
-  window.loadCodingQuestions = async function() {
+  async function loadCodingQuestions() {
     try {
       const res = await fetch('/api/coding/questions', { credentials: 'include' });
       const data = await res.json();
@@ -8988,9 +9023,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const currentId = selectEl?.value || codingQuestionsList[0].id;
     switchCodingQuestion(currentId);
-  };
+  }
 
-  window.switchCodingQuestion = function(qid) {
+  function switchCodingQuestion(qid) {
     saveCurrentDraft();
     const q = codingQuestionsList.find(x => x.id === qid) || DEFAULT_CODING_QUESTIONS.find(x => x.id === qid) || codingQuestionsList[0];
     if (!q) return;
@@ -9015,13 +9050,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const lang = document.getElementById('code-lang-select')?.value || 'python';
     loadDraftOrStarterCode(q, lang);
-  };
+  }
 
-  window.switchCodingLanguage = function(lang) {
+  function switchCodingLanguage(lang) {
     saveCurrentDraft();
     const q = getCurrentCodingQuestion();
     loadDraftOrStarterCode(q, lang);
-  };
+  }
 
   function loadDraftOrStarterCode(q, lang) {
     const editor = document.getElementById('code-editor-textarea');
@@ -9043,7 +9078,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     codingCodeDrafts[key] = editor.value;
   }
 
-  window.resetCodingStarterCode = function(lang) {
+  function resetCodingStarterCode(lang) {
     const q = getCurrentCodingQuestion();
     const selectedLang = lang || document.getElementById('code-lang-select')?.value || 'python';
     const editor = document.getElementById('code-editor-textarea');
@@ -9060,10 +9095,25 @@ document.addEventListener('DOMContentLoaded', async () => {
       editor.value = q.starter_code_c || '/* Write your C solution here */\n';
     }
     codingCodeDrafts[key] = editor.value;
-    window.showToast?.('Code reset to starter template.', 'info');
-  };
 
-  window.runCodingTestCases = async function() {
+    const drawer = document.getElementById('code-results-drawer');
+    if (drawer) drawer.style.display = 'none';
+
+    const statusBanner = document.getElementById('code-status-banner');
+    if (statusBanner) {
+      statusBanner.style.display = 'block';
+      statusBanner.style.background = '#EFF6FF';
+      statusBanner.style.color = '#1D4ED8';
+      statusBanner.style.border = '1px solid #BFDBFE';
+      statusBanner.textContent = '↺ Code reset to starter template.';
+      setTimeout(() => { statusBanner.style.display = 'none'; }, 3000);
+    }
+
+    window.showToast?.('Code reset to starter template.', 'info');
+  }
+
+  async function runCodingTestCases() {
+    if (isCodingExecuting) return;
     const q = getCurrentCodingQuestion();
     const editor = document.getElementById('code-editor-textarea');
     const code = editor?.value;
@@ -9075,24 +9125,54 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     saveCurrentDraft();
-    const runBtn = document.querySelector('button[onclick*="runCodingTestCases"]');
+    isCodingExecuting = true;
+    const runBtn = document.getElementById('btn-code-run') || document.querySelector('button[onclick*="runCodingTestCases"]');
     if (runBtn) {
       runBtn.disabled = true;
       runBtn.dataset.originalHtml = runBtn.innerHTML;
-      runBtn.innerHTML = `<span>Executing...</span>`;
+      runBtn.innerHTML = `<span>Executing in Sandbox...</span>`;
     }
 
-    window.showToast?.('Executing code against sample test cases in sandbox...', 'info');
+    const statusBanner = document.getElementById('code-status-banner');
+    if (statusBanner) {
+      statusBanner.style.display = 'block';
+      statusBanner.style.background = '#EFF6FF';
+      statusBanner.style.color = '#1D4ED8';
+      statusBanner.style.border = '1px solid #BFDBFE';
+      statusBanner.innerHTML = `⏳ Executing code in isolated sandbox against sample test cases...`;
+    }
+
+    window.showToast?.('Executing code against test cases in local sandbox...', 'info');
 
     try {
       const res = await fetch('/api/coding/run', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ question_id: q.id, language: lang, code })
+        body: JSON.stringify({ question_id: q?.id || 'code_q1', language: lang, code })
       });
       const data = await res.json();
       renderCodingExecutionResult(data);
+
+      if (statusBanner) {
+        if (data.success && data.status === 'Accepted') {
+          statusBanner.style.background = '#DCFCE7';
+          statusBanner.style.color = '#166534';
+          statusBanner.style.border = '1px solid #86EFAC';
+          statusBanner.innerHTML = `✓ Execution finished: All ${data.total} sample test cases passed! Output displayed below ↓`;
+        } else if (data.success) {
+          statusBanner.style.background = '#FEF3C7';
+          statusBanner.style.color = '#92400E';
+          statusBanner.style.border = '1px solid #FCD34D';
+          statusBanner.innerHTML = `⚠️ Execution finished: ${data.passed || 0}/${data.total || 0} passed (${data.status}). Output displayed below ↓`;
+        } else {
+          statusBanner.style.background = '#FEE2E2';
+          statusBanner.style.color = '#991B1B';
+          statusBanner.style.border = '1px solid #FCA5A5';
+          statusBanner.innerHTML = `✕ Execution Error: ${sanitizeCodeHtml(data.error || 'Check output below')}`;
+        }
+      }
+
       if (data.success) {
         if (data.status === 'Accepted') {
           window.showToast?.(`✓ All ${data.total} sample test cases passed!`, 'success');
@@ -9103,16 +9183,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.showToast?.(data.error || 'Execution encountered an issue.', 'error');
       }
     } catch (err) {
-      window.showToast?.('Error running code: ' + err.message, 'error');
+      window.showToast?.('Connection error: ' + err.message, 'error');
+      renderCodingExecutionResult({
+        success: false,
+        status: 'Connection Error',
+        passed: 0,
+        total: 1,
+        score: 0,
+        error: `Could not reach execution backend: ${err.message}. Please verify the StudyFlow server is running.`
+      });
     } finally {
+      isCodingExecuting = false;
       if (runBtn) {
         runBtn.disabled = false;
         if (runBtn.dataset.originalHtml) runBtn.innerHTML = runBtn.dataset.originalHtml;
       }
     }
-  };
+  }
 
-  window.submitCodingSolution = async function() {
+  async function submitCodingSolution() {
+    if (isCodingExecuting) return;
     const q = getCurrentCodingQuestion();
     const editor = document.getElementById('code-editor-textarea');
     const code = editor?.value;
@@ -9124,12 +9214,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     saveCurrentDraft();
-    const submitBtns = document.querySelectorAll('button[onclick*="submitCodingSolution"]');
+    isCodingExecuting = true;
+    const submitBtns = [
+      document.getElementById('btn-code-submit'),
+      document.getElementById('btn-code-submit-header')
+    ].filter(Boolean);
+
     submitBtns.forEach(btn => {
       btn.disabled = true;
       btn.dataset.originalHtml = btn.innerHTML;
       btn.innerHTML = `<span>Evaluating All Cases...</span>`;
     });
+
+    const statusBanner = document.getElementById('code-status-banner');
+    if (statusBanner) {
+      statusBanner.style.display = 'block';
+      statusBanner.style.background = '#EFF6FF';
+      statusBanner.style.color = '#1D4ED8';
+      statusBanner.style.border = '1px solid #BFDBFE';
+      statusBanner.innerHTML = `⏳ Evaluating solution against all test cases (including hidden edge cases)...`;
+    }
 
     window.showToast?.('Running full test suite (including hidden edge cases)...', 'info');
 
@@ -9138,10 +9242,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ question_id: q.id, language: lang, code })
+        body: JSON.stringify({ question_id: q?.id || 'code_q1', language: lang, code })
       });
       const data = await res.json();
       renderCodingExecutionResult(data);
+
+      if (statusBanner) {
+        if (data.success && data.status === 'Accepted') {
+          statusBanner.style.background = '#DCFCE7';
+          statusBanner.style.color = '#166534';
+          statusBanner.style.border = '1px solid #86EFAC';
+          statusBanner.innerHTML = `✓ Solution Accepted! Score: 100% (${data.passed}/${data.total} test cases passed). Logged to history ↓`;
+        } else if (data.success) {
+          statusBanner.style.background = '#FEF3C7';
+          statusBanner.style.color = '#92400E';
+          statusBanner.style.border = '1px solid #FCD34D';
+          statusBanner.innerHTML = `⚠️ Solution Submitted: Status ${data.status} (Score: ${data.score}% - ${data.passed}/${data.total} passed). Logged to history ↓`;
+        } else {
+          statusBanner.style.background = '#FEE2E2';
+          statusBanner.style.color = '#991B1B';
+          statusBanner.style.border = '1px solid #FCA5A5';
+          statusBanner.innerHTML = `✕ Submission Error: ${sanitizeCodeHtml(data.error || 'Check details below')}`;
+        }
+      }
+
       if (data.success) {
         const isAccepted = data.status === 'Accepted';
         window.showToast?.(`✓ Solution submitted! Status: ${data.status} (Score: ${data.score}%)`, isAccepted ? 'success' : 'warning');
@@ -9153,14 +9277,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.showToast?.(data.error || 'Submission failed.', 'error');
       }
     } catch (err) {
-      window.showToast?.('Error submitting code: ' + err.message, 'error');
+      window.showToast?.('Submission connection error: ' + err.message, 'error');
     } finally {
+      isCodingExecuting = false;
       submitBtns.forEach(btn => {
         btn.disabled = false;
         if (btn.dataset.originalHtml) btn.innerHTML = btn.dataset.originalHtml;
       });
     }
-  };
+  }
 
   function renderCodingExecutionResult(data) {
     const drawer = document.getElementById('code-results-drawer');
@@ -9168,8 +9293,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     const scoreEl = document.getElementById('code-res-score');
     const timeEl = document.getElementById('code-res-time');
     const detailBox = document.getElementById('code-test-cases-detail');
+    const terminalBox = document.getElementById('code-terminal-box');
+    const terminalPre = document.getElementById('code-terminal-pre');
 
-    if (drawer) drawer.style.display = 'block';
+    if (drawer) {
+      drawer.style.display = 'block';
+      setTimeout(() => {
+        drawer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
+    }
+
     if (pill) {
       const isPass = data.status === 'Accepted' || (data.passed > 0 && data.passed === data.total);
       pill.textContent = isPass ? '✓ All Tests Passed' : `${data.passed || 0}/${data.total || 0} Passed (${data.status || 'Failed'})`;
@@ -9178,33 +9311,49 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (scoreEl) scoreEl.textContent = `Score: ${data.score !== undefined ? data.score : (data.passed ? Math.round((data.passed / data.total) * 100) : 0)}%`;
     if (timeEl) timeEl.textContent = `Execution Time: ${data.execution_time_ms || 12}ms`;
 
+    // Render Terminal / Stdout if present
+    const firstOutput = data.results?.[0]?.output || data.error || '';
+    if (terminalBox && terminalPre) {
+      if (firstOutput) {
+        terminalBox.style.display = 'block';
+        terminalPre.textContent = firstOutput;
+        if (firstOutput.startsWith('Error:') || firstOutput.startsWith('Runtime Error:') || firstOutput.startsWith('Compilation') || firstOutput.startsWith('SyntaxError')) {
+          terminalPre.style.color = '#F87171'; // red for errors
+        } else {
+          terminalPre.style.color = '#38BDF8'; // cyan for stdout
+        }
+      } else {
+        terminalBox.style.display = 'none';
+      }
+    }
+
     if (detailBox) {
       if (data.error && (!data.results || data.results.length === 0)) {
         detailBox.innerHTML = `
-          <div style="color: #DC2626; background: #FEE2E2; border: 1px solid #FCA5A5; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 11.5px; white-space: pre-wrap;">
+          <div style="color: #DC2626; background: #FEE2E2; border: 1px solid #FCA5A5; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 12px; white-space: pre-wrap;">
             <strong>Error Details:</strong>\n${sanitizeCodeHtml(data.error)}
           </div>
         `;
       } else {
         const results = data.results || [];
         detailBox.innerHTML = results.map((tc, idx) => `
-          <div style="background: #FFFFFF; border: 1px solid ${tc.passed ? '#86EFAC' : '#FCA5A5'}; border-radius: 6px; padding: 8px 10px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-              <strong style="color: #1E293B;">Test Case #${idx + 1} ${tc.is_hidden ? '(Hidden Test Case)' : ''}</strong>
-              <span class="badge-status ${tc.passed ? 'teal' : 'red'}" style="font-size: 10px; padding: 2px 6px;">
+          <div style="background: #FFFFFF; border: 1.5px solid ${tc.passed ? '#86EFAC' : '#FCA5A5'}; border-radius: 8px; padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <strong style="color: #1E293B; font-size: 12.5px;">Test Case #${idx + 1} ${tc.is_hidden ? '(Hidden Edge Case)' : ''}</strong>
+              <span class="badge-status ${tc.passed ? 'teal' : 'red'}" style="font-size: 11px; padding: 2px 8px; font-weight: 700;">
                 ${tc.passed ? '✓ Passed' : '✗ Failed'}
               </span>
             </div>
             ${tc.is_hidden ? `
-              <div style="font-size: 11px; color: var(--text-secondary);">
-                <em>Hidden test case inputs and expected outputs are masked for assessment integrity.</em>
+              <div style="font-size: 11.5px; color: var(--text-secondary);">
+                <em>Hidden edge test case inputs and expected outputs are masked for evaluation integrity.</em>
               </div>
             ` : `
-              <div style="font-size: 11px; color: #334155; display: flex; flex-direction: column; gap: 2px;">
-                <div><span style="color: var(--text-secondary); font-weight: 600;">Input:</span> <code style="background: #F1F5F9; padding: 1px 4px; border-radius: 4px;">${sanitizeCodeHtml(tc.input || '')}</code></div>
-                <div><span style="color: var(--text-secondary); font-weight: 600;">Expected:</span> <code style="background: #F1F5F9; padding: 1px 4px; border-radius: 4px;">${sanitizeCodeHtml(tc.expected || '')}</code></div>
-                <div><span style="color: var(--text-secondary); font-weight: 600;">Your Output:</span> <code style="background: ${tc.passed ? '#F0FDF4' : '#FEF2F2'}; color: ${tc.passed ? '#166534' : '#991B1B'}; padding: 1px 4px; border-radius: 4px;">${sanitizeCodeHtml(tc.output || '(No output)')}</code></div>
-                ${tc.error ? `<div style="color: #DC2626; font-size: 10.5px; margin-top: 2px;">${sanitizeCodeHtml(tc.error)}</div>` : ''}
+              <div style="font-size: 12px; color: #334155; display: flex; flex-direction: column; gap: 4px;">
+                <div><span style="color: var(--text-secondary); font-weight: 600;">Input:</span> <code style="background: #F1F5F9; padding: 2px 6px; border-radius: 4px; font-family: monospace;">${sanitizeCodeHtml(tc.input || '')}</code></div>
+                <div><span style="color: var(--text-secondary); font-weight: 600;">Expected:</span> <code style="background: #F1F5F9; padding: 2px 6px; border-radius: 4px; font-family: monospace;">${sanitizeCodeHtml(tc.expected || '')}</code></div>
+                <div><span style="color: var(--text-secondary); font-weight: 600;">Your Output:</span> <code style="background: ${tc.passed ? '#F0FDF4' : '#FEF2F2'}; color: ${tc.passed ? '#166534' : '#991B1B'}; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-weight: 700;">${sanitizeCodeHtml(tc.output || '(No output)')}</code></div>
+                ${tc.error ? `<div style="color: #DC2626; font-size: 11px; margin-top: 2px;">${sanitizeCodeHtml(tc.error)}</div>` : ''}
               </div>
             `}
           </div>
@@ -9213,7 +9362,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  window.loadCodingStatistics = async function() {
+  async function loadCodingStatistics() {
     try {
       const res = await fetch('/api/coding/statistics', { credentials: 'include' });
       const data = await res.json();
@@ -9230,9 +9379,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (err) {
       console.error('Failed to load coding statistics:', err);
     }
-  };
+  }
 
-  window.loadCodingHistory = async function() {
+  async function loadCodingHistory() {
     try {
       const res = await fetch('/api/coding/history', { credentials: 'include' });
       const data = await res.json();
@@ -9262,7 +9411,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
     } catch (err) {}
-  };
+  }
+
+  // Expose on window for explicit invocation, HTML onclick handlers and cross-module routing
+  window.initCodingAssessment = initCodingAssessment;
+  window.getCurrentCodingQuestion = getCurrentCodingQuestion;
+  window.resetCodingStarterCode = resetCodingStarterCode;
+  window.switchCodingQuestion = switchCodingQuestion;
+  window.switchCodingLanguage = switchCodingLanguage;
+  window.loadCodingCompilers = loadCodingCompilers;
+  window.loadCodingQuestions = loadCodingQuestions;
+  window.loadCodingStatistics = loadCodingStatistics;
+  window.loadCodingHistory = loadCodingHistory;
+  window.runCodingTestCases = runCodingTestCases;
+  window.submitCodingSolution = submitCodingSolution;
+  window.renderCodingExecutionResult = renderCodingExecutionResult;
 
   // 5. 4-Pillar Machine Learning Placement Prediction Controller
   let latestPredictionData = null;

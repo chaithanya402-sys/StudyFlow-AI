@@ -6055,13 +6055,13 @@ body.dark-theme [style*="color: #94A3B8"] {
 /* Coding IDE */
 .coding-ide-container {
   display: grid;
-  grid-template-columns: 320px 1fr;
+  grid-template-columns: 340px 1fr;
   gap: 16px;
   background: #FFFFFF;
   border: 1px solid #E2E8F0;
   border-radius: 12px;
-  overflow: hidden;
-  min-height: 540px;
+  overflow: visible;
+  min-height: 520px;
 }
 @media (max-width: 900px) {
   .coding-ide-container {
@@ -6073,17 +6073,20 @@ body.dark-theme [style*="color: #94A3B8"] {
   border-right: 1px solid #E2E8F0;
   padding: 18px;
   overflow-y: auto;
+  max-height: 800px;
 }
 .coding-editor-pane {
   display: flex;
   flex-direction: column;
   padding: 16px;
   background: #FFFFFF;
+  overflow: visible;
+  min-height: 520px;
 }
 .code-textarea {
-  flex: 1;
   width: 100%;
-  min-height: 320px;
+  min-height: 240px;
+  max-height: 450px;
   font-family: 'Consolas', 'Courier New', monospace;
   font-size: 13.5px;
   line-height: 1.5;
@@ -6097,15 +6100,18 @@ body.dark-theme [style*="color: #94A3B8"] {
 }
 .code-textarea:focus {
   border-color: #38BDF8;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
 }
 
 /* Test case results drawer */
 .test-results-drawer {
-  margin-top: 14px;
-  padding: 14px;
+  margin-top: 16px;
+  padding: 16px;
   background: #F8FAFC;
-  border: 1px solid #E2E8F0;
-  border-radius: 8px;
+  border: 1.5px solid #CBD5E1;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
 }
 .test-pill {
   display: inline-flex;

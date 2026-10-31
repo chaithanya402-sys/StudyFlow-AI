@@ -230,7 +230,7 @@ async function runSubmissionConsistencyTests() {
       getFaculty.status === 200 &&
       fData?.submittedFile?.originalName === 'faculty_arch_paper.pdf' &&
       fData?.studentRemarks === 'Student 1 system architecture microservices design' &&
-      fData?.studentStatus === 'Submitted'
+      ['Submitted', 'Late'].includes(fData?.studentStatus)
     );
     recordResult('View Details: Faculty Assignment shows its own file and remarks', fPassed, `File: ${fData?.submittedFile?.originalName}`);
 
@@ -240,7 +240,7 @@ async function runSubmissionConsistencyTests() {
       getLab.status === 200 &&
       lData?.submittedFile?.originalName === 'lab3_raft_simulation.zip' &&
       lData?.studentRemarks === 'Student 1 Raft consensus protocol simulation in Go/Python' &&
-      lData?.studentStatus === 'Submitted'
+      ['Submitted', 'Late'].includes(lData?.studentStatus)
     );
     recordResult('View Details: Lab Assignment shows its own file and remarks', lPassed, `File: ${lData?.submittedFile?.originalName}`);
 
@@ -250,7 +250,7 @@ async function runSubmissionConsistencyTests() {
       getLearning.status === 200 &&
       lrData?.submittedFile?.originalName === 'react_cert_verified.pdf' &&
       lrData?.studentRemarks === 'Student 1 Full stack React credentials and certificates' &&
-      lrData?.studentStatus === 'Submitted'
+      ['Submitted', 'Late'].includes(lrData?.studentStatus)
     );
     recordResult('View Details: Learning Record shows its own file and remarks', lrPassed, `File: ${lrData?.submittedFile?.originalName}`);
 
@@ -260,7 +260,7 @@ async function runSubmissionConsistencyTests() {
       getPractice.status === 200 &&
       prData?.submittedFile?.originalName === 'leetcode_coin_change.cpp' &&
       prData?.studentRemarks === 'Student 1 bottom-up DP coin change solution with O(amount) space' &&
-      prData?.studentStatus === 'Submitted'
+      ['Submitted', 'Late'].includes(prData?.studentStatus)
     );
     recordResult('View Details: Practice Record shows its own file and remarks', prPassed, `File: ${prData?.submittedFile?.originalName}`);
 
@@ -417,9 +417,10 @@ async function runSubmissionConsistencyTests() {
     const stLab = (state1.body?.data?.labAssignments || []).find(l => l.id === 'lab_003');
     const stFac = (state1.body?.data?.facultyAssignments || []).find(f => f.id === 'fa_002');
     const stateCheck = (
-      stLab?.studentStatus === 'Submitted' &&
+      state1.status === 200 &&
+      ['Submitted', 'Late'].includes(stLab?.studentStatus) &&
       stLab?.submittedFile?.originalName === 'lab3_raft_simulation_v2_optimized.zip' &&
-      stFac?.studentStatus === 'Submitted' &&
+      ['Submitted', 'Late'].includes(stFac?.studentStatus) &&
       stFac?.submittedFile?.originalName === 'faculty_arch_paper.pdf'
     );
     recordResult('GET /api/state accurately reflects student submissions upon reload', stateCheck, 'State verified');

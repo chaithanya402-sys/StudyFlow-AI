@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>StudyFlow AI — Academic Management & Placement Intelligence Platform</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=2.6.0">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -1816,7 +1816,7 @@
             <p class="welcome-subtext">Algorithmic programming challenges in Python, Java, and C with isolated subprocess execution and test case verification.</p>
           </div>
           <div style="display: flex; gap: 8px;">
-            <button class="btn-primary btn-sm" onclick="submitCodingSolution()">
+            <button class="btn-primary btn-sm" id="btn-code-submit-header" onclick="submitCodingSolution()">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
               <span>Submit Solution</span>
             </button>
@@ -1920,29 +1920,38 @@
                 </select>
               </div>
               <div style="display: flex; gap: 8px;">
-                <button type="button" class="btn-outline btn-sm" onclick="resetCodingStarterCode()">Reset Code</button>
-                <button type="button" class="btn-outline btn-sm" style="background: #EFF6FF; border-color: #93C5FD; color: #1D4ED8;" onclick="runCodingTestCases()">
+                <button type="button" class="btn-outline btn-sm" id="btn-code-reset" onclick="resetCodingStarterCode()">Reset Code</button>
+                <button type="button" class="btn-outline btn-sm" id="btn-code-run" style="background: #EFF6FF; border-color: #93C5FD; color: #1D4ED8;" onclick="runCodingTestCases()">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                   <span>Run Test Cases</span>
                 </button>
-                <button type="button" class="btn-primary btn-sm" onclick="submitCodingSolution()">
+                <button type="button" class="btn-primary btn-sm" id="btn-code-submit" onclick="submitCodingSolution()">
                   <span>Submit Code</span>
                 </button>
               </div>
             </div>
 
+            <div id="code-status-banner" style="display: none; margin-bottom: 10px; padding: 10px 14px; border-radius: 8px; font-size: 12.5px; font-weight: 600; transition: all 0.2s ease;"></div>
+
             <textarea id="code-editor-textarea" class="code-textarea" spellcheck="false" placeholder="Write your solution here..."></textarea>
 
             <!-- Test Results Drawer -->
             <div class="test-results-drawer" id="code-results-drawer" style="display: none;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #E2E8F0; padding-bottom: 8px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
                   <span class="test-pill pass" id="code-res-pill">All Tests Passed</span>
-                  <span style="font-size: 12px; font-weight: 700; color: #1E293B;" id="code-res-score">Score: 100%</span>
+                  <span style="font-size: 13px; font-weight: 700; color: #1E293B;" id="code-res-score">Score: 100%</span>
                 </div>
-                <span style="font-size: 11px; color: var(--text-secondary);" id="code-res-time">Execution Time: 15ms</span>
+                <span style="font-size: 11.5px; color: var(--text-secondary); font-weight: 600;" id="code-res-time">Execution Time: 15ms</span>
               </div>
-              <div id="code-test-cases-detail" style="font-size: 12px; display: flex; flex-direction: column; gap: 6px;">
+
+              <!-- Terminal Standard Output Box -->
+              <div id="code-terminal-box" style="display: none; margin-bottom: 10px; background: #0F172A; border-radius: 6px; padding: 10px;">
+                <div style="color: #94A3B8; font-size: 10.5px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 4px;">Standard Output (Stdout)</div>
+                <pre id="code-terminal-pre" style="margin: 0; color: #38BDF8; font-family: 'Consolas', monospace; font-size: 12px; white-space: pre-wrap; word-break: break-all;"></pre>
+              </div>
+
+              <div id="code-test-cases-detail" style="font-size: 12px; display: flex; flex-direction: column; gap: 8px;">
                 <!-- Test cases pass / fail entries -->
               </div>
             </div>
@@ -6388,6 +6397,6 @@
   <script src="supabaseClient.js"></script>
   <!-- Central Reactive Data Store + App Controller -->
   <script src="dataStore.js"></script>
-  <script src="app.js"></script>
+  <script src="app.js?v=2.6.0"></script>
 </body>
 </html>
