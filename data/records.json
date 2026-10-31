@@ -152,7 +152,19 @@
       "improvements": "",
       "nextSteps": "",
       "isRevisionRequested": false,
-      "gradedDate": null
+      "gradedDate": null,
+      "attachment": "/api/files/lab_manual_machine_learning.pdf",
+      "attachmentUrl": "/api/files/lab_manual_machine_learning.pdf",
+      "attachmentName": "ML_Lab6_RandomForest_Manual.pdf",
+      "attachments": [
+        {
+          "url": "/api/files/lab_manual_machine_learning.pdf",
+          "fileName": "ML_Lab6_RandomForest_Manual.pdf",
+          "originalName": "ML_Lab6_RandomForest_Manual.pdf",
+          "mimeType": "application/pdf",
+          "size": 650
+        }
+      ]
     },
     {
       "id": "lab_002",
@@ -180,7 +192,19 @@
       "improvements": "",
       "nextSteps": "",
       "isRevisionRequested": false,
-      "gradedDate": null
+      "gradedDate": null,
+      "attachment": "/api/files/lab_manual_web_cloud.pdf",
+      "attachmentUrl": "/api/files/lab_manual_web_cloud.pdf",
+      "attachmentName": "WebCloud_Lab5_REST_JWT_Guide.pdf",
+      "attachments": [
+        {
+          "url": "/api/files/lab_manual_web_cloud.pdf",
+          "fileName": "WebCloud_Lab5_REST_JWT_Guide.pdf",
+          "originalName": "WebCloud_Lab5_REST_JWT_Guide.pdf",
+          "mimeType": "application/pdf",
+          "size": 650
+        }
+      ]
     },
     {
       "id": "lab_003",
@@ -208,7 +232,19 @@
       "improvements": "",
       "nextSteps": "",
       "isRevisionRequested": false,
-      "gradedDate": null
+      "gradedDate": null,
+      "attachment": "/api/files/lab_manual_compiler_design.pdf",
+      "attachmentUrl": "/api/files/lab_manual_compiler_design.pdf",
+      "attachmentName": "CompilerDesign_Lab4_LR1_Parser_Manual.pdf",
+      "attachments": [
+        {
+          "url": "/api/files/lab_manual_compiler_design.pdf",
+          "fileName": "CompilerDesign_Lab4_LR1_Parser_Manual.pdf",
+          "originalName": "CompilerDesign_Lab4_LR1_Parser_Manual.pdf",
+          "mimeType": "application/pdf",
+          "size": 650
+        }
+      ]
     },
     {
       "id": "lab_004",
@@ -236,7 +272,19 @@
       "improvements": "",
       "nextSteps": "",
       "isRevisionRequested": false,
-      "gradedDate": null
+      "gradedDate": null,
+      "attachment": "/api/files/lab_manual_distributed_systems.pdf",
+      "attachmentUrl": "/api/files/lab_manual_distributed_systems.pdf",
+      "attachmentName": "DistributedSystems_Lab3_Raft_Manual.pdf",
+      "attachments": [
+        {
+          "url": "/api/files/lab_manual_distributed_systems.pdf",
+          "fileName": "DistributedSystems_Lab3_Raft_Manual.pdf",
+          "originalName": "DistributedSystems_Lab3_Raft_Manual.pdf",
+          "mimeType": "application/pdf",
+          "size": 650
+        }
+      ]
     }
   ],
   "learning": [

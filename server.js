@@ -1856,9 +1856,10 @@ const MIME_TYPES = {
   '.tar': 'application/x-tar',
   '.gz': 'application/gzip',
   '.txt': 'text/plain; charset=utf-8',
-    '.py': 'text/plain; charset=utf-8',
+  '.py': 'text/plain; charset=utf-8',
   '.java': 'text/plain; charset=utf-8',
-  '.cpp': 'text/plain; charset=utf-8'
+  '.cpp': 'text/plain; charset=utf-8',
+  '.c': 'text/plain; charset=utf-8'
 };
 
 app.post('/api/upload', requireRole(['student', 'faculty', 'officer']), (req, res) => {

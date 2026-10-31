@@ -5538,7 +5538,12 @@
                 <span style="font-weight: 600; color: #334155;">Submitted Work:</span>
                 <a href="#" id="grade-display-link" target="_blank" style="color: #2563EB; font-weight: 600; margin-left: 6px;">View Artifact / Repository ↗</a>
               </div>
-              <a href="#" id="grade-download-link" download class="btn-outline btn-sm" style="font-size: 11px; padding: 2px 8px; text-decoration: none;">Download File 📥</a>
+              <div style="display: flex; gap: 6px; align-items: center;">
+                <button type="button" id="btn-grade-view-work" class="btn-primary btn-sm" onclick="previewGradeWork()" style="font-size: 11px; padding: 3px 10px; display: inline-flex; align-items: center; gap: 4px; cursor: pointer;">
+                  👁️ View Work / PDF (No Download)
+                </button>
+                <a href="#" id="grade-download-link" download class="btn-outline btn-sm" style="font-size: 11px; padding: 3px 10px; text-decoration: none;">Download File 📥</a>
+              </div>
             </div>
 
             <div style="margin-top: 8px; padding: 8px 10px; background: #F1F5F9; border-radius: 6px; font-size: 12px;" id="grade-display-student-remarks-wrap">
@@ -5877,13 +5882,23 @@
           </div>
 
           <!-- Submitted File Row -->
-          <div style="margin-top: 10px; display: flex; align-items: center; gap: 10px; font-size: 12.5px;" id="sub-detail-file-row">
-            <span style="font-weight: 600; color: #475569;">Submitted File:</span>
-            <a id="sub-detail-file-link" href="#" target="_blank" class="sub-file-badge" style="display: none;">
-              <span>📄</span>
-              <span id="sub-detail-file-name"></span>
-            </a>
-            <span id="sub-detail-no-file-msg" style="color: #64748B; font-style: italic;">No submission yet</span>
+          <div style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 12.5px;" id="sub-detail-file-row">
+            <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+              <span style="font-weight: 600; color: #475569;">Submitted File:</span>
+              <a id="sub-detail-file-link" href="#" target="_blank" class="sub-file-badge" style="display: none;">
+                <span>📄</span>
+                <span id="sub-detail-file-name"></span>
+              </a>
+              <span id="sub-detail-no-file-msg" style="color: #64748B; font-style: italic;">No submission yet</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <button type="button" class="btn-outline btn-sm" id="btn-view-submitted-file" onclick="viewSubmittedFile()" style="display: none; font-size: 11px; padding: 3px 10px; cursor: pointer; align-items: center; gap: 4px;">
+                👁️ View Solution
+              </button>
+              <a id="btn-download-submitted-file" href="#" download class="btn-outline btn-sm" style="display: none; font-size: 11px; padding: 3px 10px; text-decoration: none; align-items: center; gap: 4px;">
+                📥 Download
+              </a>
+            </div>
           </div>
 
           <!-- Student Remarks Row -->
@@ -5924,6 +5939,39 @@
       <div class="modal-footer" style="display: flex; justify-content: flex-end; align-items: center; gap: 12px; padding: 14px 20px; border-top: 1px solid #E2E8F0;">
         <button type="button" class="btn-outline btn-sm" onclick="closeSubmissionDetailsModal()" style="font-size: 13px; padding: 8px 16px;">Cancel</button>
         <button type="button" class="btn-submit-modal-action" id="btn-sub-detail-update-action" onclick="handleUpdateSubmissionAction()">Update Submission</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       MODAL: UNIVERSAL IN-BROWSER DOCUMENT & PDF VIEWER
+       ======================================================== -->
+  <div class="modal-overlay" id="modal-document-viewer" style="display: none; z-index: 10000; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px);">
+    <div class="modal-box" style="max-width: 960px; width: 95%; height: 90vh; border-radius: 14px; display: flex; flex-direction: column; padding: 0; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); background: #FFFFFF;">
+      <div class="modal-header" style="background: #FFFFFF; padding: 12px 20px; border-bottom: 1px solid #E2E8F0; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;">
+        <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+          <span style="font-size: 22px;">📄</span>
+          <div style="min-width: 0;">
+            <h4 id="doc-viewer-title" style="margin: 0; font-size: 15px; font-weight: 700; color: #0F172A; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 550px;">Document Preview</h4>
+            <div id="doc-viewer-subtitle" style="font-size: 11px; color: #64748B;">In-browser view (No download required)</div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <a id="doc-viewer-newtab-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn-outline btn-sm" style="font-size: 12px; padding: 5px 12px; display: inline-flex; align-items: center; gap: 5px; text-decoration: none;">
+            <span>Open in Tab</span> ↗
+          </a>
+          <a id="doc-viewer-download-btn" href="#" download class="btn-outline btn-sm" style="font-size: 12px; padding: 5px 12px; display: inline-flex; align-items: center; gap: 5px; text-decoration: none;">
+            <span>Download</span> 📥
+          </a>
+          <button type="button" class="modal-close-btn" onclick="closeDocumentViewerModal()" title="Close Viewer" style="margin-left: 6px; font-size: 18px; line-height: 1;">✕</button>
+        </div>
+      </div>
+      <div style="flex: 1; position: relative; background: #334155; overflow: hidden;">
+        <div id="doc-viewer-loading" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #FFFFFF; font-size: 14px; gap: 8px; background: rgba(15, 23, 42, 0.6); z-index: 2;">
+          <span class="spinner" style="width: 20px; height: 20px; border: 2px solid #94A3B8; border-top-color: #38BDF8; border-radius: 50%; display: inline-block; animation: spin 0.8s linear infinite;"></span>
+          <span>Loading document preview...</span>
+        </div>
+        <iframe id="doc-viewer-iframe" src="" style="width: 100%; height: 100%; border: none; background: #FFFFFF;" onload="const l=document.getElementById('doc-viewer-loading'); if(l) l.style.display='none';"></iframe>
       </div>
     </div>
   </div>

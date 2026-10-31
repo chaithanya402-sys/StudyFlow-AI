@@ -1203,13 +1203,13 @@ function seedInitialData() {
         description, instructions, due_date, due_time, priority, status,
         max_marks, marks, feedback, student_status, student_marks,
         submission_url, submitted_date, student_remarks, strengths,
-        improvements, next_steps, is_revision_requested, graded_date, meta_json
+        improvements, next_steps, is_revision_requested, graded_date, attachments_json, meta_json
       ) VALUES (
         ?, ?, ?, ?, ?, ?, ?, ?,
         ?, ?, ?, ?, ?, ?,
         ?, ?, ?, ?, ?,
         ?, ?, ?, ?,
-        ?, ?, ?, ?, ?
+        ?, ?, ?, ?, ?, ?
       )
     `);
 
@@ -1217,6 +1217,11 @@ function seedInitialData() {
       for (const [type, list] of Object.entries(loadedRecords)) {
         if (!Array.isArray(list)) continue;
         for (const item of list) {
+          const itemAttachments = item.attachments || (item.attachmentUrl || item.attachment ? [{
+            url: item.attachmentUrl || item.attachment,
+            fileName: item.attachmentName || (item.attachmentUrl || item.attachment).split('/').pop(),
+            originalName: item.attachmentName || (item.attachmentUrl || item.attachment).split('/').pop()
+          }] : []);
           insertAssignment.run(
             item.id,
             type,
@@ -1245,6 +1250,7 @@ function seedInitialData() {
             '',
             0,
             null,
+            JSON.stringify(itemAttachments),
             JSON.stringify({ ...item, submissions: [] })
           );
         }

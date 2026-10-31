@@ -1336,6 +1336,42 @@
       }
 
       this.addAudit(`Faculty ${this.data.roles.faculty.name} created assignment: "${newAssignment.title}"`);
+      
+      // If category is Lab Assignments, also add/sync to labAssignments
+      const isLab = (assignmentObj.category || '').toLowerCase().includes('lab');
+      if (isLab) {
+        if (!this.data.labAssignments) this.data.labAssignments = [];
+        const labItem = {
+          id: newId,
+          code: assignmentObj.subject ? assignmentObj.subject.substring(0, 3).toUpperCase() + '301' : 'CSL301',
+          title: newAssignment.title,
+          subject: newAssignment.subject,
+          facultyName: newAssignment.facultyName,
+          professor: newAssignment.professor,
+          dueDate: newAssignment.dueDate,
+          dueTime: newAssignment.dueTime,
+          status: 'Assigned',
+          studentStatus: 'Pending',
+          grade: 'Pending',
+          maxMarks: newAssignment.maxMarks,
+          rubric: newAssignment.instructions,
+          description: newAssignment.description,
+          instructions: newAssignment.instructions,
+          attachment: newAssignment.attachment,
+          attachmentUrl: newAssignment.attachmentUrl,
+          attachmentName: newAssignment.attachmentName,
+          attachments: newAssignment.attachments,
+          submissions: []
+        };
+        const existingIdx = this.data.labAssignments.findIndex(l => l.id === newId || l.title === newAssignment.title);
+        if (existingIdx >= 0) {
+          this.data.labAssignments[existingIdx] = labItem;
+        } else {
+          this.data.labAssignments.unshift(labItem);
+        }
+        sendBackendMutation('/api/records/lab', 'POST', labItem).catch(e => console.warn('[DataStore] Lab assignment creation warning:', e));
+      }
+
       this.save();
       sendBackendMutation('/api/records/faculty', 'POST', newAssignment).catch(e => console.warn('[DataStore] Assignment creation warning:', e));
       return newAssignment;
@@ -1359,6 +1395,58 @@
         assignment.publishedDate = new Date().toISOString().split('T')[0];
       }
       this.invalidateRecordCache('faculty', id);
+
+      // If category is Lab Assignments, sync updates to labAssignments
+      const isLab = (assignment.category || '').toLowerCase().includes('lab') || (updateObj.category || '').toLowerCase().includes('lab');
+      if (isLab) {
+        if (!this.data.labAssignments) this.data.labAssignments = [];
+        let labItem = this.data.labAssignments.find(l => l.id === id || l.title === assignment.title);
+        if (labItem) {
+          Object.assign(labItem, {
+            title: assignment.title,
+            subject: assignment.subject,
+            facultyName: assignment.facultyName,
+            professor: assignment.professor,
+            dueDate: assignment.dueDate,
+            dueTime: assignment.dueTime,
+            maxMarks: assignment.maxMarks,
+            rubric: assignment.instructions,
+            description: assignment.description,
+            instructions: assignment.instructions,
+            attachment: assignment.attachment,
+            attachmentUrl: assignment.attachmentUrl,
+            attachmentName: assignment.attachmentName,
+            attachments: assignment.attachments
+          });
+        } else {
+          labItem = {
+            id,
+            code: assignment.subject ? assignment.subject.substring(0, 3).toUpperCase() + '301' : 'CSL301',
+            title: assignment.title,
+            subject: assignment.subject,
+            facultyName: assignment.facultyName,
+            professor: assignment.professor,
+            dueDate: assignment.dueDate,
+            dueTime: assignment.dueTime,
+            status: 'Assigned',
+            studentStatus: 'Pending',
+            grade: 'Pending',
+            maxMarks: assignment.maxMarks,
+            rubric: assignment.instructions,
+            description: assignment.description,
+            instructions: assignment.instructions,
+            attachment: assignment.attachment,
+            attachmentUrl: assignment.attachmentUrl,
+            attachmentName: assignment.attachmentName,
+            attachments: assignment.attachments,
+            submissions: []
+          };
+          this.data.labAssignments.unshift(labItem);
+        }
+        this.invalidateRecordCache('lab', id);
+        sendBackendMutation(`/api/records/lab/${id}`, 'PUT', labItem).catch(e => console.warn('[DataStore] Lab update warning:', e));
+      }
+
       this.addAudit(`Faculty updated assignment: "${assignment.title}"`);
       this.save();
       sendBackendMutation(`/api/records/faculty/${id}`, 'PUT', updateObj).catch(e => console.warn('[DataStore] Assignment update warning:', e));
@@ -1371,6 +1459,14 @@
         const title = this.data.facultyAssignments[idx].title;
         this.data.facultyAssignments.splice(idx, 1);
         this.invalidateRecordCache('faculty', id);
+
+        const labIdx = (this.data.labAssignments || []).findIndex(l => l.id === id);
+        if (labIdx !== -1) {
+          this.data.labAssignments.splice(labIdx, 1);
+          this.invalidateRecordCache('lab', id);
+          sendBackendMutation(`/api/records/lab/${id}`, 'DELETE').catch(e => console.warn('[DataStore] Lab delete warning:', e));
+        }
+
         this.addAudit(`Faculty deleted assignment: "${title}"`);
         this.save();
         sendBackendMutation(`/api/records/faculty/${id}`, 'DELETE');
@@ -1581,23 +1677,38 @@
       const lab = (this.data.labAssignments || []).find(l => l.id === labId);
       if (!lab) return { success: false, message: 'Lab not found' };
 
+      const numMarks = parseFloat(marks);
       lab.status = 'Evaluated';
+      lab.studentStatus = 'Graded';
+      lab.marks = numMarks;
+      lab.studentMarks = numMarks;
       lab.grade = marks.toString().includes('%') ? marks : `${marks}%`;
       lab.feedback = feedback || 'Laboratory practical report evaluated and verified.';
       lab.evaluatedDate = new Date().toISOString().split('T')[0];
+      lab.gradedDate = lab.evaluatedDate;
+
+      if (!lab.submissions) lab.submissions = [];
+      if (lab.submissions.length > 0) {
+        lab.submissions[0].status = 'Graded';
+        lab.submissions[0].marks = numMarks;
+        lab.submissions[0].feedback = lab.feedback;
+        lab.submissions[0].gradedDate = lab.gradedDate;
+      }
 
       if (!this.data.facultyActivities) this.data.facultyActivities = [];
       this.data.facultyActivities.unshift({
         id: 'fact_' + Date.now().toString(36),
         title: 'Lab Evaluated',
-        detail: `Evaluated ${lab.code}: ${lab.title} (${lab.grade})`,
+        detail: `Evaluated ${lab.code || lab.title}: ${lab.title} (${lab.grade})`,
         time: 'Just now',
         icon: 'award',
         type: 'lab'
       });
 
-      this.addAudit(`Faculty evaluated Lab ${lab.code} (${lab.grade})`);
+      this.invalidateRecordCache('lab', labId);
+      this.addAudit(`Faculty evaluated Lab ${lab.code || lab.title} (${lab.grade})`);
       this.save();
+      sendBackendMutation(`/api/records/lab/${labId}`, 'PUT', lab).catch(e => console.warn('[DataStore] Lab evaluation sync warning:', e));
       return { success: true, lab };
     }
 

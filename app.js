@@ -3464,6 +3464,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       fileUrl = item.submissionUrl;
     }
 
+    window._currentSubmittedFileUrl = (displayFileName && fileUrl && fileUrl !== '#') ? fileUrl : '';
+    window._currentSubmittedFileName = displayFileName || 'Student_Submission.pdf';
+
+    const viewSubBtn = document.getElementById('btn-view-submitted-file');
+    const dlSubBtn = document.getElementById('btn-download-submitted-file');
+
     if (displayFileName && fileUrl && fileUrl !== '#') {
       if (fileNameEl) fileNameEl.textContent = displayFileName;
       if (fileLink) {
@@ -3471,9 +3477,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         fileLink.setAttribute('download', displayFileName);
         fileLink.style.display = 'inline-flex';
       }
+      if (viewSubBtn) {
+        viewSubBtn.style.display = 'inline-flex';
+      }
+      if (dlSubBtn) {
+        dlSubBtn.href = fileUrl;
+        dlSubBtn.setAttribute('download', displayFileName);
+        dlSubBtn.style.display = 'inline-flex';
+      }
       if (noFileMsg) noFileMsg.style.display = 'none';
     } else {
       if (fileLink) fileLink.style.display = 'none';
+      if (viewSubBtn) viewSubBtn.style.display = 'none';
+      if (dlSubBtn) dlSubBtn.style.display = 'none';
       if (noFileMsg) {
         noFileMsg.style.display = 'inline-block';
         noFileMsg.textContent = 'No submission yet.';
@@ -3531,18 +3547,94 @@ document.addEventListener('DOMContentLoaded', async () => {
     window._selectedReplaceFile = null;
   };
 
+  window.previewFileInline = function(url, title) {
+    if (!url || url === '#' || url === 'undefined' || url === 'null') {
+      if (typeof window.showToast === 'function') window.showToast('No file or document available to preview.', 'info');
+      return;
+    }
+
+    const cleanTitle = title || (url.split('/').pop().split('?')[0]) || 'Document Preview';
+
+    // If external link like GitHub repo or external website that disallows iframe embedding
+    const isExternalWeb = url.startsWith('http://') || url.startsWith('https://');
+    const isLocalOrigin = isExternalWeb && (url.includes(window.location.host) || url.includes('localhost') || url.includes('127.0.0.1'));
+    if (isExternalWeb && !isLocalOrigin && !url.includes('/api/files/')) {
+      window.open(url, '_blank');
+      return;
+    }
+
+    const modal = document.getElementById('modal-document-viewer');
+    const iframe = document.getElementById('doc-viewer-iframe');
+    const titleEl = document.getElementById('doc-viewer-title');
+    const newtabBtn = document.getElementById('doc-viewer-newtab-btn');
+    const downloadBtn = document.getElementById('doc-viewer-download-btn');
+    const loadingEl = document.getElementById('doc-viewer-loading');
+
+    let inlineUrl = url;
+    if (inlineUrl.includes('/api/files/')) {
+      const sep = inlineUrl.includes('?') ? '&' : '?';
+      inlineUrl = `${inlineUrl}${sep}view=1`;
+    }
+
+    if (titleEl) titleEl.textContent = cleanTitle;
+    if (newtabBtn) newtabBtn.href = inlineUrl;
+    if (downloadBtn) {
+      const dlUrl = url.replace(/([?&])view=1(&|$)/, '$1').replace(/[?&]$/, '');
+      downloadBtn.href = dlUrl;
+      downloadBtn.setAttribute('download', cleanTitle);
+    }
+
+    if (loadingEl) loadingEl.style.display = 'flex';
+    if (iframe) {
+      iframe.src = inlineUrl;
+    }
+
+    if (modal) {
+      modal.classList.add('active');
+      modal.style.display = 'flex';
+    }
+  };
+
+  window.closeDocumentViewerModal = function() {
+    const modal = document.getElementById('modal-document-viewer');
+    const iframe = document.getElementById('doc-viewer-iframe');
+    if (modal) {
+      modal.classList.remove('active');
+      modal.style.display = 'none';
+    }
+    if (iframe) {
+      iframe.src = 'about:blank';
+    }
+  };
+
   window.viewAssignmentPdf = function() {
     const url = window._currentAssignmentPdfUrl;
     if (!url) {
       if (typeof window.showToast === 'function') window.showToast('No Assignment PDF is attached.', 'info');
       return;
     }
-    let viewUrl = url;
-    if (viewUrl.includes('/api/files/')) {
-      const sep = viewUrl.includes('?') ? '&' : '?';
-      viewUrl = `${viewUrl}${sep}view=1`;
+    const name = window._currentAssignmentPdfName || 'Assignment_Questions.pdf';
+    previewFileInline(url, name);
+  };
+
+  window.viewSubmittedFile = function() {
+    const url = window._currentSubmittedFileUrl;
+    if (!url || url === '#') {
+      if (typeof window.showToast === 'function') window.showToast('No submitted file available to preview.', 'info');
+      return;
     }
-    window.open(viewUrl, '_blank');
+    const name = window._currentSubmittedFileName || 'Submitted_Solution.pdf';
+    previewFileInline(url, name);
+  };
+
+  window.previewGradeWork = function() {
+    const url = window._currentGradeFileUrl;
+    if (!url || url === '#') {
+      if (typeof window.showToast === 'function') window.showToast('No submission file available to preview.', 'info');
+      return;
+    }
+    const name = window._currentGradeFileName || 'Student_Submission.pdf';
+    previewFileInline(url, name);
   };
 
   window.downloadAssignmentPdf = function(e) {
@@ -4277,31 +4369,126 @@ document.addEventListener('DOMContentLoaded', async () => {
     const labsList = document.getElementById('student-lab-assignments-list');
     if (labsList) {
       const labs = store.getLabAssignments();
+      const currentStudent = (store.data && store.data.roles && store.data.roles.student) ? store.data.roles.student : {};
+
+      const toDDMMYYYY = dStr => {
+        if (!dStr) return 'Flexible';
+        const clean = String(dStr).split('T')[0].split(' ')[0];
+        const parts = clean.split('-');
+        if (parts.length === 3 && parts[0].length === 4) {
+          return `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+        return dStr;
+      };
+
       labsList.innerHTML = labs.map(lab => {
-        const isGraded = lab.studentStatus === 'Graded' || lab.studentStatus === 'Evaluated' || (lab.status === 'Graded' && lab.studentStatus && lab.studentStatus !== 'Assigned');
-        const isSubmitted = lab.studentStatus === 'Submitted' || (lab.status === 'Submitted' && lab.studentStatus && lab.studentStatus !== 'Assigned');
+        const studentSub = (lab.submissions || []).find(s => (s.studentId || s.student_id) === currentStudent.id) || (lab.submissions && lab.submissions[0]);
+        const isGraded = (studentSub && studentSub.status === 'Graded') || lab.studentStatus === 'Graded' || lab.status === 'Graded';
+        const isRevision = (studentSub && (studentSub.status === 'Revision Requested' || Boolean(studentSub.isRevisionRequested))) || lab.studentStatus === 'Revision Requested' || Boolean(lab.isRevisionRequested);
+        const isSubmitted = (studentSub && studentSub.status === 'Submitted') || lab.studentStatus === 'Submitted' || lab.status === 'Submitted' || !!lab.submittedFile || (lab.submissionUrl && lab.submissionUrl.trim().length > 0);
+
+        let statusBadgeClass = 'blue';
+        let statusText = 'Pending';
+        if (isGraded) {
+          statusBadgeClass = 'success';
+          statusText = 'Graded ✓';
+        } else if (isRevision) {
+          statusBadgeClass = 'warning';
+          statusText = 'Revision Requested';
+        } else if (isSubmitted) {
+          const isLate = Boolean((studentSub && studentSub.isLate) || lab.isLate);
+          statusBadgeClass = isLate ? 'warning' : 'teal';
+          statusText = isLate ? 'Late' : 'Submitted';
+        } else {
+          let isPastDue = false;
+          if (lab.dueDate) {
+            const dueTime = lab.dueTime || '23:59';
+            const dueAt = new Date(`${lab.dueDate}T${dueTime}:00`);
+            if (!isNaN(dueAt.getTime()) && new Date() > dueAt) {
+              isPastDue = true;
+            }
+          }
+          if (isPastDue) {
+            statusBadgeClass = 'error';
+            statusText = 'Late';
+          } else {
+            statusBadgeClass = 'blue';
+            statusText = 'Pending';
+          }
+        }
+
+        const displayScore = isGraded
+          ? (studentSub && studentSub.marks != null ? `${studentSub.marks} / ${lab.maxMarks || 100}` : (lab.studentMarks != null ? `${lab.studentMarks} / ${lab.maxMarks || 100}` : (lab.grade || lab.marks || 'Graded')))
+          : 'Pending Evaluation';
+
+        const pdfUrl = lab.attachmentUrl || lab.attachment || (lab.attachments && lab.attachments[0] ? (lab.attachments[0].url || lab.attachments[0].href) : '');
+        const rawPdfName = lab.attachmentName || (lab.attachments && lab.attachments[0] ? (lab.attachments[0].fileName || lab.attachments[0].originalName) : '') || (pdfUrl ? pdfUrl.split('/').pop().split('?')[0] : '');
+        const pdfName = rawPdfName || (pdfUrl ? 'Lab_Manual.pdf' : '');
+
+        const subFileUrl = (studentSub && (studentSub.fileUrl || studentSub.file_url)) || (lab.submittedFile && (lab.submittedFile.downloadUrl || lab.submittedFile.url)) || lab.submissionUrl;
+        const rawSubFileName = (studentSub && (studentSub.fileName || studentSub.file_name)) || (lab.submittedFile && (lab.submittedFile.originalName || lab.submittedFile.fileName)) || (subFileUrl ? subFileUrl.split('/').pop().split('?')[0] : '');
+        const subFileName = rawSubFileName || (subFileUrl ? 'Lab_Solution.pdf' : '');
+
+        const formattedDueDate = toDDMMYYYY(lab.dueDate || lab.due_date);
+        const facultyName = lab.facultyName || lab.professor || 'Dr. Rajesh Sharma';
 
         return `
-          <div class="assignment-card-box">
+          <div class="assignment-card-box" style="cursor: pointer;" onclick="openSubmissionDetailsModal('lab', '${lab.id}')">
             <div class="assignment-card-header">
               <div>
-                <span class="badge-status blue" style="font-size: 11px; margin-right: 6px;">${lab.code}</span>
-                <span style="font-size: 12px; color: var(--text-secondary);">${lab.subject}</span>
-                <h3 style="font-size: 15px; font-weight: 700; color: #0F172A; margin-top: 4px;">${lab.title}</h3>
+                <span class="badge-status blue" style="font-size: 11px; font-weight: 700;">${lab.code || lab.subject || 'Lab Coursework'}</span>
+                <span style="font-size: 12px; color: var(--text-secondary); margin-left: 6px;">Faculty: <strong>${facultyName}</strong></span>
+                <h3 style="font-size: 16px; font-weight: 700; color: #0F172A; margin-top: 4px;">${lab.title}</h3>
               </div>
               <div style="text-align: right;">
-                <span class="badge-status ${isGraded ? 'success' : isSubmitted ? 'teal' : 'warning'}">${isGraded ? 'Graded ✓' : isSubmitted ? 'Submitted' : 'Not Started'}</span>
-                <div style="font-size: 12px; font-weight: 700; color: #0F172A; margin-top: 4px;">${lab.grade || 'Pending'}</div>
+                <span class="badge-status ${statusBadgeClass}">${statusText}</span>
+                <div style="font-size: 12px; font-weight: 700; color: #0F172A; margin-top: 4px;">Score: ${displayScore}</div>
               </div>
             </div>
-            <div style="background: #F8FAFC; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 12px; color: var(--text-secondary);">
-              <strong>Evaluation Rubric:</strong> ${lab.rubric || 'Practical implementation and report accuracy.'}
+
+            <div style="background: #F8FAFC; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+              <strong>Description / Rubric:</strong> ${lab.description || lab.instructions || lab.rubric || 'Practical implementation and report accuracy.'}
             </div>
-            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-top: 4px;">
-              <span style="font-size: 12px; color: var(--text-muted);">Due Date: <strong>${lab.dueDate}</strong></span>
+
+            ${pdfUrl ? `
+              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: var(--radius-sm); padding: 8px 12px; margin-top: 6px;" onclick="event.stopPropagation();">
+                <div style="display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: #1E40AF; min-width: 0;">
+                  <span style="font-size: 16px;">📄</span>
+                  <strong style="color: #1E3A8A; font-size: 12px;">Assignment PDF:</strong>
+                  <span style="color: #0F172A; font-weight: 600; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 250px;">${pdfName}</span>
+                </div>
+                <div style="display: flex; gap: 6px;">
+                  <button type="button" class="btn-outline btn-sm" style="font-size: 11px; padding: 3px 10px; background: #FFFFFF;" onclick="event.stopPropagation(); previewFileInline('${pdfUrl}', '${pdfName.replace(/'/g, "\\\'")}');">View PDF</button>
+                  <a href="${pdfUrl}" download="${pdfName}" class="btn-primary btn-sm" style="font-size: 11px; padding: 3px 10px; text-decoration: none;" onclick="event.stopPropagation();">Download PDF</a>
+                </div>
+              </div>
+            ` : ''}
+
+            ${(isSubmitted || isGraded) && subFileUrl && subFileUrl !== '#' ? `
+              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: var(--radius-sm); padding: 8px 12px; margin-top: 6px;" onclick="event.stopPropagation();">
+                <div style="display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: #166534; min-width: 0;">
+                  <span style="font-size: 16px;">📁</span>
+                  <strong style="color: #14532D; font-size: 12px;">Submitted Solution:</strong>
+                  <span style="color: #0F172A; font-weight: 600; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 250px;">${subFileName}</span>
+                </div>
+                <div style="display: flex; gap: 6px;">
+                  <button type="button" class="btn-outline btn-sm" style="font-size: 11px; padding: 3px 10px; background: #FFFFFF;" onclick="event.stopPropagation(); previewFileInline('${subFileUrl}', '${subFileName.replace(/'/g, "\\\'")}');">👁️ View Work</button>
+                  <a href="${subFileUrl}" download="${subFileName}" class="btn-outline btn-sm" style="font-size: 11px; padding: 3px 10px; text-decoration: none;" onclick="event.stopPropagation();">Download</a>
+                </div>
+              </div>
+            ` : ''}
+
+            ${isGraded && (lab.feedback || (studentSub && studentSub.feedback)) ? `
+              <div style="background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: var(--radius-sm); padding: 8px 12px; font-size: 12px; color: #065F46; margin-top: 6px;">
+                <strong>Faculty Feedback:</strong> "${lab.feedback || studentSub.feedback}"
+              </div>
+            ` : ''}
+
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 12px; color: var(--text-muted); margin-top: 6px;" onclick="event.stopPropagation();">
+              <span>Due Date: <strong>${formattedDueDate}</strong> ${lab.dueTime ? `(${lab.dueTime})` : ''} <span class="badge-status ${lab.priority === 'High' ? 'error' : 'blue'}" style="margin-left: 4px; font-size: 10px;">${lab.priority || 'Medium'}</span></span>
               <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                <button class="btn-outline btn-sm" onclick="openSubmissionDetailsModal('lab', '${lab.id}')">View Details</button>
-                <button class="btn-primary btn-sm" onclick="openSubmitAssignmentModal('lab', '${lab.id}')">${isSubmitted || isGraded ? 'Replace Submission' : 'Submit Solution'}</button>
+                <button class="btn-outline btn-sm" onclick="event.stopPropagation(); openSubmissionDetailsModal('lab', '${lab.id}')">View Details</button>
+                <button class="btn-primary btn-sm" onclick="event.stopPropagation(); openSubmissionDetailsModal('lab', '${lab.id}')">${isSubmitted || isGraded ? 'Update Submission' : 'Submit Assignment'}</button>
               </div>
             </div>
           </div>
@@ -5865,9 +6052,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           </td>
           <td>
             <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
-              <a href="${fileUrl}" target="_blank" style="color: #2563EB; font-weight: 600; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;">
-                <span>${fileName}</span> ↗
-              </a>
+              <button type="button" class="btn-outline btn-sm" style="font-size: 11px; padding: 2px 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" onclick="previewFileInline('${fileUrl}', '${fileName.replace(/'/g, "\\\'")}');" title="View student work in browser without downloading">
+                👁️ View Work
+              </button>
               <a href="${fileUrl}" download="${fileName}" class="btn-outline btn-sm" style="font-size: 11px; padding: 2px 6px; text-decoration: none;" title="Download submitted file">
                 📥
               </a>
@@ -5903,35 +6090,67 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <th>Lab Title / Experiment</th>
                 <th>Subject</th>
                 <th>Due Date</th>
+                <th>Assignment PDF</th>
+                <th>Student Work</th>
                 <th>Submission Status</th>
-                <th>Verified Link</th>
                 <th>Lab Grade</th>
                 <th>Action</th>
               </tr>
             </thead>
             <tbody>
-              ${labs.map(lab => `
-                <tr>
-                  <td><code>${lab.code || 'CSL401'}</code></td>
-                  <td><strong>${lab.title}</strong></td>
-                  <td>${lab.subject || 'Advanced Computing'}</td>
-                  <td>${lab.dueDate}</td>
-                  <td>
-                    <span class="badge-status ${lab.status === 'Submitted' || lab.status === 'Completed' ? 'success' : 'warning'}">
-                      ${lab.status}
-                    </span>
-                  </td>
-                  <td>
-                    <a href="${lab.submissionUrl || '#'}" target="_blank" style="color: #2563EB; font-weight: 600; font-size: 12px;">GitHub / Repo ↗</a>
-                  </td>
-                  <td><strong>${lab.grade || 'Pending'}</strong></td>
-                  <td>
-                    <button class="btn-faculty-action btn-faculty-secondary" style="padding: 4px 10px; font-size: 11px;" onclick="openGradeSubmissionModal('lab', '${lab.id}')">
-                      Evaluate Lab
-                    </button>
-                  </td>
-                </tr>
-              `).join('')}
+              ${labs.map(lab => {
+                const pdfUrl = lab.attachmentUrl || lab.attachment || (lab.attachments && lab.attachments[0] ? (lab.attachments[0].url || lab.attachments[0].href) : '');
+                const rawPdfName = lab.attachmentName || (lab.attachments && lab.attachments[0] ? (lab.attachments[0].fileName || lab.attachments[0].originalName) : '') || (pdfUrl ? pdfUrl.split('/').pop().split('?')[0] : '');
+                const pdfName = rawPdfName || (pdfUrl ? 'Lab_Manual.pdf' : '');
+
+                const sub = (lab.submissions && lab.submissions[0]) || null;
+                const subUrl = (sub && (sub.fileUrl || sub.file_url)) || (lab.submittedFile && (lab.submittedFile.downloadUrl || lab.submittedFile.url)) || lab.submissionUrl || '';
+                const subName = (sub && (sub.fileName || sub.file_name)) || (lab.submittedFile && (lab.submittedFile.originalName || lab.submittedFile.fileName)) || (subUrl ? subUrl.split('/').pop().split('?')[0] : 'Solution.pdf');
+
+                const isGraded = (sub && sub.status === 'Graded') || lab.studentStatus === 'Graded' || lab.status === 'Graded';
+                const isSubmitted = (sub && sub.status === 'Submitted') || lab.studentStatus === 'Submitted' || lab.status === 'Submitted' || Boolean(subUrl && subUrl.length > 1);
+
+                return `
+                  <tr>
+                    <td><code>${lab.code || 'CSL401'}</code></td>
+                    <td><strong>${lab.title}</strong></td>
+                    <td>${lab.subject || 'Advanced Computing'}</td>
+                    <td>${lab.dueDate}</td>
+                    <td>
+                      ${pdfUrl ? `
+                        <div style="display: flex; gap: 4px; align-items: center;">
+                          <button type="button" class="btn-outline btn-sm" style="font-size: 11px; padding: 2px 8px; cursor: pointer;" onclick="previewFileInline('${pdfUrl}', '${pdfName.replace(/'/g, "\\\'")}');" title="View Lab Assignment PDF">
+                            📄 View PDF
+                          </button>
+                        </div>
+                      ` : '<span style="color: #94A3B8; font-size: 11px;">None</span>'}
+                    </td>
+                    <td>
+                      ${subUrl && subUrl !== '#' ? `
+                        <div style="display: flex; gap: 4px; align-items: center;">
+                          <button type="button" class="btn-outline btn-sm" style="font-size: 11px; padding: 2px 8px; cursor: pointer;" onclick="previewFileInline('${subUrl}', '${subName.replace(/'/g, "\\\'")}');" title="View student work in browser without downloading">
+                            👁️ View Work
+                          </button>
+                          <a href="${subUrl}" download="${subName}" class="btn-outline btn-sm" style="font-size: 11px; padding: 2px 6px; text-decoration: none;" title="Download student solution">
+                            📥
+                          </a>
+                        </div>
+                      ` : '<span style="color: #94A3B8; font-size: 11px;">Pending</span>'}
+                    </td>
+                    <td>
+                      <span class="badge-status ${isGraded ? 'success' : isSubmitted ? 'teal' : 'warning'}">
+                        ${isGraded ? 'Graded ✓' : isSubmitted ? 'Submitted' : 'Pending'}
+                      </span>
+                    </td>
+                    <td><strong>${(sub && sub.marks != null) ? `${sub.marks} / ${lab.maxMarks || 100}` : (lab.grade || 'Pending')}</strong></td>
+                    <td>
+                      <button class="btn-faculty-action btn-faculty-secondary" style="padding: 4px 10px; font-size: 11px;" onclick="openGradeSubmissionModal('lab', '${lab.id}')">
+                        ${isGraded ? 'Re-evaluate' : 'Evaluate Lab'}
+                      </button>
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
             </tbody>
           </table>
         </div>
@@ -6849,15 +7068,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (assignmentId === 'lab') {
       const lab = (store.data.labAssignments || []).find(l => l.id === submissionId);
       if (lab) {
-        asgObj = { id: 'lab', title: lab.title, maxMarks: 100 };
+        asgObj = { id: 'lab', title: lab.title, maxMarks: lab.maxMarks || 100 };
         const currentStudent = store.data.roles.student || {};
-        subObj = { id: lab.id, studentName: lab.studentName || currentStudent.name || 'Student', rollNo: lab.rollNo || currentStudent.rollNo || '', submittedAt: lab.submittedAt, submissionUrl: lab.submissionUrl, marks: lab.grade ? parseInt(lab.grade) : null, feedback: lab.feedback || '', remarks: lab.studentRemarks || '' };
+        const labSub = (lab.submissions && lab.submissions[0]) || null;
+        const subFileUrl = (labSub && (labSub.fileUrl || labSub.file_url)) || (lab.submittedFile && (lab.submittedFile.downloadUrl || lab.submittedFile.url)) || lab.submissionUrl || '#';
+        const subFileName = (labSub && (labSub.fileName || labSub.file_name)) || (lab.submittedFile && (lab.submittedFile.originalName || lab.submittedFile.fileName)) || (subFileUrl !== '#' ? subFileUrl.split('/').pop().split('?')[0] : 'lab_solution.pdf');
+
+        subObj = {
+          id: lab.id,
+          studentName: (labSub && labSub.studentName) || lab.studentName || currentStudent.name || 'Student',
+          rollNo: (labSub && labSub.rollNo) || lab.rollNo || currentStudent.rollNo || '',
+          submittedAt: (labSub && (labSub.submittedDate || labSub.submittedAt)) || lab.submittedAt || 'Today',
+          submissionUrl: subFileUrl,
+          fileUrl: subFileUrl,
+          fileName: subFileName,
+          marks: (labSub && labSub.marks != null) ? labSub.marks : (lab.studentMarks != null ? lab.studentMarks : (lab.grade ? parseInt(lab.grade) : null)),
+          feedback: (labSub && labSub.feedback) || lab.feedback || '',
+          remarks: (labSub && labSub.remarks) || lab.studentRemarks || ''
+        };
       }
     } else if (assignmentId === 'project') {
       const proj = (store.data.groupProjects || []).find(p => p.id === submissionId);
       if (proj) {
         asgObj = { id: 'project', title: proj.title, maxMarks: 100 };
-        subObj = { id: proj.id, studentName: `${proj.teamLead} & Team`, rollNo: 'CSE-G04', submittedAt: 'Oct 12, 2026', submissionUrl: proj.repositoryUrl, marks: proj.facultyMarks, feedback: proj.feedback, remarks: proj.description || '' };
+        subObj = { id: proj.id, studentName: `${proj.teamLead} & Team`, rollNo: 'CSE-G04', submittedAt: 'Oct 12, 2026', submissionUrl: proj.repositoryUrl, fileUrl: proj.repositoryUrl, fileName: 'project_repo', marks: proj.facultyMarks, feedback: proj.feedback, remarks: proj.description || '' };
       }
     } else {
       asgObj = (store.data.facultyAssignments || []).find(a => a.id === assignmentId);
@@ -6877,11 +7111,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     const linkEl = document.getElementById('grade-display-link');
     const downloadEl = document.getElementById('grade-download-link');
+    const viewWorkBtn = document.getElementById('btn-grade-view-work');
     const fileUrl = subObj.submissionUrl || subObj.fileUrl || '#';
-    if (linkEl) linkEl.href = fileUrl;
+    const fileName = subObj.fileName || (fileUrl !== '#' ? fileUrl.split('/').pop().split('?')[0] : 'submission_file');
+
+    window._currentGradeFileUrl = (fileUrl && fileUrl !== '#') ? fileUrl : '';
+    window._currentGradeFileName = fileName;
+
+    if (linkEl) {
+      linkEl.href = fileUrl;
+      linkEl.textContent = (fileName && fileName !== 'submission_file') ? `${fileName} ↗` : 'View Artifact / Repository ↗';
+    }
     if (downloadEl) {
       downloadEl.href = fileUrl;
-      downloadEl.setAttribute('download', subObj.fileName || 'submission_file');
+      downloadEl.setAttribute('download', fileName);
+      downloadEl.style.display = (fileUrl && fileUrl !== '#') ? 'inline-flex' : 'none';
+    }
+    if (viewWorkBtn) {
+      viewWorkBtn.style.display = (fileUrl && fileUrl !== '#') ? 'inline-flex' : 'none';
     }
 
     const remarksEl = document.getElementById('grade-display-student-remarks');
@@ -6956,6 +7203,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     closeGradeSubmissionModal();
 
     if (typeof renderFacultySubmissionsQueue === 'function') renderFacultySubmissionsQueue();
+    if (typeof renderFacultySubmissionsLab === 'function') renderFacultySubmissionsLab();
     if (typeof renderFacultyAssignments === 'function') renderFacultyAssignments();
     if (typeof renderStudentAssignments === 'function') renderStudentAssignments(store.data.roles.student);
     if (typeof renderStudentViews === 'function') renderStudentViews();
