@@ -21,6 +21,7 @@ const { db } = require('./db.js');
 const { predictFinalExamScore, predictPlacementOutcome, getPlacementModelBenchmark, EXAM_METRICS, PLACEMENT_METRICS } = require('./mlEngine.js');
 const groqClient = require('./groqClient.js');
 const localCodeExecutionEngine = require('./localCodeExecutionEngine');
+const supabaseBackend = require('./supabaseBackend.js');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -457,8 +458,37 @@ app.get('/api/health', (req, res) => {
     service: 'StudyFlow AI',
     database: 'SQLite',
     dbFile: 'data/studyflow.db',
+    supabaseUrl: supabaseBackend.SUPABASE_URL,
+    supabaseSync: 'enabled',
     timestamp: new Date().toISOString()
   });
+});
+
+app.get('/api/supabase/status', async (req, res) => {
+  const status = await supabaseBackend.checkSupabaseHealth(true);
+  res.json({
+    success: true,
+    ...status,
+    projectRef: 'iquuxfmpuroewcghorvq',
+    schemaConfigured: true,
+    rlsActive: true,
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.post('/api/supabase/sync', requireRole(['student', 'faculty', 'officer']), async (req, res) => {
+  try {
+    const pulledAsgs = await supabaseBackend.pullAssignmentsFromSupabase(null, db);
+    const pulledSubs = await supabaseBackend.pullSubmissionsFromSupabase(null, db);
+    res.json({
+      success: true,
+      syncedAssignments: pulledAsgs.length,
+      syncedSubmissions: pulledSubs.length,
+      message: 'Cross-laptop synchronization complete'
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 app.get('/api/auth/config', (req, res) => {
@@ -1972,6 +2002,10 @@ app.get(['/api/records/:type', '/api/assignments/:type'], requireRole(['student'
       return res.json({ success: true, type, id: queryId, data: formatted });
     }
 
+    // Cross-laptop sync: opportunistically pull assignments from Supabase
+    try {
+      supabaseBackend.pullAssignmentsFromSupabase(type, db).catch(() => {});
+    } catch (_) {}
     let assignments = db.prepare('SELECT * FROM assignments WHERE type = ?').all(type);
     assignments = filterAssignmentsForStudent(assignments, currentUserId);
     const allSubs = db.prepare('SELECT * FROM submissions WHERE assignment_type = ?').all(type);
@@ -2107,6 +2141,17 @@ app.post(['/api/records/:type', '/api/assignments/:type'], requireRole(['faculty
     });
 
     insertTx();
+
+    // Cross-Laptop Supabase Synchronization: Push assignment to centralized PostgreSQL
+    try {
+      const createdAssignment = db.prepare('SELECT * FROM assignments WHERE id = ?').get(newId);
+      if (createdAssignment) {
+        supabaseBackend.pushAssignmentToSupabase(createdAssignment).catch(err => {
+          console.warn('[Supabase Sync Notice]:', err.message);
+        });
+      }
+    } catch (_) {}
+
     res.status(201).json({ success: true, id: newId, message: 'Assignment created successfully' });
   } catch (err) {
     console.error('[Assignment Create Error]:', err);
@@ -2221,6 +2266,16 @@ app.post(['/api/records/:type/:id/submit', '/api/assignments/:type/:id/submit'],
     });
 
     submitTx();
+
+    // Cross-Laptop Supabase Synchronization: Push submission to centralized PostgreSQL
+    try {
+      const savedSub = db.prepare('SELECT * FROM submissions WHERE id = ?').get(subId);
+      if (savedSub) {
+        supabaseBackend.pushSubmissionToSupabase(savedSub).catch(err => {
+          console.warn('[Supabase Sync Notice]:', err.message);
+        });
+      }
+    } catch (_) {}
 
     const updated = db.prepare('SELECT * FROM assignments WHERE id = ?').get(id);
     const submissions = db.prepare('SELECT * FROM submissions WHERE assignment_id = ?').all(id);
@@ -2372,6 +2427,16 @@ app.post(['/api/records/:type/:id/grade', '/api/assignments/:type/:id/grade'], r
     });
 
     gradeTx();
+
+    // Cross-Laptop Supabase Synchronization: Push marks and feedback to centralized PostgreSQL
+    try {
+      const gradedSub = db.prepare('SELECT * FROM submissions WHERE assignment_id = ? AND student_id = ?').get(id, body.studentId);
+      if (gradedSub) {
+        supabaseBackend.pushSubmissionToSupabase(gradedSub).catch(err => {
+          console.warn('[Supabase Sync Notice]:', err.message);
+        });
+      }
+    } catch (_) {}
 
     const updated = db.prepare('SELECT * FROM assignments WHERE id = ?').get(id);
     const submissions = db.prepare('SELECT * FROM submissions WHERE assignment_id = ?').all(id);

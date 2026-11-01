@@ -257,6 +257,36 @@
     updateConfig() {
       return true;
     }
+
+    getSupabaseConfig() {
+      return {
+        projectRef: 'iquuxfmpuroewcghorvq',
+        url: 'https://iquuxfmpuroewcghorvq.supabase.co',
+        anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxdXV4Zm1wdXJvZXdjZ2hvcnZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE5Njg1NDMsImV4cCI6MjEwNzU0NDU0M30.wy92mBnsuCjGh43Wk3KdUA0LwWvc6aEKH3zNBUaOFIQ'
+      };
+    }
+
+    async checkCloudStatus() {
+      try {
+        const res = await fetch('/api/supabase/status');
+        return await res.json();
+      } catch (err) {
+        return { success: false, connected: false, error: err.message };
+      }
+    }
+
+    async syncWithSupabase() {
+      try {
+        const res = await fetch('/api/supabase/sync', {
+          method: 'POST',
+          headers: this.getAuthHeaders(),
+          credentials: 'same-origin'
+        });
+        return await res.json();
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    }
   }
 
   // Export singleton instances (both window.SupabaseAuth for full backward compatibility and window.StudyFlowAuth)
@@ -264,5 +294,6 @@
   window.SupabaseAuth = authInstance;
   window.StudyFlowAuth = authInstance;
   window.SQLiteAuth = authInstance;
+  window.SUPABASE_CONFIG = authInstance.getSupabaseConfig();
 
 })(window);

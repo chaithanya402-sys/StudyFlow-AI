@@ -13,6 +13,7 @@ scratch/coding_sandbox/
 *.db-journal
 *.db-wal
 *.db-shm
+*.db.backup
 backup_pre_sqlite/
 
 # Runtime uploads (keep lab manuals and templates, ignore transient test uploads)
