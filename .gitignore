@@ -1,26 +1,24 @@
-# Logs and temporary files
-*.log
+# Dependencies & Runtime Logs
 node_modules/
+*.log
 .DS_Store
 Thumbs.db
+__pycache__/
+*.pyc
 
-# Scratch and inspection dumps
-dump.html
-chrome_dom.html
-scratch/
+# Local scratch execution sandbox
+scratch/coding_sandbox/
 
-# Local database and backup
-*.db
+# SQLite runtime journal and shared-memory files
 *.db-journal
 *.db-wal
 *.db-shm
 backup_pre_sqlite/
 
-# Uploads
+# Runtime uploads (keep lab manuals and templates, ignore transient test uploads)
 uploads/rc_*
 uploads/sub_*
-uploads/
-data/
+uploads/resume_*
+
+# Environment secrets (NEVER commit live API keys or credentials)
 .env
-
-

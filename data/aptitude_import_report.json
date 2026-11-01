@@ -1,0 +1,1787 @@
+{
+  "primary_file": "C:\\Users\\palla\\Downloads\\StudyFlow AI\\data\\placement_aptitude_800_questions.xlsx",
+  "secondary_file": "C:\\Users\\palla\\Downloads\\StudyFlow AI\\data\\Placement_Aptitude_Question_Bank_300.xlsx",
+  "total_questions_found": 1180,
+  "successfully_imported": 1099,
+  "auto_fixed_rows": [
+    {
+      "source": "800_questions",
+      "original_no": 663,
+      "question": "Which operator checks equality in Python?",
+      "fix": "Auto-restored Option C and answer to '=='"
+    },
+    {
+      "source": "800_questions",
+      "original_no": 683,
+      "question": "Which operator checks equality in Python?",
+      "fix": "Auto-restored Option A and answer to '=='"
+    },
+    {
+      "source": "800_questions",
+      "original_no": 703,
+      "question": "Which operator checks equality in Python?",
+      "fix": "Auto-restored Option A and answer to '=='"
+    },
+    {
+      "source": "800_questions",
+      "original_no": 723,
+      "question": "Which operator checks equality in Python?",
+      "fix": "Auto-restored Option A and answer to '=='"
+    },
+    {
+      "source": "800_questions",
+      "original_no": 743,
+      "question": "Which operator checks equality in Python?",
+      "fix": "Auto-restored Option D and answer to '=='"
+    },
+    {
+      "source": "800_questions",
+      "original_no": 763,
+      "question": "Which operator checks equality in Python?",
+      "fix": "Auto-restored Option B and answer to '=='"
+    },
+    {
+      "source": "800_questions",
+      "original_no": 783,
+      "question": "Which operator checks equality in Python?",
+      "fix": "Auto-restored Option A and answer to '=='"
+    }
+  ],
+  "invalid_questions": [],
+  "duplicate_questions": [
+    {
+      "original_no": 224,
+      "question": "If each letter is shifted forward by 4 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_204"
+    },
+    {
+      "original_no": 228,
+      "question": "If each letter is shifted forward by 5 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_208"
+    },
+    {
+      "original_no": 232,
+      "question": "If each letter is shifted forward by 1 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_212"
+    },
+    {
+      "original_no": 236,
+      "question": "If each letter is shifted forward by 2 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_216"
+    },
+    {
+      "original_no": 240,
+      "question": "If each letter is shifted forward by 3 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_220"
+    },
+    {
+      "original_no": 244,
+      "question": "If each letter is shifted forward by 4 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_224"
+    },
+    {
+      "original_no": 248,
+      "question": "If each letter is shifted forward by 5 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_228"
+    },
+    {
+      "original_no": 252,
+      "question": "If each letter is shifted forward by 1 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_232"
+    },
+    {
+      "original_no": 256,
+      "question": "If each letter is shifted forward by 2 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_236"
+    },
+    {
+      "original_no": 260,
+      "question": "If each letter is shifted forward by 3 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_240"
+    },
+    {
+      "original_no": 262,
+      "question": "Find the next number: 3, 6, 12, 24, ?",
+      "first_seen_id": "apt_800_202"
+    },
+    {
+      "original_no": 264,
+      "question": "If each letter is shifted forward by 4 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_244"
+    },
+    {
+      "original_no": 266,
+      "question": "Find the next number: 4, 12, 36, 108, ?",
+      "first_seen_id": "apt_800_206"
+    },
+    {
+      "original_no": 268,
+      "question": "If each letter is shifted forward by 5 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_248"
+    },
+    {
+      "original_no": 270,
+      "question": "Find the next number: 5, 20, 80, 320, ?",
+      "first_seen_id": "apt_800_210"
+    },
+    {
+      "original_no": 272,
+      "question": "If each letter is shifted forward by 1 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_252"
+    },
+    {
+      "original_no": 274,
+      "question": "Find the next number: 6, 12, 24, 48, ?",
+      "first_seen_id": "apt_800_214"
+    },
+    {
+      "original_no": 276,
+      "question": "If each letter is shifted forward by 2 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_256"
+    },
+    {
+      "original_no": 278,
+      "question": "Find the next number: 7, 21, 63, 189, ?",
+      "first_seen_id": "apt_800_218"
+    },
+    {
+      "original_no": 280,
+      "question": "If each letter is shifted forward by 3 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_260"
+    },
+    {
+      "original_no": 282,
+      "question": "Find the next number: 8, 32, 128, 512, ?",
+      "first_seen_id": "apt_800_222"
+    },
+    {
+      "original_no": 284,
+      "question": "If each letter is shifted forward by 4 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_264"
+    },
+    {
+      "original_no": 286,
+      "question": "Find the next number: 9, 18, 36, 72, ?",
+      "first_seen_id": "apt_800_226"
+    },
+    {
+      "original_no": 288,
+      "question": "If each letter is shifted forward by 5 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_268"
+    },
+    {
+      "original_no": 290,
+      "question": "Find the next number: 10, 30, 90, 270, ?",
+      "first_seen_id": "apt_800_230"
+    },
+    {
+      "original_no": 292,
+      "question": "If each letter is shifted forward by 1 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_272"
+    },
+    {
+      "original_no": 294,
+      "question": "Find the next number: 11, 44, 176, 704, ?",
+      "first_seen_id": "apt_800_234"
+    },
+    {
+      "original_no": 296,
+      "question": "If each letter is shifted forward by 2 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_276"
+    },
+    {
+      "original_no": 298,
+      "question": "Find the next number: 12, 24, 48, 96, ?",
+      "first_seen_id": "apt_800_238"
+    },
+    {
+      "original_no": 300,
+      "question": "If each letter is shifted forward by 3 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_280"
+    },
+    {
+      "original_no": 302,
+      "question": "Find the next number: 13, 39, 117, 351, ?",
+      "first_seen_id": "apt_800_242"
+    },
+    {
+      "original_no": 304,
+      "question": "If each letter is shifted forward by 4 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_284"
+    },
+    {
+      "original_no": 306,
+      "question": "Find the next number: 14, 56, 224, 896, ?",
+      "first_seen_id": "apt_800_246"
+    },
+    {
+      "original_no": 308,
+      "question": "If each letter is shifted forward by 5 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_288"
+    },
+    {
+      "original_no": 310,
+      "question": "Find the next number: 15, 30, 60, 120, ?",
+      "first_seen_id": "apt_800_250"
+    },
+    {
+      "original_no": 312,
+      "question": "If each letter is shifted forward by 1 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_292"
+    },
+    {
+      "original_no": 314,
+      "question": "Find the next number: 16, 48, 144, 432, ?",
+      "first_seen_id": "apt_800_254"
+    },
+    {
+      "original_no": 316,
+      "question": "If each letter is shifted forward by 2 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_296"
+    },
+    {
+      "original_no": 318,
+      "question": "Find the next number: 17, 68, 272, 1088, ?",
+      "first_seen_id": "apt_800_258"
+    },
+    {
+      "original_no": 320,
+      "question": "If each letter is shifted forward by 3 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_300"
+    },
+    {
+      "original_no": 322,
+      "question": "Find the next number: 3, 6, 12, 24, ?",
+      "first_seen_id": "apt_800_262"
+    },
+    {
+      "original_no": 324,
+      "question": "If each letter is shifted forward by 4 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_304"
+    },
+    {
+      "original_no": 326,
+      "question": "Find the next number: 4, 12, 36, 108, ?",
+      "first_seen_id": "apt_800_266"
+    },
+    {
+      "original_no": 328,
+      "question": "If each letter is shifted forward by 5 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_308"
+    },
+    {
+      "original_no": 330,
+      "question": "Find the next number: 5, 20, 80, 320, ?",
+      "first_seen_id": "apt_800_270"
+    },
+    {
+      "original_no": 332,
+      "question": "If each letter is shifted forward by 1 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_312"
+    },
+    {
+      "original_no": 334,
+      "question": "Find the next number: 6, 12, 24, 48, ?",
+      "first_seen_id": "apt_800_274"
+    },
+    {
+      "original_no": 336,
+      "question": "If each letter is shifted forward by 2 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_316"
+    },
+    {
+      "original_no": 338,
+      "question": "Find the next number: 7, 21, 63, 189, ?",
+      "first_seen_id": "apt_800_278"
+    },
+    {
+      "original_no": 340,
+      "question": "If each letter is shifted forward by 3 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_320"
+    },
+    {
+      "original_no": 342,
+      "question": "Find the next number: 8, 32, 128, 512, ?",
+      "first_seen_id": "apt_800_282"
+    },
+    {
+      "original_no": 344,
+      "question": "If each letter is shifted forward by 4 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_324"
+    },
+    {
+      "original_no": 346,
+      "question": "Find the next number: 9, 18, 36, 72, ?",
+      "first_seen_id": "apt_800_286"
+    },
+    {
+      "original_no": 348,
+      "question": "If each letter is shifted forward by 5 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_328"
+    },
+    {
+      "original_no": 350,
+      "question": "Find the next number: 10, 30, 90, 270, ?",
+      "first_seen_id": "apt_800_290"
+    },
+    {
+      "original_no": 352,
+      "question": "If each letter is shifted forward by 1 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_332"
+    },
+    {
+      "original_no": 354,
+      "question": "Find the next number: 11, 44, 176, 704, ?",
+      "first_seen_id": "apt_800_294"
+    },
+    {
+      "original_no": 356,
+      "question": "If each letter is shifted forward by 2 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_336"
+    },
+    {
+      "original_no": 358,
+      "question": "Find the next number: 12, 24, 48, 96, ?",
+      "first_seen_id": "apt_800_298"
+    },
+    {
+      "original_no": 360,
+      "question": "If each letter is shifted forward by 3 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_340"
+    },
+    {
+      "original_no": 362,
+      "question": "Find the next number: 13, 39, 117, 351, ?",
+      "first_seen_id": "apt_800_302"
+    },
+    {
+      "original_no": 364,
+      "question": "If each letter is shifted forward by 4 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_344"
+    },
+    {
+      "original_no": 366,
+      "question": "Find the next number: 14, 56, 224, 896, ?",
+      "first_seen_id": "apt_800_306"
+    },
+    {
+      "original_no": 368,
+      "question": "If each letter is shifted forward by 5 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_348"
+    },
+    {
+      "original_no": 370,
+      "question": "Find the next number: 15, 30, 60, 120, ?",
+      "first_seen_id": "apt_800_310"
+    },
+    {
+      "original_no": 372,
+      "question": "If each letter is shifted forward by 1 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_352"
+    },
+    {
+      "original_no": 374,
+      "question": "Find the next number: 16, 48, 144, 432, ?",
+      "first_seen_id": "apt_800_314"
+    },
+    {
+      "original_no": 376,
+      "question": "If each letter is shifted forward by 2 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_356"
+    },
+    {
+      "original_no": 378,
+      "question": "Find the next number: 17, 68, 272, 1088, ?",
+      "first_seen_id": "apt_800_318"
+    },
+    {
+      "original_no": 380,
+      "question": "If each letter is shifted forward by 3 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_360"
+    },
+    {
+      "original_no": 382,
+      "question": "Find the next number: 3, 6, 12, 24, ?",
+      "first_seen_id": "apt_800_322"
+    },
+    {
+      "original_no": 384,
+      "question": "If each letter is shifted forward by 4 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_364"
+    },
+    {
+      "original_no": 386,
+      "question": "Find the next number: 4, 12, 36, 108, ?",
+      "first_seen_id": "apt_800_326"
+    },
+    {
+      "original_no": 388,
+      "question": "If each letter is shifted forward by 5 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_368"
+    },
+    {
+      "original_no": 390,
+      "question": "Find the next number: 5, 20, 80, 320, ?",
+      "first_seen_id": "apt_800_330"
+    },
+    {
+      "original_no": 392,
+      "question": "If each letter is shifted forward by 1 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_372"
+    },
+    {
+      "original_no": 394,
+      "question": "Find the next number: 6, 12, 24, 48, ?",
+      "first_seen_id": "apt_800_334"
+    },
+    {
+      "original_no": 396,
+      "question": "If each letter is shifted forward by 2 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_376"
+    },
+    {
+      "original_no": 398,
+      "question": "Find the next number: 7, 21, 63, 189, ?",
+      "first_seen_id": "apt_800_338"
+    },
+    {
+      "original_no": 400,
+      "question": "If each letter is shifted forward by 3 places in the alphabet, how is A coded?",
+      "first_seen_id": "apt_800_380"
+    },
+    {
+      "original_no": 557,
+      "question": "Using the same data, what percentage of the total belongs to department B?",
+      "first_seen_id": "apt_800_552"
+    },
+    {
+      "original_no": 558,
+      "question": "Using the same data, what is the average number of students per department?",
+      "first_seen_id": "apt_800_553"
+    },
+    {
+      "original_no": 562,
+      "question": "Using the same data, what percentage of the total belongs to department B?",
+      "first_seen_id": "apt_800_557"
+    },
+    {
+      "original_no": 563,
+      "question": "Using the same data, what is the average number of students per department?",
+      "first_seen_id": "apt_800_558"
+    },
+    {
+      "original_no": 567,
+      "question": "Using the same data, what percentage of the total belongs to department B?",
+      "first_seen_id": "apt_800_562"
+    },
+    {
+      "original_no": 568,
+      "question": "Using the same data, what is the average number of students per department?",
+      "first_seen_id": "apt_800_563"
+    },
+    {
+      "original_no": 572,
+      "question": "Using the same data, what percentage of the total belongs to department B?",
+      "first_seen_id": "apt_800_567"
+    },
+    {
+      "original_no": 573,
+      "question": "Using the same data, what is the average number of students per department?",
+      "first_seen_id": "apt_800_568"
+    },
+    {
+      "original_no": 577,
+      "question": "Using the same data, what percentage of the total belongs to department B?",
+      "first_seen_id": "apt_800_572"
+    },
+    {
+      "original_no": 578,
+      "question": "Using the same data, what is the average number of students per department?",
+      "first_seen_id": "apt_800_573"
+    },
+    {
+      "original_no": 582,
+      "question": "Using the same data, what percentage of the total belongs to department B?",
+      "first_seen_id": "apt_800_577"
+    },
+    {
+      "original_no": 583,
+      "question": "Using the same data, what is the average number of students per department?",
+      "first_seen_id": "apt_800_578"
+    },
+    {
+      "original_no": 587,
+      "question": "Using the same data, what percentage of the total belongs to department B?",
+      "first_seen_id": "apt_800_582"
+    },
+    {
+      "original_no": 588,
+      "question": "Using the same data, what is the average number of students per department?",
+      "first_seen_id": "apt_800_583"
+    },
+    {
+      "original_no": 592,
+      "question": "Using the same data, what percentage of the total belongs to department B?",
+      "first_seen_id": "apt_800_587"
+    },
+    {
+      "original_no": 593,
+      "question": "Using the same data, what is the average number of students per department?",
+      "first_seen_id": "apt_800_588"
+    },
+    {
+      "original_no": 597,
+      "question": "Using the same data, what percentage of the total belongs to department B?",
+      "first_seen_id": "apt_800_592"
+    },
+    {
+      "original_no": 598,
+      "question": "Using the same data, what is the average number of students per department?",
+      "first_seen_id": "apt_800_593"
+    },
+    {
+      "original_no": 602,
+      "question": "Using the same data, what percentage of the total belongs to department B?",
+      "first_seen_id": "apt_800_597"
+    },
+    {
+      "original_no": 603,
+      "question": "Using the same data, what is the average number of students per department?",
+      "first_seen_id": "apt_800_598"
+    },
+    {
+      "original_no": 607,
+      "question": "Using the same data, what percentage of the total belongs to department B?",
+      "first_seen_id": "apt_800_602"
+    },
+    {
+      "original_no": 608,
+      "question": "Using the same data, what is the average number of students per department?",
+      "first_seen_id": "apt_800_603"
+    },
+    {
+      "original_no": 612,
+      "question": "Using the same data, what percentage of the total belongs to department B?",
+      "first_seen_id": "apt_800_607"
+    },
+    {
+      "original_no": 613,
+      "question": "Using the same data, what is the average number of students per department?",
+      "first_seen_id": "apt_800_608"
+    },
+    {
+      "original_no": 617,
+      "question": "Using the same data, what percentage of the total belongs to department B?",
+      "first_seen_id": "apt_800_612"
+    },
+    {
+      "original_no": 618,
+      "question": "Using the same data, what is the average number of students per department?",
+      "first_seen_id": "apt_800_613"
+    },
+    {
+      "original_no": 622,
+      "question": "Using the same data, what percentage of the total belongs to department B?",
+      "first_seen_id": "apt_800_617"
+    },
+    {
+      "original_no": 623,
+      "question": "Using the same data, what is the average number of students per department?",
+      "first_seen_id": "apt_800_618"
+    },
+    {
+      "original_no": 627,
+      "question": "Using the same data, what percentage of the total belongs to department B?",
+      "first_seen_id": "apt_800_622"
+    },
+    {
+      "original_no": 628,
+      "question": "Using the same data, what is the average number of students per department?",
+      "first_seen_id": "apt_800_623"
+    },
+    {
+      "original_no": 632,
+      "question": "Using the same data, what percentage of the total belongs to department B?",
+      "first_seen_id": "apt_800_627"
+    },
+    {
+      "original_no": 633,
+      "question": "Using the same data, what is the average number of students per department?",
+      "first_seen_id": "apt_800_628"
+    },
+    {
+      "original_no": 637,
+      "question": "Using the same data, what percentage of the total belongs to department B?",
+      "first_seen_id": "apt_800_632"
+    },
+    {
+      "original_no": 638,
+      "question": "Using the same data, what is the average number of students per department?",
+      "first_seen_id": "apt_800_633"
+    },
+    {
+      "original_no": 642,
+      "question": "Using the same data, what percentage of the total belongs to department B?",
+      "first_seen_id": "apt_800_637"
+    },
+    {
+      "original_no": 643,
+      "question": "Using the same data, what is the average number of students per department?",
+      "first_seen_id": "apt_800_638"
+    },
+    {
+      "original_no": 647,
+      "question": "Using the same data, what percentage of the total belongs to department B?",
+      "first_seen_id": "apt_800_642"
+    },
+    {
+      "original_no": 648,
+      "question": "Using the same data, what is the average number of students per department?",
+      "first_seen_id": "apt_800_643"
+    },
+    {
+      "original_no": 669,
+      "question": "What does CPU stand for?",
+      "first_seen_id": "apt_800_649"
+    },
+    {
+      "original_no": 670,
+      "question": "Which data structure follows FIFO?",
+      "first_seen_id": "apt_800_650"
+    },
+    {
+      "original_no": 671,
+      "question": "Which data structure follows LIFO?",
+      "first_seen_id": "apt_800_651"
+    },
+    {
+      "original_no": 672,
+      "question": "What is the time complexity of binary search on a sorted array?",
+      "first_seen_id": "apt_800_652"
+    },
+    {
+      "original_no": 673,
+      "question": "Which language is primarily used to style web pages?",
+      "first_seen_id": "apt_800_653"
+    },
+    {
+      "original_no": 674,
+      "question": "Which SQL command retrieves data?",
+      "first_seen_id": "apt_800_654"
+    },
+    {
+      "original_no": 675,
+      "question": "What does OOP stand for?",
+      "first_seen_id": "apt_800_655"
+    },
+    {
+      "original_no": 676,
+      "question": "Which HTML tag creates a hyperlink?",
+      "first_seen_id": "apt_800_656"
+    },
+    {
+      "original_no": 677,
+      "question": "Which of these is a Python list property?",
+      "first_seen_id": "apt_800_657"
+    },
+    {
+      "original_no": 678,
+      "question": "Which protocol is commonly used to access secure websites?",
+      "first_seen_id": "apt_800_658"
+    },
+    {
+      "original_no": 679,
+      "question": "What is the smallest unit of data?",
+      "first_seen_id": "apt_800_659"
+    },
+    {
+      "original_no": 680,
+      "question": "Which key uniquely identifies a row in a relational table?",
+      "first_seen_id": "apt_800_660"
+    },
+    {
+      "original_no": 681,
+      "question": "What does RAM stand for?",
+      "first_seen_id": "apt_800_661"
+    },
+    {
+      "original_no": 682,
+      "question": "Which traversal visits left subtree, root, then right subtree?",
+      "first_seen_id": "apt_800_662"
+    },
+    {
+      "original_no": 683,
+      "question": "Which operator checks equality in Python?",
+      "first_seen_id": "apt_800_663"
+    },
+    {
+      "original_no": 684,
+      "question": "What is the result of 2 ** 3 in Python?",
+      "first_seen_id": "apt_800_664"
+    },
+    {
+      "original_no": 685,
+      "question": "Which SDLC phase gathers user needs?",
+      "first_seen_id": "apt_800_665"
+    },
+    {
+      "original_no": 686,
+      "question": "What is a database index mainly used for?",
+      "first_seen_id": "apt_800_666"
+    },
+    {
+      "original_no": 687,
+      "question": "Which testing checks individual functions or components?",
+      "first_seen_id": "apt_800_667"
+    },
+    {
+      "original_no": 688,
+      "question": "What does API stand for?",
+      "first_seen_id": "apt_800_668"
+    },
+    {
+      "original_no": 689,
+      "question": "What does CPU stand for?",
+      "first_seen_id": "apt_800_669"
+    },
+    {
+      "original_no": 690,
+      "question": "Which data structure follows FIFO?",
+      "first_seen_id": "apt_800_670"
+    },
+    {
+      "original_no": 691,
+      "question": "Which data structure follows LIFO?",
+      "first_seen_id": "apt_800_671"
+    },
+    {
+      "original_no": 692,
+      "question": "What is the time complexity of binary search on a sorted array?",
+      "first_seen_id": "apt_800_672"
+    },
+    {
+      "original_no": 693,
+      "question": "Which language is primarily used to style web pages?",
+      "first_seen_id": "apt_800_673"
+    },
+    {
+      "original_no": 694,
+      "question": "Which SQL command retrieves data?",
+      "first_seen_id": "apt_800_674"
+    },
+    {
+      "original_no": 695,
+      "question": "What does OOP stand for?",
+      "first_seen_id": "apt_800_675"
+    },
+    {
+      "original_no": 696,
+      "question": "Which HTML tag creates a hyperlink?",
+      "first_seen_id": "apt_800_676"
+    },
+    {
+      "original_no": 697,
+      "question": "Which of these is a Python list property?",
+      "first_seen_id": "apt_800_677"
+    },
+    {
+      "original_no": 698,
+      "question": "Which protocol is commonly used to access secure websites?",
+      "first_seen_id": "apt_800_678"
+    },
+    {
+      "original_no": 699,
+      "question": "What is the smallest unit of data?",
+      "first_seen_id": "apt_800_679"
+    },
+    {
+      "original_no": 700,
+      "question": "Which key uniquely identifies a row in a relational table?",
+      "first_seen_id": "apt_800_680"
+    },
+    {
+      "original_no": 701,
+      "question": "What does RAM stand for?",
+      "first_seen_id": "apt_800_681"
+    },
+    {
+      "original_no": 702,
+      "question": "Which traversal visits left subtree, root, then right subtree?",
+      "first_seen_id": "apt_800_682"
+    },
+    {
+      "original_no": 703,
+      "question": "Which operator checks equality in Python?",
+      "first_seen_id": "apt_800_683"
+    },
+    {
+      "original_no": 704,
+      "question": "What is the result of 2 ** 3 in Python?",
+      "first_seen_id": "apt_800_684"
+    },
+    {
+      "original_no": 705,
+      "question": "Which SDLC phase gathers user needs?",
+      "first_seen_id": "apt_800_685"
+    },
+    {
+      "original_no": 706,
+      "question": "What is a database index mainly used for?",
+      "first_seen_id": "apt_800_686"
+    },
+    {
+      "original_no": 707,
+      "question": "Which testing checks individual functions or components?",
+      "first_seen_id": "apt_800_687"
+    },
+    {
+      "original_no": 708,
+      "question": "What does API stand for?",
+      "first_seen_id": "apt_800_688"
+    },
+    {
+      "original_no": 709,
+      "question": "What does CPU stand for?",
+      "first_seen_id": "apt_800_689"
+    },
+    {
+      "original_no": 710,
+      "question": "Which data structure follows FIFO?",
+      "first_seen_id": "apt_800_690"
+    },
+    {
+      "original_no": 711,
+      "question": "Which data structure follows LIFO?",
+      "first_seen_id": "apt_800_691"
+    },
+    {
+      "original_no": 712,
+      "question": "What is the time complexity of binary search on a sorted array?",
+      "first_seen_id": "apt_800_692"
+    },
+    {
+      "original_no": 713,
+      "question": "Which language is primarily used to style web pages?",
+      "first_seen_id": "apt_800_693"
+    },
+    {
+      "original_no": 714,
+      "question": "Which SQL command retrieves data?",
+      "first_seen_id": "apt_800_694"
+    },
+    {
+      "original_no": 715,
+      "question": "What does OOP stand for?",
+      "first_seen_id": "apt_800_695"
+    },
+    {
+      "original_no": 716,
+      "question": "Which HTML tag creates a hyperlink?",
+      "first_seen_id": "apt_800_696"
+    },
+    {
+      "original_no": 717,
+      "question": "Which of these is a Python list property?",
+      "first_seen_id": "apt_800_697"
+    },
+    {
+      "original_no": 718,
+      "question": "Which protocol is commonly used to access secure websites?",
+      "first_seen_id": "apt_800_698"
+    },
+    {
+      "original_no": 719,
+      "question": "What is the smallest unit of data?",
+      "first_seen_id": "apt_800_699"
+    },
+    {
+      "original_no": 720,
+      "question": "Which key uniquely identifies a row in a relational table?",
+      "first_seen_id": "apt_800_700"
+    },
+    {
+      "original_no": 721,
+      "question": "What does RAM stand for?",
+      "first_seen_id": "apt_800_701"
+    },
+    {
+      "original_no": 722,
+      "question": "Which traversal visits left subtree, root, then right subtree?",
+      "first_seen_id": "apt_800_702"
+    },
+    {
+      "original_no": 723,
+      "question": "Which operator checks equality in Python?",
+      "first_seen_id": "apt_800_703"
+    },
+    {
+      "original_no": 724,
+      "question": "What is the result of 2 ** 3 in Python?",
+      "first_seen_id": "apt_800_704"
+    },
+    {
+      "original_no": 725,
+      "question": "Which SDLC phase gathers user needs?",
+      "first_seen_id": "apt_800_705"
+    },
+    {
+      "original_no": 726,
+      "question": "What is a database index mainly used for?",
+      "first_seen_id": "apt_800_706"
+    },
+    {
+      "original_no": 727,
+      "question": "Which testing checks individual functions or components?",
+      "first_seen_id": "apt_800_707"
+    },
+    {
+      "original_no": 728,
+      "question": "What does API stand for?",
+      "first_seen_id": "apt_800_708"
+    },
+    {
+      "original_no": 729,
+      "question": "What does CPU stand for?",
+      "first_seen_id": "apt_800_709"
+    },
+    {
+      "original_no": 730,
+      "question": "Which data structure follows FIFO?",
+      "first_seen_id": "apt_800_710"
+    },
+    {
+      "original_no": 731,
+      "question": "Which data structure follows LIFO?",
+      "first_seen_id": "apt_800_711"
+    },
+    {
+      "original_no": 732,
+      "question": "What is the time complexity of binary search on a sorted array?",
+      "first_seen_id": "apt_800_712"
+    },
+    {
+      "original_no": 733,
+      "question": "Which language is primarily used to style web pages?",
+      "first_seen_id": "apt_800_713"
+    },
+    {
+      "original_no": 734,
+      "question": "Which SQL command retrieves data?",
+      "first_seen_id": "apt_800_714"
+    },
+    {
+      "original_no": 735,
+      "question": "What does OOP stand for?",
+      "first_seen_id": "apt_800_715"
+    },
+    {
+      "original_no": 736,
+      "question": "Which HTML tag creates a hyperlink?",
+      "first_seen_id": "apt_800_716"
+    },
+    {
+      "original_no": 737,
+      "question": "Which of these is a Python list property?",
+      "first_seen_id": "apt_800_717"
+    },
+    {
+      "original_no": 738,
+      "question": "Which protocol is commonly used to access secure websites?",
+      "first_seen_id": "apt_800_718"
+    },
+    {
+      "original_no": 739,
+      "question": "What is the smallest unit of data?",
+      "first_seen_id": "apt_800_719"
+    },
+    {
+      "original_no": 740,
+      "question": "Which key uniquely identifies a row in a relational table?",
+      "first_seen_id": "apt_800_720"
+    },
+    {
+      "original_no": 741,
+      "question": "What does RAM stand for?",
+      "first_seen_id": "apt_800_721"
+    },
+    {
+      "original_no": 742,
+      "question": "Which traversal visits left subtree, root, then right subtree?",
+      "first_seen_id": "apt_800_722"
+    },
+    {
+      "original_no": 743,
+      "question": "Which operator checks equality in Python?",
+      "first_seen_id": "apt_800_723"
+    },
+    {
+      "original_no": 744,
+      "question": "What is the result of 2 ** 3 in Python?",
+      "first_seen_id": "apt_800_724"
+    },
+    {
+      "original_no": 745,
+      "question": "Which SDLC phase gathers user needs?",
+      "first_seen_id": "apt_800_725"
+    },
+    {
+      "original_no": 746,
+      "question": "What is a database index mainly used for?",
+      "first_seen_id": "apt_800_726"
+    },
+    {
+      "original_no": 747,
+      "question": "Which testing checks individual functions or components?",
+      "first_seen_id": "apt_800_727"
+    },
+    {
+      "original_no": 748,
+      "question": "What does API stand for?",
+      "first_seen_id": "apt_800_728"
+    },
+    {
+      "original_no": 749,
+      "question": "What does CPU stand for?",
+      "first_seen_id": "apt_800_729"
+    },
+    {
+      "original_no": 750,
+      "question": "Which data structure follows FIFO?",
+      "first_seen_id": "apt_800_730"
+    },
+    {
+      "original_no": 751,
+      "question": "Which data structure follows LIFO?",
+      "first_seen_id": "apt_800_731"
+    },
+    {
+      "original_no": 752,
+      "question": "What is the time complexity of binary search on a sorted array?",
+      "first_seen_id": "apt_800_732"
+    },
+    {
+      "original_no": 753,
+      "question": "Which language is primarily used to style web pages?",
+      "first_seen_id": "apt_800_733"
+    },
+    {
+      "original_no": 754,
+      "question": "Which SQL command retrieves data?",
+      "first_seen_id": "apt_800_734"
+    },
+    {
+      "original_no": 755,
+      "question": "What does OOP stand for?",
+      "first_seen_id": "apt_800_735"
+    },
+    {
+      "original_no": 756,
+      "question": "Which HTML tag creates a hyperlink?",
+      "first_seen_id": "apt_800_736"
+    },
+    {
+      "original_no": 757,
+      "question": "Which of these is a Python list property?",
+      "first_seen_id": "apt_800_737"
+    },
+    {
+      "original_no": 758,
+      "question": "Which protocol is commonly used to access secure websites?",
+      "first_seen_id": "apt_800_738"
+    },
+    {
+      "original_no": 759,
+      "question": "What is the smallest unit of data?",
+      "first_seen_id": "apt_800_739"
+    },
+    {
+      "original_no": 760,
+      "question": "Which key uniquely identifies a row in a relational table?",
+      "first_seen_id": "apt_800_740"
+    },
+    {
+      "original_no": 761,
+      "question": "What does RAM stand for?",
+      "first_seen_id": "apt_800_741"
+    },
+    {
+      "original_no": 762,
+      "question": "Which traversal visits left subtree, root, then right subtree?",
+      "first_seen_id": "apt_800_742"
+    },
+    {
+      "original_no": 763,
+      "question": "Which operator checks equality in Python?",
+      "first_seen_id": "apt_800_743"
+    },
+    {
+      "original_no": 764,
+      "question": "What is the result of 2 ** 3 in Python?",
+      "first_seen_id": "apt_800_744"
+    },
+    {
+      "original_no": 765,
+      "question": "Which SDLC phase gathers user needs?",
+      "first_seen_id": "apt_800_745"
+    },
+    {
+      "original_no": 766,
+      "question": "What is a database index mainly used for?",
+      "first_seen_id": "apt_800_746"
+    },
+    {
+      "original_no": 767,
+      "question": "Which testing checks individual functions or components?",
+      "first_seen_id": "apt_800_747"
+    },
+    {
+      "original_no": 768,
+      "question": "What does API stand for?",
+      "first_seen_id": "apt_800_748"
+    },
+    {
+      "original_no": 769,
+      "question": "What does CPU stand for?",
+      "first_seen_id": "apt_800_749"
+    },
+    {
+      "original_no": 770,
+      "question": "Which data structure follows FIFO?",
+      "first_seen_id": "apt_800_750"
+    },
+    {
+      "original_no": 771,
+      "question": "Which data structure follows LIFO?",
+      "first_seen_id": "apt_800_751"
+    },
+    {
+      "original_no": 772,
+      "question": "What is the time complexity of binary search on a sorted array?",
+      "first_seen_id": "apt_800_752"
+    },
+    {
+      "original_no": 773,
+      "question": "Which language is primarily used to style web pages?",
+      "first_seen_id": "apt_800_753"
+    },
+    {
+      "original_no": 774,
+      "question": "Which SQL command retrieves data?",
+      "first_seen_id": "apt_800_754"
+    },
+    {
+      "original_no": 775,
+      "question": "What does OOP stand for?",
+      "first_seen_id": "apt_800_755"
+    },
+    {
+      "original_no": 776,
+      "question": "Which HTML tag creates a hyperlink?",
+      "first_seen_id": "apt_800_756"
+    },
+    {
+      "original_no": 777,
+      "question": "Which of these is a Python list property?",
+      "first_seen_id": "apt_800_757"
+    },
+    {
+      "original_no": 778,
+      "question": "Which protocol is commonly used to access secure websites?",
+      "first_seen_id": "apt_800_758"
+    },
+    {
+      "original_no": 779,
+      "question": "What is the smallest unit of data?",
+      "first_seen_id": "apt_800_759"
+    },
+    {
+      "original_no": 780,
+      "question": "Which key uniquely identifies a row in a relational table?",
+      "first_seen_id": "apt_800_760"
+    },
+    {
+      "original_no": 781,
+      "question": "What does RAM stand for?",
+      "first_seen_id": "apt_800_761"
+    },
+    {
+      "original_no": 782,
+      "question": "Which traversal visits left subtree, root, then right subtree?",
+      "first_seen_id": "apt_800_762"
+    },
+    {
+      "original_no": 783,
+      "question": "Which operator checks equality in Python?",
+      "first_seen_id": "apt_800_763"
+    },
+    {
+      "original_no": 784,
+      "question": "What is the result of 2 ** 3 in Python?",
+      "first_seen_id": "apt_800_764"
+    },
+    {
+      "original_no": 785,
+      "question": "Which SDLC phase gathers user needs?",
+      "first_seen_id": "apt_800_765"
+    },
+    {
+      "original_no": 786,
+      "question": "What is a database index mainly used for?",
+      "first_seen_id": "apt_800_766"
+    },
+    {
+      "original_no": 787,
+      "question": "Which testing checks individual functions or components?",
+      "first_seen_id": "apt_800_767"
+    },
+    {
+      "original_no": 788,
+      "question": "What does API stand for?",
+      "first_seen_id": "apt_800_768"
+    },
+    {
+      "original_no": 789,
+      "question": "What does CPU stand for?",
+      "first_seen_id": "apt_800_769"
+    },
+    {
+      "original_no": 790,
+      "question": "Which data structure follows FIFO?",
+      "first_seen_id": "apt_800_770"
+    },
+    {
+      "original_no": 791,
+      "question": "Which data structure follows LIFO?",
+      "first_seen_id": "apt_800_771"
+    },
+    {
+      "original_no": 792,
+      "question": "What is the time complexity of binary search on a sorted array?",
+      "first_seen_id": "apt_800_772"
+    },
+    {
+      "original_no": 793,
+      "question": "Which language is primarily used to style web pages?",
+      "first_seen_id": "apt_800_773"
+    },
+    {
+      "original_no": 794,
+      "question": "Which SQL command retrieves data?",
+      "first_seen_id": "apt_800_774"
+    },
+    {
+      "original_no": 795,
+      "question": "What does OOP stand for?",
+      "first_seen_id": "apt_800_775"
+    },
+    {
+      "original_no": 796,
+      "question": "Which HTML tag creates a hyperlink?",
+      "first_seen_id": "apt_800_776"
+    },
+    {
+      "original_no": 797,
+      "question": "Which of these is a Python list property?",
+      "first_seen_id": "apt_800_777"
+    },
+    {
+      "original_no": 798,
+      "question": "Which protocol is commonly used to access secure websites?",
+      "first_seen_id": "apt_800_778"
+    },
+    {
+      "original_no": "APT206",
+      "question": "Ravi is older than Teja, and Teja is older than Shyam. Who is the youngest?",
+      "first_seen_id": "apt_300_APT202",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT210",
+      "question": "Ravi is older than Teja, and Teja is older than Shyam. Who is the youngest?",
+      "first_seen_id": "apt_300_APT202",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT214",
+      "question": "Ravi is older than Teja, and Teja is older than Shyam. Who is the youngest?",
+      "first_seen_id": "apt_300_APT202",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT218",
+      "question": "Ravi is older than Teja, and Teja is older than Shyam. Who is the youngest?",
+      "first_seen_id": "apt_300_APT202",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT222",
+      "question": "Ravi is older than Teja, and Teja is older than Shyam. Who is the youngest?",
+      "first_seen_id": "apt_300_APT202",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT226",
+      "question": "Ravi is older than Teja, and Teja is older than Shyam. Who is the youngest?",
+      "first_seen_id": "apt_300_APT202",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT230",
+      "question": "Ravi is older than Teja, and Teja is older than Shyam. Who is the youngest?",
+      "first_seen_id": "apt_300_APT202",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT234",
+      "question": "Ravi is older than Teja, and Teja is older than Shyam. Who is the youngest?",
+      "first_seen_id": "apt_300_APT202",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT238",
+      "question": "Ravi is older than Teja, and Teja is older than Shyam. Who is the youngest?",
+      "first_seen_id": "apt_300_APT202",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT242",
+      "question": "Ravi is older than Teja, and Teja is older than Shyam. Who is the youngest?",
+      "first_seen_id": "apt_300_APT202",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT246",
+      "question": "Ravi is older than Teja, and Teja is older than Shyam. Who is the youngest?",
+      "first_seen_id": "apt_300_APT202",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT247",
+      "question": "What is the smaller angle between the clock hands at 1:00?",
+      "first_seen_id": "apt_300_APT203",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT250",
+      "question": "Ravi is older than Teja, and Teja is older than Shyam. Who is the youngest?",
+      "first_seen_id": "apt_300_APT202",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT251",
+      "question": "What is the smaller angle between the clock hands at 2:00?",
+      "first_seen_id": "apt_300_APT207",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT254",
+      "question": "Ravi is older than Teja, and Teja is older than Shyam. Who is the youngest?",
+      "first_seen_id": "apt_300_APT202",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT255",
+      "question": "What is the smaller angle between the clock hands at 3:00?",
+      "first_seen_id": "apt_300_APT211",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT258",
+      "question": "Ravi is older than Teja, and Teja is older than Shyam. Who is the youngest?",
+      "first_seen_id": "apt_300_APT202",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT259",
+      "question": "What is the smaller angle between the clock hands at 4:00?",
+      "first_seen_id": "apt_300_APT215",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT262",
+      "question": "Ravi is older than Teja, and Teja is older than Shyam. Who is the youngest?",
+      "first_seen_id": "apt_300_APT202",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT263",
+      "question": "What is the smaller angle between the clock hands at 5:00?",
+      "first_seen_id": "apt_300_APT219",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT266",
+      "question": "Ravi is older than Teja, and Teja is older than Shyam. Who is the youngest?",
+      "first_seen_id": "apt_300_APT202",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT267",
+      "question": "What is the smaller angle between the clock hands at 6:00?",
+      "first_seen_id": "apt_300_APT223",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT270",
+      "question": "Ravi is older than Teja, and Teja is older than Shyam. Who is the youngest?",
+      "first_seen_id": "apt_300_APT202",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT271",
+      "question": "What is the smaller angle between the clock hands at 7:00?",
+      "first_seen_id": "apt_300_APT227",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT274",
+      "question": "Ravi is older than Teja, and Teja is older than Shyam. Who is the youngest?",
+      "first_seen_id": "apt_300_APT202",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT275",
+      "question": "What is the smaller angle between the clock hands at 8:00?",
+      "first_seen_id": "apt_300_APT231",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT278",
+      "question": "Ravi is older than Teja, and Teja is older than Shyam. Who is the youngest?",
+      "first_seen_id": "apt_300_APT202",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT279",
+      "question": "What is the smaller angle between the clock hands at 9:00?",
+      "first_seen_id": "apt_300_APT235",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT281",
+      "question": "Choose the synonym of 'Rapid'.",
+      "first_seen_id": "apt_800_439",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT282",
+      "question": "Choose the synonym of 'Abundant'.",
+      "first_seen_id": "apt_800_401",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT283",
+      "question": "Choose the synonym of 'Brief'.",
+      "first_seen_id": "apt_800_407",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT284",
+      "question": "Choose the synonym of 'Candid'.",
+      "first_seen_id": "apt_800_409",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT285",
+      "question": "Choose the synonym of 'Diligent'.",
+      "first_seen_id": "apt_800_411",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT287",
+      "question": "Choose the synonym of 'Fragile'.",
+      "first_seen_id": "apt_800_415",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT288",
+      "question": "Choose the synonym of 'Genuine'.",
+      "first_seen_id": "apt_800_417",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT289",
+      "question": "Choose the synonym of 'Hostile'.",
+      "first_seen_id": "apt_800_419",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT290",
+      "question": "Choose the synonym of 'Inevitable'.",
+      "first_seen_id": "apt_800_421",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT291",
+      "question": "Choose the synonym of 'Jubilant'.",
+      "first_seen_id": "apt_800_423",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT292",
+      "question": "Choose the synonym of 'Keen'.",
+      "first_seen_id": "apt_800_425",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT294",
+      "question": "Choose the synonym of 'Meager'.",
+      "first_seen_id": "apt_800_521",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT295",
+      "question": "Choose the synonym of 'Novice'.",
+      "first_seen_id": "apt_800_479",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT296",
+      "question": "Choose the synonym of 'Obsolete'.",
+      "first_seen_id": "apt_800_433",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT298",
+      "question": "Choose the synonym of 'Reluctant'.",
+      "first_seen_id": "apt_800_441",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT299",
+      "question": "Choose the synonym of 'Sincere'.",
+      "first_seen_id": "apt_800_489",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT300",
+      "question": "Choose the synonym of 'Tranquil'.",
+      "first_seen_id": "apt_800_531",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT302",
+      "question": "Choose the synonym of 'Vivid'.",
+      "first_seen_id": "apt_800_535",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT303",
+      "question": "Choose the synonym of 'Weary'.",
+      "first_seen_id": "apt_800_451",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT304",
+      "question": "Choose the synonym of 'Yield'.",
+      "first_seen_id": "apt_800_499",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT305",
+      "question": "Choose the synonym of 'Zeal'.",
+      "first_seen_id": "apt_800_455",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT306",
+      "question": "Choose the antonym of 'Expand'.",
+      "first_seen_id": "apt_800_414",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT307",
+      "question": "Choose the antonym of 'Ancient'.",
+      "first_seen_id": "apt_800_406",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT309",
+      "question": "Choose the antonym of 'Benevolent'.",
+      "first_seen_id": "apt_800_460",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT311",
+      "question": "Choose the antonym of 'Conceal'.",
+      "first_seen_id": "apt_800_462",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT316",
+      "question": "Choose the antonym of 'Humble'.",
+      "first_seen_id": "apt_800_472",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT319",
+      "question": "Choose the antonym of 'Optimistic'.",
+      "first_seen_id": "apt_800_436",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT323",
+      "question": "Choose the antonym of 'Transparent'.",
+      "first_seen_id": "apt_800_446",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT325",
+      "question": "Choose the antonym of 'Wisdom'.",
+      "first_seen_id": "apt_800_454",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT357",
+      "question": "Which word is spelled correctly?",
+      "first_seen_id": "apt_300_APT356",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT358",
+      "question": "Which word is spelled correctly?",
+      "first_seen_id": "apt_300_APT356",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT359",
+      "question": "Which word is spelled correctly?",
+      "first_seen_id": "apt_300_APT356",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT360",
+      "question": "Which word is spelled correctly?",
+      "first_seen_id": "apt_300_APT356",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT361",
+      "question": "Which word is spelled correctly?",
+      "first_seen_id": "apt_300_APT356",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT362",
+      "question": "Which word is spelled correctly?",
+      "first_seen_id": "apt_300_APT356",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT363",
+      "question": "Which word is spelled correctly?",
+      "first_seen_id": "apt_300_APT356",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT364",
+      "question": "Which word is spelled correctly?",
+      "first_seen_id": "apt_300_APT356",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT365",
+      "question": "Which word is spelled correctly?",
+      "first_seen_id": "apt_300_APT356",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT366",
+      "question": "Which word is spelled correctly?",
+      "first_seen_id": "apt_300_APT356",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT367",
+      "question": "Which word is spelled correctly?",
+      "first_seen_id": "apt_300_APT356",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT368",
+      "question": "Which word is spelled correctly?",
+      "first_seen_id": "apt_300_APT356",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT369",
+      "question": "Which word is spelled correctly?",
+      "first_seen_id": "apt_300_APT356",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT370",
+      "question": "Which word is spelled correctly?",
+      "first_seen_id": "apt_300_APT356",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT371",
+      "question": "Which word is spelled correctly?",
+      "first_seen_id": "apt_300_APT356",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT372",
+      "question": "Which word is spelled correctly?",
+      "first_seen_id": "apt_300_APT356",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT373",
+      "question": "Which word is spelled correctly?",
+      "first_seen_id": "apt_300_APT356",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT374",
+      "question": "Which word is spelled correctly?",
+      "first_seen_id": "apt_300_APT356",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT375",
+      "question": "Which word is spelled correctly?",
+      "first_seen_id": "apt_300_APT356",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT376",
+      "question": "Which word is spelled correctly?",
+      "first_seen_id": "apt_300_APT356",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT377",
+      "question": "Which word is spelled correctly?",
+      "first_seen_id": "apt_300_APT356",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT378",
+      "question": "Which word is spelled correctly?",
+      "first_seen_id": "apt_300_APT356",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT379",
+      "question": "Which word is spelled correctly?",
+      "first_seen_id": "apt_300_APT356",
+      "note": "Skipping duplicate question from 300 bank"
+    },
+    {
+      "original_no": "APT380",
+      "question": "Which word is spelled correctly?",
+      "first_seen_id": "apt_300_APT356",
+      "note": "Skipping duplicate question from 300 bank"
+    }
+  ],
+  "manual_review_required": [],
+  "category_counts": {
+    "Quantitative Aptitude": 300,
+    "Logical Reasoning": 352,
+    "Verbal Ability": 195,
+    "Data Interpretation": 100,
+    "Technical Aptitude": 152
+  }
+}
