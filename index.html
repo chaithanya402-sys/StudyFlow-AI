@@ -1876,6 +1876,157 @@
           </div>
         </div>
 
+        <!-- Assessment Mode Selector Tabs -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+          <div style="display: flex; gap: 8px; background: #F1F5F9; padding: 4px; border-radius: 8px;">
+            <button type="button" class="btn-sm" id="btn-mode-curated" onclick="switchCodingMode('curated')" style="background: #FFFFFF; color: #1E293B; font-weight: 700; border: 1px solid #CBD5E1; border-radius: 6px; padding: 6px 14px; cursor: pointer;">
+              📚 Curated Question Bank (60)
+            </button>
+            <button type="button" class="btn-sm" id="btn-mode-ai" onclick="switchCodingMode('ai')" style="background: transparent; color: #64748B; font-weight: 600; border: 1px solid transparent; border-radius: 6px; padding: 6px 14px; cursor: pointer;">
+              ⚡ System-Selected Questions (Groq AI)
+            </button>
+            <button type="button" class="btn-sm" id="btn-mode-history" onclick="switchCodingMode('history')" style="background: transparent; color: #64748B; font-weight: 600; border: 1px solid transparent; border-radius: 6px; padding: 6px 14px; cursor: pointer;">
+              📜 AI Assessment History
+            </button>
+          </div>
+          <div id="code-active-badge-container"></div>
+        </div>
+
+        <!-- System-Selected / AI Assessment Configuration Panel -->
+        <div id="code-ai-config-panel" style="display: none; background: #F8FAFC; border: 1.5px solid #BFDBFE; border-radius: 12px; padding: 18px 20px; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(37,99,235,0.06);">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="badge-status blue" style="font-weight: 700;">Groq AI Integration</span>
+                <span class="badge-status teal" style="font-size: 11px;">Free Plan Optimized</span>
+              </div>
+              <h3 style="font-size: 16px; font-weight: 700; color: #1E3A8A; margin: 6px 0 2px 0;">Dynamic Placement Assessment Generator</h3>
+              <p style="font-size: 12.5px; color: #475569; margin: 0;">Configure your assessment. Groq AI generates validated, placement-oriented problems with full test cases, starter templates, and complexity bounds.</p>
+            </div>
+            <button type="button" class="btn-primary btn-sm" id="btn-generate-ai-assessment" onclick="generateAiCodingAssessment()" style="padding: 8px 18px; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+              <span>Generate Assessment ⚡</span>
+            </button>
+          </div>
+
+          <!-- Configuration Controls Grid -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 12px;">
+            <div>
+              <label class="form-label" style="font-size: 11px; font-weight: 700; color: #1E293B; text-transform: uppercase;">Difficulty</label>
+              <select id="code-ai-diff" class="form-input" style="font-size: 12px; padding: 7px 10px;">
+                <option value="Mixed" selected>Mixed (Easy • Medium • Hard)</option>
+                <option value="Easy">Easy</option>
+                <option value="Medium">Medium</option>
+                <option value="Hard">Hard</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="form-label" style="font-size: 11px; font-weight: 700; color: #1E293B; text-transform: uppercase;">Number of Questions</label>
+              <select id="code-ai-count" class="form-input" style="font-size: 12px; padding: 7px 10px;">
+                <option value="5" selected>5 Questions (1 Batch)</option>
+                <option value="10">10 Questions (2 Batches)</option>
+                <option value="15">15 Questions (3 Batches)</option>
+                <option value="20">20 Questions (4 Batches)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="form-label" style="font-size: 11px; font-weight: 700; color: #1E293B; text-transform: uppercase;">Programming Topic</label>
+              <select id="code-ai-topic" class="form-input" style="font-size: 12px; padding: 7px 10px;">
+                <option value="All Topics" selected>All Topics</option>
+                <option value="Arrays">Arrays</option>
+                <option value="Strings">Strings</option>
+                <option value="Searching">Searching</option>
+                <option value="Sorting">Sorting</option>
+                <option value="Mathematics">Mathematics</option>
+                <option value="Recursion">Recursion</option>
+                <option value="Linked Lists">Linked Lists</option>
+                <option value="Stack and Queue">Stack and Queue</option>
+                <option value="Trees">Trees</option>
+                <option value="Graphs">Graphs</option>
+                <option value="Dynamic Programming">Dynamic Programming</option>
+                <option value="Greedy Algorithms">Greedy Algorithms</option>
+                <option value="Hashing">Hashing</option>
+                <option value="Backtracking">Backtracking</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="form-label" style="font-size: 11px; font-weight: 700; color: #1E293B; text-transform: uppercase;">Company Preparation</label>
+              <select id="code-ai-company" class="form-input" style="font-size: 12px; padding: 7px 10px;">
+                <option value="General Placement" selected>General Placement</option>
+                <option value="TCS">TCS Pattern</option>
+                <option value="Infosys">Infosys Pattern</option>
+                <option value="Wipro">Wipro Pattern</option>
+                <option value="Accenture">Accenture Pattern</option>
+                <option value="Cognizant">Cognizant Pattern</option>
+                <option value="Product-Based Companies">Product-Based Companies</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="form-label" style="font-size: 11px; font-weight: 700; color: #1E293B; text-transform: uppercase;">Assessment Duration</label>
+              <select id="code-ai-duration" class="form-input" style="font-size: 12px; padding: 7px 10px;">
+                <option value="15">15 Minutes</option>
+                <option value="30" selected>30 Minutes</option>
+                <option value="45">45 Minutes</option>
+                <option value="60">60 Minutes</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="code-ai-status-msg" style="display: none; padding: 10px 14px; border-radius: 8px; font-size: 12px; font-weight: 600;"></div>
+        </div>
+
+        <!-- Active Assessment In-Progress Banner -->
+        <div id="code-active-banner" style="display: none; background: #EFF6FF; border: 1.5px solid #93C5FD; border-radius: 10px; padding: 12px 16px; margin-bottom: 20px; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span class="badge-status blue" id="code-active-badge">Active AI Assessment</span>
+            <div>
+              <div style="font-size: 13.5px; font-weight: 700; color: #1E3A8A;" id="code-active-title">System-Generated Assessment</div>
+              <div style="font-size: 11.5px; color: #475569;" id="code-active-meta">5 Questions • 30 Mins • TCS Pattern</div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span id="code-active-progress" style="font-size: 12px; font-weight: 700; color: #1D4ED8; background: #DBEAFE; padding: 4px 10px; border-radius: 6px;">0 / 5 Solved</span>
+            <button type="button" class="btn-primary btn-sm" onclick="finishActiveAssessment()" style="padding: 5px 12px; font-size: 12px;">Complete Session</button>
+            <button type="button" class="btn-outline btn-sm" onclick="exitToCuratedMode()" style="padding: 5px 12px; font-size: 12px; background: #FFFFFF;">Switch to Curated Bank</button>
+          </div>
+        </div>
+
+        <!-- AI Assessment History View Pane -->
+        <div id="code-ai-history-panel" style="display: none; margin-bottom: 24px;">
+          <div class="content-panel" style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 10px; padding: 18px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+              <div>
+                <h3 class="panel-title" style="margin: 0;">AI Generated Assessments History</h3>
+                <p style="font-size: 12px; color: var(--text-secondary); margin: 4px 0 0 0;">Review your previously generated Groq AI assessments, track overall score, and reopen question sets to retry.</p>
+              </div>
+              <button class="btn-outline btn-sm" onclick="switchCodingMode('curated')">Back to Workspace &rarr;</button>
+            </div>
+            <table class="data-table" style="width: 100%;">
+              <thead>
+                <tr>
+                  <th>Generated At</th>
+                  <th>Assessment ID</th>
+                  <th>Company / Topic</th>
+                  <th>Questions</th>
+                  <th>Duration</th>
+                  <th>Score</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="code-ai-history-tbody">
+                <tr>
+                  <td colspan="8" style="text-align: center; color: var(--text-secondary); padding: 16px;">No AI assessments generated yet. Select 'System-Selected Questions (Groq AI)' to create one.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <!-- Coding IDE -->
         <div class="coding-ide-container" style="margin-bottom: 24px;">
           <!-- Left: Problem Statement -->
@@ -1892,9 +2043,20 @@
               </select>
             </div>
 
-            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+            <div style="display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; align-items: center;">
               <span class="badge-status teal" id="code-problem-diff">Easy</span>
-              <span class="badge-status neutral">Python &bull; Java &bull; C</span>
+              <span class="badge-status blue" id="code-problem-topic">Algorithms</span>
+              <span class="badge-status neutral" id="code-problem-company">General</span>
+              <span class="badge-status neutral" style="font-size: 11px;">Python • Java • C</span>
+            </div>
+
+            <!-- Complexity & Source Row -->
+            <div id="code-problem-meta-row" style="display: flex; gap: 10px; margin-bottom: 12px; font-size: 11px; color: #475569; background: #F8FAFC; padding: 6px 10px; border-radius: 6px; border: 1px solid #E2E8F0;">
+              <div>Time: <strong id="code-problem-time-comp">O(N)</strong></div>
+              <div>&bull;</div>
+              <div>Space: <strong id="code-problem-space-comp">O(1)</strong></div>
+              <div>&bull;</div>
+              <div>Source: <strong id="code-problem-source">Curated Bank</strong></div>
             </div>
 
             <h3 style="font-size: 15px; font-weight: 700; color: #1E293B; margin-bottom: 8px;" id="code-problem-title">Two Sum</h3>

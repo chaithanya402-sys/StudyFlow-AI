@@ -161,11 +161,11 @@ print(c)
 
   // TEST 5: Database Seeding & Hidden Test Case Verification
   test('Database has 6 questions with public and hidden test cases partitioned', () => {
-    const questions = db.prepare('SELECT * FROM coding_questions').all();
-    assert.strictEqual(questions.length, 6, `Expected 6 coding questions, found ${questions.length}`);
+    const curatedQuestions = db.prepare("SELECT * FROM coding_questions WHERE source = 'curated' OR source IS NULL").all();
+    assert.strictEqual(curatedQuestions.length, 6, `Expected 6 curated coding questions, found ${curatedQuestions.length}`);
 
     // Verify test cases partition
-    for (const q of questions) {
+    for (const q of curatedQuestions) {
       const publicCases = db.prepare('SELECT * FROM coding_test_cases WHERE question_id = ? AND is_hidden = 0').all(q.id);
       const hiddenCases = db.prepare('SELECT * FROM coding_test_cases WHERE question_id = ? AND is_hidden = 1').all(q.id);
       assert(publicCases.length >= 1, `Question ${q.id} must have at least 1 public test case`);

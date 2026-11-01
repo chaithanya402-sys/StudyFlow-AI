@@ -9185,6 +9185,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       id: 'code_q1',
       title: 'Two Sum Problem',
       difficulty: 'Easy',
+      topic: 'Arrays & HashMaps',
+      company_tags: 'TCS, Infosys, Product Companies',
+      expected_time_complexity: 'O(N)',
+      expected_space_complexity: 'O(N)',
+      source: 'curated',
       language: 'Python, Java, C',
       description: 'Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target. You may assume each input would have exactly one solution.',
       sample_input: 'nums = [2, 7, 11, 15], target = 9',
@@ -9197,6 +9202,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       id: 'code_q2',
       title: 'Reverse a String',
       difficulty: 'Easy',
+      topic: 'Strings',
+      company_tags: 'Wipro, TCS',
+      expected_time_complexity: 'O(N)',
+      expected_space_complexity: 'O(1)',
+      source: 'curated',
       language: 'Python, Java, C',
       description: 'Given a string s, write a function that reverses the string and returns the reversed result.',
       sample_input: 's = "hello"',
@@ -9209,6 +9219,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       id: 'code_q3',
       title: 'Palindrome Number',
       difficulty: 'Easy',
+      topic: 'Mathematics',
+      company_tags: 'Cognizant, Accenture',
+      expected_time_complexity: 'O(log N)',
+      expected_space_complexity: 'O(1)',
+      source: 'curated',
       language: 'Python, Java, C',
       description: 'Given an integer x, return true if x is a palindrome integer, and false otherwise. An integer is a palindrome when it reads the same backward as forward.',
       sample_input: 'x = 121',
@@ -9221,6 +9236,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       id: 'code_q4',
       title: 'Fibonacci Series',
       difficulty: 'Easy',
+      topic: 'Recursion & DP',
+      company_tags: 'Infosys, TCS',
+      expected_time_complexity: 'O(N)',
+      expected_space_complexity: 'O(1)',
+      source: 'curated',
       language: 'Python, Java, C',
       description: 'The Fibonacci numbers form a sequence such that each number is the sum of the two preceding ones, starting from 0 and 1. Given n, calculate F(n).',
       sample_input: 'n = 5',
@@ -9233,6 +9253,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       id: 'code_q5',
       title: 'Prime Number Check',
       difficulty: 'Medium',
+      topic: 'Mathematics',
+      company_tags: 'Wipro, Accenture',
+      expected_time_complexity: 'O(sqrt(N))',
+      expected_space_complexity: 'O(1)',
+      source: 'curated',
       language: 'Python, Java, C',
       description: 'Given an integer n, determine whether n is a prime number. Return true if n is prime, and false otherwise.',
       sample_input: 'n = 7',
@@ -9245,6 +9270,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       id: 'code_q6',
       title: 'Array Sorting',
       difficulty: 'Hard',
+      topic: 'Sorting & Algorithms',
+      company_tags: 'Product-Based Companies',
+      expected_time_complexity: 'O(N log N)',
+      expected_space_complexity: 'O(N)',
+      source: 'curated',
       language: 'Python, Java, C',
       description: 'Given an array of integers nums, sort the array in ascending numerical order and return the sorted array.',
       sample_input: 'nums = [5, 2, 9, 1, 5, 6]',
@@ -9255,8 +9285,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   ];
 
+  let curatedQuestionsList = [...DEFAULT_CODING_QUESTIONS];
+  let aiQuestionsList = [];
   let codingQuestionsList = [...DEFAULT_CODING_QUESTIONS];
   let currentCodingQ = DEFAULT_CODING_QUESTIONS[0];
+  let activeCodingAssessment = null;
+  let currentCodingMode = 'curated'; // 'curated' | 'ai' | 'history'
   const codingCodeDrafts = {}; // questionId_language -> code
   let codingCompilersInfo = null;
   let isCodingExecuting = false;
@@ -9311,18 +9345,326 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  window.switchCodingMode = function(mode) {
+    currentCodingMode = mode;
+    const btnCurated = document.getElementById('btn-mode-curated');
+    const btnAi = document.getElementById('btn-mode-ai');
+    const btnHistory = document.getElementById('btn-mode-history');
+    const configPanel = document.getElementById('code-ai-config-panel');
+    const historyPanel = document.getElementById('code-ai-history-panel');
+    const activeBanner = document.getElementById('code-active-banner');
+    const ideContainer = document.querySelector('.coding-ide-container');
+
+    // Update active tab buttons
+    if (btnCurated) {
+      btnCurated.style.background = mode === 'curated' ? '#FFFFFF' : 'transparent';
+      btnCurated.style.color = mode === 'curated' ? '#1E293B' : '#64748B';
+      btnCurated.style.borderColor = mode === 'curated' ? '#CBD5E1' : 'transparent';
+    }
+    if (btnAi) {
+      btnAi.style.background = mode === 'ai' ? '#FFFFFF' : 'transparent';
+      btnAi.style.color = mode === 'ai' ? '#2563EB' : '#64748B';
+      btnAi.style.borderColor = mode === 'ai' ? '#93C5FD' : 'transparent';
+    }
+    if (btnHistory) {
+      btnHistory.style.background = mode === 'history' ? '#FFFFFF' : 'transparent';
+      btnHistory.style.color = mode === 'history' ? '#1E293B' : '#64748B';
+      btnHistory.style.borderColor = mode === 'history' ? '#CBD5E1' : 'transparent';
+    }
+
+    if (mode === 'curated') {
+      if (configPanel) configPanel.style.display = 'none';
+      if (historyPanel) historyPanel.style.display = 'none';
+      if (activeBanner) activeBanner.style.display = activeCodingAssessment ? 'flex' : 'none';
+      if (ideContainer) ideContainer.style.display = 'grid';
+
+      codingQuestionsList = [...curatedQuestionsList];
+      populateCodingProblemDropdown(codingQuestionsList);
+      if (codingQuestionsList.length > 0) switchCodingQuestion(codingQuestionsList[0].id);
+    } else if (mode === 'ai') {
+      if (historyPanel) historyPanel.style.display = 'none';
+      if (ideContainer) ideContainer.style.display = 'grid';
+
+      if (activeCodingAssessment && aiQuestionsList.length > 0) {
+        if (configPanel) configPanel.style.display = 'none';
+        if (activeBanner) activeBanner.style.display = 'flex';
+        codingQuestionsList = [...aiQuestionsList];
+        populateCodingProblemDropdown(codingQuestionsList);
+        if (codingQuestionsList.length > 0) switchCodingQuestion(codingQuestionsList[0].id);
+      } else {
+        if (configPanel) configPanel.style.display = 'block';
+        if (activeBanner) activeBanner.style.display = 'none';
+      }
+    } else if (mode === 'history') {
+      if (configPanel) configPanel.style.display = 'none';
+      if (activeBanner) activeBanner.style.display = 'none';
+      if (ideContainer) ideContainer.style.display = 'none';
+      if (historyPanel) historyPanel.style.display = 'block';
+      loadAiCodingAssessmentsHistory();
+    }
+  };
+
+  window.generateAiCodingAssessment = async function() {
+    const diffEl = document.getElementById('code-ai-diff');
+    const countEl = document.getElementById('code-ai-count');
+    const topicEl = document.getElementById('code-ai-topic');
+    const companyEl = document.getElementById('code-ai-company');
+    const durationEl = document.getElementById('code-ai-duration');
+    const btn = document.getElementById('btn-generate-ai-assessment');
+    const statusBox = document.getElementById('code-ai-status-msg');
+
+    const difficulty = diffEl?.value || 'Mixed';
+    const questionCount = parseInt(countEl?.value, 10) || 5;
+    const topics = topicEl?.value || 'All Topics';
+    const companyPreparation = companyEl?.value || 'General Placement';
+    const durationMinutes = parseInt(durationEl?.value, 10) || 30;
+
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = `<span>Generating with Groq... ⏳</span>`;
+    }
+
+    if (statusBox) {
+      statusBox.style.display = 'block';
+      statusBox.style.background = '#EFF6FF';
+      statusBox.style.color = '#1D4ED8';
+      statusBox.style.border = '1px solid #BFDBFE';
+      statusBox.innerHTML = `Calling Groq AI (${questionCount} questions &bull; ${companyPreparation}). Validating problem statements and test cases against local compiler...`;
+    }
+
+    try {
+      const res = await fetch('/api/coding/ai/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          difficulty,
+          questionCount,
+          topics,
+          companyPreparation,
+          durationMinutes
+        })
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        if (statusBox) {
+          statusBox.style.display = 'block';
+          statusBox.style.background = '#FEF2F2';
+          statusBox.style.color = '#991B1B';
+          statusBox.style.border = '1px solid #FCA5A5';
+          statusBox.textContent = data.error || 'Failed to generate assessment.';
+        }
+        window.showToast?.(data.error || 'Failed to generate AI questions.', 'error');
+        return;
+      }
+
+      // Success
+      activeCodingAssessment = {
+        id: data.assessment_id,
+        difficulty: data.difficulty,
+        topics: data.topics,
+        company_preparation: data.company,
+        duration_minutes: data.duration_minutes,
+        question_count: data.total_generated,
+        score: 0,
+        passed_count: 0
+      };
+
+      aiQuestionsList = data.questions || [];
+      codingQuestionsList = [...aiQuestionsList];
+
+      // Update active banner
+      updateActiveAssessmentBanner();
+
+      const configPanel = document.getElementById('code-ai-config-panel');
+      if (configPanel) configPanel.style.display = 'none';
+
+      populateCodingProblemDropdown(codingQuestionsList);
+      if (codingQuestionsList.length > 0) {
+        switchCodingQuestion(codingQuestionsList[0].id);
+      }
+
+      window.showToast?.(`✓ Successfully generated ${data.total_generated} placement questions with Groq AI!`, 'success');
+    } catch (err) {
+      if (statusBox) {
+        statusBox.style.display = 'block';
+        statusBox.style.background = '#FEF2F2';
+        statusBox.style.color = '#991B1B';
+        statusBox.style.border = '1px solid #FCA5A5';
+        statusBox.textContent = 'Connection error: ' + err.message;
+      }
+      window.showToast?.('Error generating assessment: ' + err.message, 'error');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg><span>Generate Assessment ⚡</span>`;
+      }
+    }
+  };
+
+  function updateActiveAssessmentBanner() {
+    const banner = document.getElementById('code-active-banner');
+    if (!banner) return;
+
+    if (!activeCodingAssessment) {
+      banner.style.display = 'none';
+      return;
+    }
+
+    banner.style.display = 'flex';
+    const titleEl = document.getElementById('code-active-title');
+    const metaEl = document.getElementById('code-active-meta');
+    const progEl = document.getElementById('code-active-progress');
+
+    if (titleEl) {
+      titleEl.textContent = `${activeCodingAssessment.company_preparation || 'Placement'} AI Assessment`;
+    }
+    if (metaEl) {
+      metaEl.textContent = `ID: ${activeCodingAssessment.id} • ${activeCodingAssessment.question_count || aiQuestionsList.length} Questions • ${activeCodingAssessment.duration_minutes || 30} Mins • ${activeCodingAssessment.difficulty || 'Mixed'}`;
+    }
+    if (progEl) {
+      progEl.textContent = `${activeCodingAssessment.passed_count || 0} / ${activeCodingAssessment.question_count || aiQuestionsList.length} Solved`;
+    }
+  }
+
+  window.checkActiveCodingAssessment = async function() {
+    try {
+      const res = await fetch('/api/coding/assessments/active', { credentials: 'include' });
+      const data = await res.json();
+      if (data.success && data.active_assessment && data.questions && data.questions.length > 0) {
+        activeCodingAssessment = data.active_assessment;
+        aiQuestionsList = data.questions;
+        updateActiveAssessmentBanner();
+      }
+    } catch (e) {}
+  };
+
+  window.loadAiCodingAssessmentsHistory = async function() {
+    const tbody = document.getElementById('code-ai-history-tbody');
+    try {
+      const res = await fetch('/api/coding/assessments/history', { credentials: 'include' });
+      const data = await res.json();
+      if (!data.success || !tbody) return;
+
+      const history = data.history || [];
+      if (history.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-secondary); padding: 16px;">No AI assessments generated yet. Select \'System-Selected Questions (Groq AI)\' to generate one.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = history.map(h => {
+        const dateStr = h.created_at ? new Date(h.created_at).toLocaleString() : 'Recent';
+        const isCompleted = h.status === 'completed';
+        const statusBadge = isCompleted
+          ? `<span class="badge-status teal">Completed (${h.score || 0}%)</span>`
+          : `<span class="badge-status blue">In Progress</span>`;
+
+        return `
+          <tr>
+            <td>${dateStr}</td>
+            <td><code>${h.id}</code></td>
+            <td><strong>${h.company_preparation || 'General'}</strong><div style="font-size: 11px; color: #64748B;">${h.topics || 'All Topics'} (${h.difficulty || 'Mixed'})</div></td>
+            <td>${h.question_count} Questions</td>
+            <td>${h.duration_minutes} Mins</td>
+            <td><strong>${h.passed_count || 0} / ${h.question_count}</strong> (${h.score || 0}%)</td>
+            <td>${statusBadge}</td>
+            <td>
+              <button class="btn-outline btn-sm" onclick="reopenAiAssessment('${h.id}')" style="padding: 4px 8px; font-size: 11px;">
+                ${isCompleted ? 'Review & Practice' : 'Resume Test'}
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    } catch (e) {
+      if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #DC2626; padding: 16px;">Error loading assessment history.</td></tr>';
+      }
+    }
+  };
+
+  window.reopenAiAssessment = async function(assessmentId) {
+    try {
+      const res = await fetch(`/api/coding/assessments/${assessmentId}`, { credentials: 'include' });
+      const data = await res.json();
+      if (!data.success || !data.questions) {
+        window.showToast?.('Could not open assessment.', 'error');
+        return;
+      }
+
+      activeCodingAssessment = data.assessment;
+      aiQuestionsList = data.questions;
+      codingQuestionsList = [...aiQuestionsList];
+
+      switchCodingMode('ai');
+      updateActiveAssessmentBanner();
+      populateCodingProblemDropdown(codingQuestionsList);
+      if (codingQuestionsList.length > 0) {
+        switchCodingQuestion(codingQuestionsList[0].id);
+      }
+
+      window.showToast?.(`Loaded assessment ${assessmentId} with ${aiQuestionsList.length} questions.`, 'info');
+    } catch (err) {
+      window.showToast?.('Error opening assessment: ' + err.message, 'error');
+    }
+  };
+
+  window.finishActiveAssessment = async function() {
+    if (!activeCodingAssessment) return;
+    if (!confirm('Are you sure you want to complete this assessment session? Your current score will be finalized.')) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/coding/assessments/${activeCodingAssessment.id}/finish`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (data.success) {
+        window.showToast?.(`✓ Assessment finalized! Final Score: ${data.score}% (${data.passed_count}/${data.total_count} solved).`, 'success');
+        activeCodingAssessment = null;
+        updateActiveAssessmentBanner();
+        loadCodingStatistics();
+        loadCodingHistory();
+      }
+    } catch (e) {
+      window.showToast?.('Error finalizing assessment: ' + e.message, 'error');
+    }
+  };
+
+  window.exitToCuratedMode = function() {
+    switchCodingMode('curated');
+  };
+
+  function populateCodingProblemDropdown(questions) {
+    const selectEl = document.getElementById('code-problem-select');
+    if (!selectEl) return;
+
+    if (!questions || questions.length === 0) {
+      selectEl.innerHTML = '<option value="">No questions available</option>';
+      return;
+    }
+
+    selectEl.innerHTML = questions.map((q, idx) => {
+      const srcTag = q.source === 'groq_ai' ? ' [AI]' : '';
+      return `<option value="${q.id}">${idx + 1}. ${sanitizeCodeHtml(q.title)} (${q.difficulty})${srcTag}</option>`;
+    }).join('');
+  }
+
   function initCodingAssessment() {
     setupCodeEditorHotkeys();
     getCurrentCodingQuestion();
 
-    // Ensure editor has starter code if empty
     const editor = document.getElementById('code-editor-textarea');
     const lang = document.getElementById('code-lang-select')?.value || 'python';
     if (editor && (!editor.value || !editor.value.trim())) {
       loadDraftOrStarterCode(currentCodingQ, lang);
     }
 
-    // Direct event listeners for resilience
+    // Direct event listeners for buttons
     const runBtn = document.getElementById('btn-code-run');
     if (runBtn && !runBtn.dataset.bound) {
       runBtn.dataset.bound = 'true';
@@ -9360,6 +9702,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadCodingQuestions();
     loadCodingStatistics();
     loadCodingHistory();
+    checkActiveCodingAssessment();
   }
 
   async function loadCodingCompilers() {
@@ -9384,23 +9727,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function loadCodingQuestions() {
     try {
-      const res = await fetch('/api/coding/questions', { credentials: 'include' });
+      const res = await fetch('/api/coding/questions?source=curated', { credentials: 'include' });
       const data = await res.json();
       if (data.success && Array.isArray(data.questions) && data.questions.length > 0) {
-        codingQuestionsList = data.questions;
+        curatedQuestionsList = data.questions;
+        codingQuestionsList = [...curatedQuestionsList];
       }
     } catch (err) {
       console.warn('Using local coding questions inventory:', err.message);
     }
 
+    populateCodingProblemDropdown(codingQuestionsList);
     const selectEl = document.getElementById('code-problem-select');
-    if (selectEl && codingQuestionsList.length > 0) {
-      selectEl.innerHTML = codingQuestionsList.map((q, idx) => `
-        <option value="${q.id}">${idx + 1}. ${sanitizeCodeHtml(q.title)} (${q.difficulty})</option>
-      `).join('');
-    }
-
-    const currentId = selectEl?.value || codingQuestionsList[0].id;
+    const currentId = selectEl?.value || codingQuestionsList[0]?.id || 'code_q1';
     switchCodingQuestion(currentId);
   }
 
@@ -9413,6 +9752,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const titleEl = document.getElementById('code-problem-title');
     const descEl = document.getElementById('code-problem-desc');
     const diffEl = document.getElementById('code-problem-diff');
+    const topicEl = document.getElementById('code-problem-topic');
+    const companyEl = document.getElementById('code-problem-company');
+    const timeEl = document.getElementById('code-problem-time-comp');
+    const spaceEl = document.getElementById('code-problem-space-comp');
+    const sourceEl = document.getElementById('code-problem-source');
     const sampleIn = document.getElementById('code-sample-input');
     const sampleOut = document.getElementById('code-sample-output');
     const selectEl = document.getElementById('code-problem-select');
@@ -9422,6 +9766,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (diffEl) {
       diffEl.textContent = q.difficulty;
       diffEl.className = `badge-status ${q.difficulty === 'Easy' ? 'teal' : q.difficulty === 'Medium' ? 'blue' : 'orange'}`;
+    }
+    if (topicEl) topicEl.textContent = q.topic || 'Algorithms';
+    if (companyEl) companyEl.textContent = q.company_tags || 'General';
+    if (timeEl) timeEl.textContent = q.expected_time_complexity || 'O(N)';
+    if (spaceEl) spaceEl.textContent = q.expected_space_complexity || 'O(1)';
+    if (sourceEl) {
+      sourceEl.textContent = q.source === 'groq_ai' ? 'Groq AI' : 'Curated Bank';
+      sourceEl.style.color = q.source === 'groq_ai' ? '#2563EB' : '#1E293B';
     }
     if (sampleIn) sampleIn.textContent = q.sample_input || '';
     if (sampleOut) sampleOut.textContent = q.sample_output || '';
@@ -9611,7 +9963,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       statusBanner.style.background = '#EFF6FF';
       statusBanner.style.color = '#1D4ED8';
       statusBanner.style.border = '1px solid #BFDBFE';
-      statusBanner.innerHTML = `⏳ Evaluating solution against all test cases (including hidden edge cases)...`;
+      statusBanner.innerHTML = '⏳ Evaluating solution against all test cases (including hidden edge cases)...';
     }
 
     window.showToast?.('Running full test suite (including hidden edge cases)...', 'info');
@@ -9621,7 +9973,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ question_id: q?.id || 'code_q1', language: lang, code })
+        body: JSON.stringify({
+          question_id: q?.id || 'code_q1',
+          language: lang,
+          code,
+          assessment_id: activeCodingAssessment ? activeCodingAssessment.id : null
+        })
       });
       const data = await res.json();
       renderCodingExecutionResult(data);
@@ -9650,6 +10007,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.showToast?.(`✓ Solution submitted! Status: ${data.status} (Score: ${data.score}%)`, isAccepted ? 'success' : 'warning');
         loadCodingStatistics();
         loadCodingHistory();
+
+        // Update active assessment state if active
+        if (activeCodingAssessment && isAccepted) {
+          checkActiveCodingAssessment();
+        }
+
         window.fetchPlacementPrediction?.();
         window.fetchStudentComprehensiveDashboard?.();
       } else {
@@ -9666,77 +10029,74 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  function renderCodingExecutionResult(data) {
+  function renderCodingExecutionResult(res) {
     const drawer = document.getElementById('code-results-drawer');
+    if (!drawer) return;
+    drawer.style.display = 'block';
+
     const pill = document.getElementById('code-res-pill');
     const scoreEl = document.getElementById('code-res-score');
     const timeEl = document.getElementById('code-res-time');
-    const detailBox = document.getElementById('code-test-cases-detail');
+    const casesBox = document.getElementById('code-test-cases-detail');
     const terminalBox = document.getElementById('code-terminal-box');
     const terminalPre = document.getElementById('code-terminal-pre');
 
-    if (drawer) {
-      drawer.style.display = 'block';
-      setTimeout(() => {
-        drawer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 50);
-    }
+    const isAccepted = res.success && res.status === 'Accepted';
+    const isError = !res.success || ['Compilation Error', 'Runtime Error', 'Time Limit Exceeded', 'Connection Error'].includes(res.status);
 
     if (pill) {
-      const isPass = data.status === 'Accepted' || (data.passed > 0 && data.passed === data.total);
-      pill.textContent = isPass ? '✓ All Tests Passed' : `${data.passed || 0}/${data.total || 0} Passed (${data.status || 'Failed'})`;
-      pill.className = `test-pill ${isPass ? 'pass' : 'fail'}`;
+      pill.textContent = isAccepted ? 'All Tests Passed' : (res.status || 'Evaluation Failed');
+      pill.className = `test-pill ${isAccepted ? 'pass' : (isError ? 'fail' : 'warning')}`;
     }
-    if (scoreEl) scoreEl.textContent = `Score: ${data.score !== undefined ? data.score : (data.passed ? Math.round((data.passed / data.total) * 100) : 0)}%`;
-    if (timeEl) timeEl.textContent = `Execution Time: ${data.execution_time_ms || 12}ms`;
 
-    // Render Terminal / Stdout if present
-    const firstOutput = data.results?.[0]?.output || data.error || '';
+    if (scoreEl) {
+      scoreEl.textContent = `Score: ${res.score !== undefined ? res.score : (isAccepted ? 100 : 0)}% (${res.passed || 0}/${res.total || 0} passed)`;
+    }
+
+    if (timeEl) {
+      timeEl.textContent = `Execution Time: ${res.executionTimeMs !== undefined ? res.executionTimeMs : 15}ms`;
+    }
+
+    // Terminal standard output
     if (terminalBox && terminalPre) {
-      if (firstOutput) {
+      if (res.stdout && res.stdout.trim()) {
         terminalBox.style.display = 'block';
-        terminalPre.textContent = firstOutput;
-        if (firstOutput.startsWith('Error:') || firstOutput.startsWith('Runtime Error:') || firstOutput.startsWith('Compilation') || firstOutput.startsWith('SyntaxError')) {
-          terminalPre.style.color = '#F87171'; // red for errors
-        } else {
-          terminalPre.style.color = '#38BDF8'; // cyan for stdout
-        }
+        terminalPre.textContent = res.stdout;
+      } else if (res.error && isError) {
+        terminalBox.style.display = 'block';
+        terminalPre.textContent = res.error;
       } else {
         terminalBox.style.display = 'none';
       }
     }
 
-    if (detailBox) {
-      if (data.error && (!data.results || data.results.length === 0)) {
-        detailBox.innerHTML = `
-          <div style="color: #DC2626; background: #FEE2E2; border: 1px solid #FCA5A5; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 12px; white-space: pre-wrap;">
-            <strong>Error Details:</strong>\n${sanitizeCodeHtml(data.error)}
+    if (casesBox) {
+      if (res.results && res.results.length > 0) {
+        casesBox.innerHTML = res.results.map((r, i) => {
+          const pass = r.passed;
+          return `
+            <div style="background: #FFFFFF; border: 1px solid ${pass ? '#86EFAC' : '#FCA5A5'}; border-radius: 6px; padding: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-weight: 700; color: #1E293B;">Test Case #${i + 1} ${r.is_hidden ? '(Hidden Edge Case)' : '(Sample Case)'}</span>
+                <span class="test-pill ${pass ? 'pass' : 'fail'}">${pass ? 'Passed' : 'Failed'}</span>
+              </div>
+              <div style="font-family: 'Consolas', monospace; font-size: 11.5px; background: #F8FAFC; padding: 6px 8px; border-radius: 4px; display: flex; flex-direction: column; gap: 4px;">
+                <div><span style="color: #64748B;">Input:</span> <code>${sanitizeCodeHtml(r.input || '(empty)')}</code></div>
+                <div><span style="color: #64748B;">Expected:</span> <code>${sanitizeCodeHtml(r.expected || '(empty)')}</code></div>
+                <div><span style="color: ${pass ? '#15803D' : '#DC2626'}; font-weight: 600;">Actual Output:</span> <code>${sanitizeCodeHtml(r.output || '(none)')}</code></div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } else if (res.error) {
+        casesBox.innerHTML = `
+          <div style="background: #FEF2F2; border: 1px solid #FCA5A5; border-radius: 6px; padding: 12px; color: #991B1B;">
+            <strong>Error Details:</strong>
+            <pre style="margin: 6px 0 0 0; font-size: 11.5px; white-space: pre-wrap;">${sanitizeCodeHtml(res.error)}</pre>
           </div>
         `;
       } else {
-        const results = data.results || [];
-        detailBox.innerHTML = results.map((tc, idx) => `
-          <div style="background: #FFFFFF; border: 1.5px solid ${tc.passed ? '#86EFAC' : '#FCA5A5'}; border-radius: 8px; padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <strong style="color: #1E293B; font-size: 12.5px;">Test Case #${idx + 1} ${tc.is_hidden ? '(Hidden Edge Case)' : ''}</strong>
-              <span class="badge-status ${tc.passed ? 'teal' : 'red'}" style="font-size: 11px; padding: 2px 8px; font-weight: 700;">
-                ${tc.passed ? '✓ Passed' : '✗ Failed'}
-              </span>
-            </div>
-            ${tc.is_hidden ? `
-              <div style="font-size: 11.5px; color: var(--text-secondary);">
-                <em>Hidden edge test case inputs and expected outputs are masked for evaluation integrity.</em>
-              </div>
-            ` : `
-              <div style="font-size: 12px; color: #334155; display: flex; flex-direction: column; gap: 4px;">
-                <div><span style="color: var(--text-secondary); font-weight: 600;">Input:</span> <code style="background: #F1F5F9; padding: 2px 6px; border-radius: 4px; font-family: monospace;">${sanitizeCodeHtml(tc.input || '')}</code></div>
-                <div><span style="color: var(--text-secondary); font-weight: 600;">Expected:</span> <code style="background: #F1F5F9; padding: 2px 6px; border-radius: 4px; font-family: monospace;">${sanitizeCodeHtml(tc.expected || '')}</code></div>
-                <div><span style="color: var(--text-secondary); font-weight: 600;">Your Output:</span> <code style="background: ${tc.passed ? '#F0FDF4' : '#FEF2F2'}; color: ${tc.passed ? '#166534' : '#991B1B'}; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-weight: 700;">${sanitizeCodeHtml(tc.output || '(No output)')}</code></div>
-                ${tc.error ? `<div style="color: #DC2626; font-size: 11px; margin-top: 2px;">${sanitizeCodeHtml(tc.error)}</div>` : ''}
-              </div>
-            `}
-          </div>
-        `).join('');
+        casesBox.innerHTML = '<div style="color: var(--text-secondary); padding: 8px;">No test cases evaluated.</div>';
       }
     }
   }
@@ -9745,68 +10105,65 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const res = await fetch('/api/coding/statistics', { credentials: 'include' });
       const data = await res.json();
-      if (!data.success || !data.statistics) return;
+      if (!data.success) return;
 
-      const s = data.statistics;
-      const scoreKpi = document.getElementById('code-kpi-score');
-      const passedKpi = document.getElementById('code-kpi-passed');
+      const scoreEl = document.getElementById('code-kpi-score');
+      const passedEl = document.getElementById('code-kpi-passed');
       const countEl = document.getElementById('code-kpi-submissions-count');
 
-      if (scoreKpi) scoreKpi.textContent = s.coding_pillar_rating ? `${s.coding_pillar_rating}%` : '--%';
-      if (passedKpi) passedKpi.textContent = s.total_test_cases_passed || 0;
-      if (countEl) countEl.textContent = s.total_submissions || 0;
-    } catch (err) {
-      console.error('Failed to load coding statistics:', err);
-    }
+      if (scoreEl) scoreEl.textContent = `${data.coding_pillar_rating || 0}%`;
+      if (passedEl) passedEl.textContent = data.passed_test_cases_total || 0;
+      if (countEl) countEl.textContent = data.total_submissions || 0;
+    } catch (e) {}
   }
 
   async function loadCodingHistory() {
     try {
-      const res = await fetch('/api/coding/history', { credentials: 'include' });
+      const res = await fetch('/api/coding/submissions', { credentials: 'include' });
       const data = await res.json();
       if (!data.success) return;
 
-      const history = data.history || [];
+      const submissions = data.submissions || [];
       const tbody = document.getElementById('code-history-tbody');
+      if (!tbody) return;
 
-      if (tbody) {
-        if (history.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 16px;">No coding submissions recorded yet. Select a problem and click \'Submit Code\'.</td></tr>';
-        } else {
-          tbody.innerHTML = history.map(h => {
-            const isAccepted = h.status === 'Accepted';
-            return `
-              <tr>
-                <td>${h.created_at ? new Date(h.created_at).toLocaleString() : 'Recent'}</td>
-                <td><strong>${sanitizeCodeHtml(h.question_title || '')}</strong></td>
-                <td><span style="text-transform: capitalize;">${sanitizeCodeHtml(h.language || '')}</span></td>
-                <td>${h.test_cases_passed} / ${h.test_cases_total}</td>
-                <td><span class="kpi-pill ${h.score === 100 ? 'teal' : h.score >= 50 ? 'blue' : 'orange'}">${h.score}%</span></td>
-                <td>${h.execution_time_ms || 15}ms</td>
-                <td><span class="badge-status ${isAccepted ? 'teal' : 'red'}">${sanitizeCodeHtml(h.status || 'Submitted')}</span></td>
-              </tr>
-            `;
-          }).join('');
-        }
+      if (submissions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 16px;">No coding submissions recorded yet. Select a problem and click \'Submit Code\'.</td></tr>';
+        return;
       }
-    } catch (err) {}
+
+      tbody.innerHTML = submissions.map(s => {
+        const dateStr = s.submitted_at || s.created_at ? new Date(s.submitted_at || s.created_at).toLocaleString() : 'Recent';
+        const isAccepted = s.status === 'Accepted';
+        const statusBadge = isAccepted
+          ? '<span class="badge-status teal">Accepted</span>'
+          : `<span class="badge-status orange">${s.status || 'Submitted'}</span>`;
+
+        return `
+          <tr>
+            <td>${dateStr}</td>
+            <td><strong>${sanitizeCodeHtml(s.question_title || 'Coding Problem')}</strong></td>
+            <td>${s.language || 'Python'}</td>
+            <td>${s.test_cases_passed || 0} / ${s.test_cases_total || 0}</td>
+            <td><strong>${s.score || 0}%</strong></td>
+            <td>${s.execution_time_ms || 15}ms</td>
+            <td>${statusBadge}</td>
+          </tr>
+        `;
+      }).join('');
+    } catch (e) {}
   }
 
-  // Expose on window for explicit invocation, HTML onclick handlers and cross-module routing
   window.initCodingAssessment = initCodingAssessment;
-  window.getCurrentCodingQuestion = getCurrentCodingQuestion;
-  window.resetCodingStarterCode = resetCodingStarterCode;
   window.switchCodingQuestion = switchCodingQuestion;
   window.switchCodingLanguage = switchCodingLanguage;
-  window.loadCodingCompilers = loadCodingCompilers;
-  window.loadCodingQuestions = loadCodingQuestions;
-  window.loadCodingStatistics = loadCodingStatistics;
-  window.loadCodingHistory = loadCodingHistory;
+  window.resetCodingStarterCode = resetCodingStarterCode;
   window.runCodingTestCases = runCodingTestCases;
   window.submitCodingSolution = submitCodingSolution;
-  window.renderCodingExecutionResult = renderCodingExecutionResult;
+  window.loadCodingHistory = loadCodingHistory;
+  window.loadCodingStatistics = loadCodingStatistics;
 
-  // 5. 4-Pillar Machine Learning Placement Prediction Controller
+    // 5. 4-Pillar Machine Learning Placement Prediction Controller
   let latestPredictionData = null;
 
   window.fetchPlacementPrediction = async function() {

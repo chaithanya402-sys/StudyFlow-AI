@@ -1,14 +1,5 @@
-const express = require('express');
-const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
-const crypto = require('crypto');
-const bcrypt = require('bcryptjs');
-const { exec } = require('child_process');
-const { db } = require('./db.js');
-const { predictFinalExamScore, predictPlacementOutcome, getPlacementModelBenchmark, EXAM_METRICS, PLACEMENT_METRICS } = require('./mlEngine.js');
-const groqClient = require('./groqClient.js');
-const localCodeExecutionEngine = require('./localCodeExecutionEngine');
 
 // Load local development settings without requiring a runtime dependency.
 const envFile = path.join(__dirname, '.env');
@@ -20,6 +11,16 @@ if (fs.existsSync(envFile)) {
     }
   }
 }
+
+const express = require('express');
+const cors = require('cors');
+const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
+const { exec } = require('child_process');
+const { db } = require('./db.js');
+const { predictFinalExamScore, predictPlacementOutcome, getPlacementModelBenchmark, EXAM_METRICS, PLACEMENT_METRICS } = require('./mlEngine.js');
+const groqClient = require('./groqClient.js');
+const localCodeExecutionEngine = require('./localCodeExecutionEngine');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -5720,14 +5721,28 @@ app.get('/api/aptitude/stats', requireRole(['student', 'faculty', 'officer']), (
 // 4. Online Coding Assessment & Local Code Execution Endpoints
 app.get('/api/coding/questions', requireRole(['student', 'faculty', 'officer']), (req, res) => {
   try {
-    const questions = db.prepare(`
+    const { source, assessment_id } = req.query;
+    let query = `
       SELECT id, title, difficulty, language, supported_languages, description,
              input_format, output_format, constraints, sample_input, sample_output,
-             starter_code_python, starter_code_java, starter_code_c,
-             time_limit_ms, memory_limit_mb
+             sample_input_2, sample_output_2, starter_code_python, starter_code_java, starter_code_c,
+             time_limit_ms, memory_limit_mb, topic, company_tags,
+             expected_time_complexity, expected_space_complexity, source, validation_status, assessment_id
       FROM coding_questions
-      ORDER BY id ASC
-    `).all();
+    `;
+    const params = [];
+    if (assessment_id) {
+      query += ' WHERE assessment_id = ? ORDER BY id ASC';
+      params.push(assessment_id);
+    } else if (source === 'curated') {
+      query += " WHERE source = 'curated' OR source IS NULL ORDER BY id ASC";
+    } else if (source === 'groq_ai') {
+      query += " WHERE source = 'groq_ai' ORDER BY created_at DESC";
+    } else {
+      query += ' ORDER BY id ASC';
+    }
+
+    const questions = db.prepare(query).all(...params);
 
     // Attach public test cases and total test case count (never expose hidden cases)
     const questionsWithPublicCases = questions.map(q => {
@@ -5746,7 +5761,6 @@ app.get('/api/coding/questions', requireRole(['student', 'faculty', 'officer']),
         totalCasesCount = totalRow ? totalRow.count : 0;
       } catch (err) {}
 
-      // Fallback to sample_input/sample_output or test_cases_json if table empty
       if (publicCases.length === 0) {
         publicCases = [
           { id: `tc_${q.id}_1`, input: q.sample_input || '', expected: q.sample_output || '' }
@@ -5772,8 +5786,9 @@ app.get('/api/coding/questions/:id', requireRole(['student', 'faculty', 'officer
     const question = db.prepare(`
       SELECT id, title, difficulty, language, supported_languages, description,
              input_format, output_format, constraints, sample_input, sample_output,
-             starter_code_python, starter_code_java, starter_code_c,
-             time_limit_ms, memory_limit_mb
+             sample_input_2, sample_output_2, starter_code_python, starter_code_java, starter_code_c,
+             time_limit_ms, memory_limit_mb, topic, company_tags,
+             expected_time_complexity, expected_space_complexity, source, validation_status, assessment_id
       FROM coding_questions
       WHERE id = ?
     `).get(req.params.id);
@@ -5793,12 +5808,353 @@ app.get('/api/coding/questions/:id', requireRole(['student', 'faculty', 'officer
       publicCases = [{ input: question.sample_input, expected: question.sample_output }];
     }
 
+    const totalRow = db.prepare('SELECT COUNT(*) as count FROM coding_test_cases WHERE question_id = ?').get(question.id);
+
     res.json({
       success: true,
       question: {
         ...question,
-        public_test_cases: publicCases
+        public_test_cases: publicCases,
+        test_case_count: totalRow ? totalRow.count : 3
       }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Dynamic Groq AI Question Generation Endpoint
+app.post('/api/coding/ai/generate', requireRole(['student', 'faculty', 'officer']), async (req, res) => {
+  try {
+    const studentId = (req.user.role === 'student') ? req.user.id : (req.query.studentId || req.user.id);
+    const {
+      difficulty = 'Mixed',
+      questionCount = 5,
+      topics = 'All Topics',
+      companyPreparation = 'General Placement',
+      durationMinutes = 30
+    } = req.body;
+
+    const count = Math.min(20, Math.max(1, parseInt(questionCount, 10) || 5));
+    const duration = parseInt(durationMinutes, 10) || 30;
+
+    // 1. Gather student context and existing fingerprints to guarantee uniqueness
+    const solvedRows = db.prepare(`
+      SELECT DISTINCT LOWER(question_title) as title
+      FROM coding_submissions
+      WHERE student_id = ? AND status = 'Accepted'
+    `).all(studentId);
+    const solvedTitles = solvedRows.map(r => r.title);
+
+    const fpRows = db.prepare('SELECT fingerprint FROM coding_questions WHERE fingerprint IS NOT NULL').all();
+    const existingFingerprints = fpRows.map(r => r.fingerprint);
+
+    // 2. Call Groq AI Question Generator with batching and validation
+    const result = await groqClient.generateCodingQuestions({
+      difficulty,
+      questionCount: count,
+      topics,
+      companyPreparation,
+      durationMinutes: duration,
+      existingFingerprints
+    }, {
+      studentId,
+      solvedTitles
+    });
+
+    if (!result.success || !Array.isArray(result.questions) || result.questions.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Unable to generate questions matching the specified criteria. Please try different topics or difficulty.'
+      });
+    }
+
+    const assessmentId = 'ca_ai_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6);
+    const generatedQuestions = result.questions;
+    const questionIds = [];
+
+    // 3. Persist approved, validated questions into coding_questions and test cases
+    const insertQStmt = db.prepare(`
+      INSERT INTO coding_questions (
+        id, title, difficulty, language, description, input_format, output_format, constraints,
+        sample_input, sample_output, sample_input_2, sample_output_2, supported_languages,
+        starter_code_python, starter_code_java, starter_code_c, reference_solution_python,
+        test_cases_json, time_limit_ms, memory_limit_mb, topic, company_tags,
+        expected_time_complexity, expected_space_complexity, source, model_identifier,
+        validation_status, fingerprint, assessment_id
+      ) VALUES (?, ?, ?, 'Python, Java, C', ?, ?, ?, ?, ?, ?, ?, ?, 'Python, Java, C', ?, ?, ?, ?, ?, 3500, 128, ?, ?, ?, ?, 'groq_ai', ?, ?, ?, ?)
+    `);
+
+    const insertTcStmt = db.prepare(`
+      INSERT INTO coding_test_cases (id, question_id, input_data, expected_output, is_hidden)
+      VALUES (?, ?, ?, ?, ?)
+    `);
+
+    const sanitizedQuestions = [];
+
+    for (const q of generatedQuestions) {
+      questionIds.push(q.id);
+
+      insertQStmt.run(
+        q.id,
+        q.title,
+        q.difficulty,
+        q.description,
+        q.input_format,
+        q.output_format,
+        q.constraints,
+        q.sample_input,
+        q.sample_output,
+        q.sample_input_2 || '',
+        q.sample_output_2 || '',
+        q.starter_code_python,
+        q.starter_code_java,
+        q.starter_code_c,
+        q.reference_solution_python || '',
+        JSON.stringify(q.test_cases || []),
+        q.topic,
+        q.company_tags,
+        q.expected_time_complexity,
+        q.expected_space_complexity,
+        q.model_identifier,
+        q.validation_status,
+        q.fingerprint,
+        assessmentId
+      );
+
+      const publicCases = [];
+      for (const tc of (q.test_cases || [])) {
+        insertTcStmt.run(tc.id, q.id, tc.input_data, tc.expected_output, tc.is_hidden ? 1 : 0);
+        if (!tc.is_hidden) {
+          publicCases.push({ id: tc.id, input: tc.input_data, expected: tc.expected_output });
+        }
+      }
+
+      // Client payload: never leak hidden cases or reference solution
+      sanitizedQuestions.push({
+        id: q.id,
+        title: q.title,
+        difficulty: q.difficulty,
+        topic: q.topic,
+        company_tags: q.company_tags,
+        description: q.description,
+        input_format: q.input_format,
+        output_format: q.output_format,
+        constraints: q.constraints,
+        sample_input: q.sample_input,
+        sample_output: q.sample_output,
+        sample_input_2: q.sample_input_2,
+        sample_output_2: q.sample_output_2,
+        expected_time_complexity: q.expected_time_complexity,
+        expected_space_complexity: q.expected_space_complexity,
+        starter_code_python: q.starter_code_python,
+        starter_code_java: q.starter_code_java,
+        starter_code_c: q.starter_code_c,
+        public_test_cases: publicCases,
+        test_case_count: (q.test_cases || []).length,
+        source: 'groq_ai',
+        validation_status: q.validation_status,
+        assessment_id: assessmentId
+      });
+    }
+
+    // 4. Record new Assessment Session in coding_assessments
+    db.prepare(`
+      INSERT INTO coding_assessments (
+        id, student_id, selection_mode, difficulty, topics, company_preparation,
+        question_count, duration_minutes, question_ids_json, status, started_at
+      ) VALUES (?, ?, 'system_generated', ?, ?, ?, ?, ?, ?, 'in_progress', datetime('now'))
+    `).run(
+      assessmentId,
+      studentId,
+      difficulty,
+      topics,
+      companyPreparation,
+      sanitizedQuestions.length,
+      duration,
+      JSON.stringify(questionIds)
+    );
+
+    res.json({
+      success: true,
+      assessment_id: assessmentId,
+      questions: sanitizedQuestions,
+      total_requested: count,
+      total_generated: sanitizedQuestions.length,
+      model: result.model,
+      duration_minutes: duration,
+      difficulty,
+      topics,
+      company: companyPreparation,
+      notice: (sanitizedQuestions.length < count)
+        ? `Generated ${sanitizedQuestions.length} of ${count} requested questions due to strict quality and uniqueness filtering.`
+        : undefined
+    });
+  } catch (err) {
+    console.error('[CodingAI] Generation error:', err);
+    if (err.code === 'RATE_LIMIT_EXCEEDED') {
+      return res.status(429).json({
+        success: false,
+        error: err.message,
+        code: 'RATE_LIMIT_EXCEEDED',
+        retryAfter: err.retryAfter || 60
+      });
+    }
+    if (err.code === 'GROQ_API_KEY_MISSING') {
+      return res.status(400).json({
+        success: false,
+        error: err.message,
+        code: 'GROQ_API_KEY_MISSING'
+      });
+    }
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Active Assessment Session (allows student to resume without re-generating on page refresh)
+app.get('/api/coding/assessments/active', requireRole(['student', 'faculty', 'officer']), (req, res) => {
+  try {
+    const studentId = (req.user.role === 'student') ? req.user.id : (req.query.studentId || req.user.id);
+    const activeSession = db.prepare(`
+      SELECT * FROM coding_assessments
+      WHERE student_id = ? AND status = 'in_progress'
+      ORDER BY started_at DESC
+      LIMIT 1
+    `).get(studentId);
+
+    if (!activeSession) {
+      return res.json({ success: true, active_assessment: null, questions: [] });
+    }
+
+    const qIds = JSON.parse(activeSession.question_ids_json || '[]');
+    if (qIds.length === 0) {
+      return res.json({ success: true, active_assessment: activeSession, questions: [] });
+    }
+
+    const placeholders = qIds.map(() => '?').join(',');
+    const questions = db.prepare(`
+      SELECT id, title, difficulty, language, supported_languages, description,
+             input_format, output_format, constraints, sample_input, sample_output,
+             sample_input_2, sample_output_2, starter_code_python, starter_code_java, starter_code_c,
+             time_limit_ms, memory_limit_mb, topic, company_tags,
+             expected_time_complexity, expected_space_complexity, source, validation_status, assessment_id
+      FROM coding_questions
+      WHERE id IN (${placeholders})
+    `).all(...qIds);
+
+    const questionsWithCases = questions.map(q => {
+      const publicCases = db.prepare(`
+        SELECT id, input_data as input, expected_output as expected
+        FROM coding_test_cases
+        WHERE question_id = ? AND is_hidden = 0
+        ORDER BY id ASC
+      `).all(q.id);
+
+      const totalRow = db.prepare('SELECT COUNT(*) as count FROM coding_test_cases WHERE question_id = ?').get(q.id);
+
+      return {
+        ...q,
+        public_test_cases: publicCases,
+        test_case_count: totalRow ? totalRow.count : 3
+      };
+    });
+
+    res.json({
+      success: true,
+      active_assessment: activeSession,
+      questions: questionsWithCases
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Coding Assessment History
+app.get('/api/coding/assessments/history', requireRole(['student', 'faculty', 'officer']), (req, res) => {
+  try {
+    const studentId = (req.user.role === 'student') ? req.user.id : (req.query.studentId || req.user.id);
+    const history = db.prepare(`
+      SELECT id, selection_mode, difficulty, topics, company_preparation,
+             question_count, duration_minutes, score, passed_count, total_count,
+             status, started_at, completed_at, created_at
+      FROM coding_assessments
+      WHERE student_id = ?
+      ORDER BY created_at DESC
+      LIMIT 25
+    `).all(studentId);
+
+    res.json({ success: true, history });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Reopen a Specific Coding Assessment
+app.get('/api/coding/assessments/:id', requireRole(['student', 'faculty', 'officer']), (req, res) => {
+  try {
+    const assessment = db.prepare('SELECT * FROM coding_assessments WHERE id = ?').get(req.params.id);
+    if (!assessment) {
+      return res.status(404).json({ success: false, error: 'Assessment not found.' });
+    }
+
+    const qIds = JSON.parse(assessment.question_ids_json || '[]');
+    let questions = [];
+    if (qIds.length > 0) {
+      const placeholders = qIds.map(() => '?').join(',');
+      questions = db.prepare(`
+        SELECT id, title, difficulty, language, supported_languages, description,
+               input_format, output_format, constraints, sample_input, sample_output,
+               sample_input_2, sample_output_2, starter_code_python, starter_code_java, starter_code_c,
+               time_limit_ms, memory_limit_mb, topic, company_tags,
+               expected_time_complexity, expected_space_complexity, source, validation_status, assessment_id
+        FROM coding_questions
+        WHERE id IN (${placeholders})
+      `).all(...qIds);
+
+      questions = questions.map(q => ({
+        ...q,
+        public_test_cases: db.prepare('SELECT id, input_data as input, expected_output as expected FROM coding_test_cases WHERE question_id = ? AND is_hidden = 0').all(q.id),
+        test_case_count: db.prepare('SELECT COUNT(*) as c FROM coding_test_cases WHERE question_id = ?').get(q.id)?.c || 3
+      }));
+    }
+
+    res.json({ success: true, assessment, questions });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Finish/Submit Entire Assessment Session
+app.post('/api/coding/assessments/:id/finish', requireRole(['student', 'faculty', 'officer']), (req, res) => {
+  try {
+    const studentId = (req.user.role === 'student') ? req.user.id : (req.query.studentId || req.user.id);
+    const assessment = db.prepare('SELECT * FROM coding_assessments WHERE id = ?').get(req.params.id);
+    if (!assessment) {
+      return res.status(404).json({ success: false, error: 'Assessment not found.' });
+    }
+
+    const passRow = db.prepare(`
+      SELECT COUNT(DISTINCT question_id) as passed
+      FROM coding_submissions
+      WHERE assessment_id = ? AND student_id = ? AND status = 'Accepted'
+    `).get(assessment.id, studentId);
+
+    const passedCount = passRow ? passRow.passed : 0;
+    const finalScore = Math.round((passedCount / (assessment.question_count || 1)) * 100);
+
+    db.prepare(`
+      UPDATE coding_assessments
+      SET status = 'completed', score = ?, passed_count = ?, completed_at = datetime('now')
+      WHERE id = ?
+    `).run(finalScore, passedCount, assessment.id);
+
+    res.json({
+      success: true,
+      assessment_id: assessment.id,
+      score: finalScore,
+      passed_count: passedCount,
+      total_count: assessment.question_count,
+      status: 'completed'
     });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -5811,7 +6167,7 @@ app.post('/api/coding/run', async (req, res) => {
     if (req.user && !['student', 'faculty', 'officer'].includes(req.user.role)) {
       return res.status(403).json({ success: false, error: 'Forbidden' });
     }
-    const { question_id, language, code } = req.body;
+    const { question_id, language, code, assessment_id } = req.body;
 
     if (!question_id || !code || !code.trim()) {
       return res.status(400).json({ success: false, error: 'Question ID and source code are required.' });
@@ -5871,7 +6227,7 @@ app.post('/api/coding/submit', async (req, res) => {
     if (req.user && !['student', 'faculty', 'officer'].includes(req.user.role)) {
       return res.status(403).json({ success: false, error: 'Forbidden' });
     }
-    const { question_id, language, code } = req.body;
+    const { question_id, language, code, assessment_id } = req.body;
 
     if (!question_id || !code || !code.trim()) {
       return res.status(400).json({ success: false, error: 'Question ID and source code are required.' });
@@ -5923,8 +6279,8 @@ app.post('/api/coding/submit', async (req, res) => {
       INSERT INTO coding_submissions (
         id, student_id, question_id, question_title, programming_language, language,
         source_code, code, total_test_cases, test_cases_total, passed_test_cases,
-        test_cases_passed, failed_test_cases, score, execution_time, execution_time_ms, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        test_cases_passed, failed_test_cases, score, execution_time, execution_time_ms, status, assessment_id
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       submissionId,
       targetStudentId,
@@ -5942,8 +6298,24 @@ app.post('/api/coding/submit', async (req, res) => {
       score,
       execTime,
       evalResult.executionTimeMs || 15,
-      evalResult.status
+      evalResult.status,
+      assessment_id || null
     );
+
+    if (assessment_id) {
+      try {
+        const passRow = db.prepare(`
+          SELECT COUNT(DISTINCT question_id) as passed
+          FROM coding_submissions
+          WHERE assessment_id = ? AND student_id = ? AND status = 'Accepted'
+        `).get(assessment_id, targetStudentId);
+        const assess = db.prepare('SELECT question_count FROM coding_assessments WHERE id = ?').get(assessment_id);
+        const qCount = assess?.question_count || 5;
+        const passedDistinct = passRow ? passRow.passed : 0;
+        const currentScore = Math.round((passedDistinct / qCount) * 100);
+        db.prepare('UPDATE coding_assessments SET passed_count = ?, score = ? WHERE id = ?').run(passedDistinct, currentScore, assessment_id);
+      } catch (e) {}
+    }
 
     // Persist to coding_execution_logs
     try {

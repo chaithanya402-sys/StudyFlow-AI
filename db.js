@@ -608,6 +608,27 @@ function initSchema() {
     );
     CREATE INDEX IF NOT EXISTS idx_coding_test_cases_qid ON coding_test_cases(question_id);
 
+    -- 29C. Coding Assessments (Sessions for System-Selected / Curated tests)
+    CREATE TABLE IF NOT EXISTS coding_assessments (
+      id TEXT PRIMARY KEY,
+      student_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      selection_mode TEXT DEFAULT 'system_generated', -- 'system_generated' or 'manual'
+      difficulty TEXT,
+      topics TEXT,
+      company_preparation TEXT,
+      question_count INTEGER DEFAULT 5,
+      duration_minutes INTEGER DEFAULT 30,
+      question_ids_json TEXT NOT NULL,
+      status TEXT DEFAULT 'in_progress', -- 'in_progress' or 'completed'
+      score REAL DEFAULT 0,
+      passed_count INTEGER DEFAULT 0,
+      total_count INTEGER DEFAULT 0,
+      started_at TEXT DEFAULT (datetime('now')),
+      completed_at TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_coding_assessments_student ON coding_assessments(student_id);
+
     -- 30. Coding Submissions Table
     CREATE TABLE IF NOT EXISTS coding_submissions (
       id TEXT PRIMARY KEY,
@@ -779,12 +800,25 @@ function initSchema() {
       { name: 'starter_code_java', def: 'TEXT' },
       { name: 'starter_code_c', def: 'TEXT' },
       { name: 'time_limit_ms', def: 'INTEGER DEFAULT 3500' },
-      { name: 'memory_limit_mb', def: 'INTEGER DEFAULT 128' }
+      { name: 'memory_limit_mb', def: 'INTEGER DEFAULT 128' },
+      { name: 'topic', def: 'TEXT' },
+      { name: 'company_tags', def: 'TEXT' },
+      { name: 'expected_time_complexity', def: 'TEXT' },
+      { name: 'expected_space_complexity', def: 'TEXT' },
+      { name: 'sample_input_2', def: 'TEXT' },
+      { name: 'sample_output_2', def: 'TEXT' },
+      { name: 'reference_solution_python', def: 'TEXT' },
+      { name: 'source', def: "TEXT DEFAULT 'curated'" },
+      { name: 'model_identifier', def: 'TEXT' },
+      { name: 'validation_status', def: "TEXT DEFAULT 'valid'" },
+      { name: 'fingerprint', def: 'TEXT' },
+      { name: 'assessment_id', def: 'TEXT' }
     ]) {
       if (!codingQCols.includes(col.name)) {
         try { db.exec(`ALTER TABLE coding_questions ADD COLUMN ${col.name} ${col.def}`); } catch (e) {}
       }
     }
+    try { db.exec("UPDATE coding_questions SET source = 'curated' WHERE source IS NULL"); } catch (e) {}
 
     const codingSubCols = db.prepare('PRAGMA table_info(coding_submissions)').all().map(c => c.name);
     for (const col of [
@@ -800,7 +834,8 @@ function initSchema() {
       { name: 'failed_test_cases', def: 'INTEGER DEFAULT 0' },
       { name: 'execution_time', def: 'REAL' },
       { name: 'execution_time_ms', def: 'INTEGER DEFAULT 15' },
-      { name: 'submitted_at', def: "TEXT DEFAULT (datetime('now'))" }
+      { name: 'submitted_at', def: "TEXT DEFAULT (datetime('now'))" },
+      { name: 'assessment_id', def: 'TEXT' }
     ]) {
       if (!codingSubCols.includes(col.name)) {
         try { db.exec(`ALTER TABLE coding_submissions ADD COLUMN ${col.name} ${col.def}`); } catch (e) {}
