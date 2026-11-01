@@ -213,23 +213,278 @@
            ROLE 1: STUDENT DASHBOARD PANES
            ======================================================== -->
 
-      <!-- PANE 1: STUDENT DASHBOARD (AI-BASED STUDENT PLACEMENT PREDICTION SYSTEM) -->
+            <!-- ========================================================
+           ROLE 1: STUDENT DASHBOARD PANES
+           ======================================================== -->
+
+      <!-- PANE 1: STUDENT DASHBOARD OVERVIEW (Personalized Student Home Dashboard) -->
       <div class="view-container screen-pane" id="pane-student-dashboard">
         
-        <!-- Welcome & Placement Engine Status Card -->
+        <!-- Section 1: Welcome Header -->
         <div class="welcome-card" style="margin-bottom: 20px;">
           <div class="welcome-info">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-              <span class="welcome-badge-status" id="dash-student-badge-status">AI Placement Engine v2.4 Active</span>
-              <span class="kpi-pill blue" id="dash-cohort-pill" style="font-size: 11px;">Class of 2026 • 6th Semester</span>
+              <span class="welcome-badge-status" id="dash-student-badge-status">Student Portal Active</span>
+              <span class="kpi-pill blue" id="dash-cohort-pill" style="font-size: 11px;">Class of 2026 • 6th Semester • CSE</span>
+              <span style="font-size: 11px; color: #64748B; font-weight: 500;" id="dash-live-date">Sunday, 1 Nov 2026</span>
             </div>
             <h2 class="welcome-heading">Welcome back, <span id="dash-welcome-name">Student</span> 👋</h2>
-            <p class="welcome-subtext">Intelligent Placement Prediction &amp; Career Readiness Hub. Multi-factor evaluation across Academic Performance, Technical Skills, Standardized Aptitude, and Hands-on Coding.</p>
+            <p class="welcome-subtext">Manage your daily academic coursework, assignments, faculty reviews, and continuous examination projections.</p>
           </div>
           <div class="welcome-actions" style="display: flex; flex-wrap: wrap; gap: 8px;">
-            <button class="btn-primary" onclick="navigateToRoute('/student/academic-performance')">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
-              <span>Academic Performance</span>
+            <button class="btn-primary" onclick="navigateToRoute('/student/assignments/faculty')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+              <span>Submit Assignment</span>
+            </button>
+            <button class="btn-outline" onclick="navigateToRoute('/student/tasks')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+              <span>My Tasks</span>
+            </button>
+            <button class="btn-outline" onclick="navigateToRoute('/student/profile')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              <span>My Profile</span>
+            </button>
+            <button class="btn-outline" onclick="navigateToRoute('/student/overview')" style="border-color: #93C5FD; color: #1D4ED8; background: #EFF6FF;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              <span>Placement Hub →</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Section 2: Academic Summary Cards (Row 2 - 5 Compact Cards) -->
+        <div class="kpi-grid-5" style="margin-bottom: 20px;">
+          <!-- Card 1: Current CGPA -->
+          <div class="kpi-card" onclick="navigateToRoute('/student/academic-performance')" style="cursor: pointer;" title="View Academic Performance">
+            <div class="kpi-top-row">
+              <span class="kpi-label">CURRENT CGPA</span>
+              <svg class="kpi-icon" style="color: #2563EB;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
+            </div>
+            <div class="kpi-main-val" id="dash-academic-cgpa">-- <span style="font-size: 14px; font-weight: 500; color: var(--text-secondary);">/ 10.0</span></div>
+            <div class="kpi-context-row">
+              <span class="kpi-pill teal" id="dash-academic-cgpa-pill">0 Backlogs</span>
+              <span id="dash-academic-cgpa-subtext" style="font-size: 11px;">First Class with Distinction</span>
+            </div>
+          </div>
+
+          <!-- Card 2: Lecture Attendance -->
+          <div class="kpi-card" onclick="navigateToRoute('/student/academic-performance')" style="cursor: pointer;" title="View Attendance Records">
+            <div class="kpi-top-row">
+              <span class="kpi-label">LECTURE ATTENDANCE</span>
+              <svg class="kpi-icon" style="color: #059669;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            </div>
+            <div class="kpi-main-val" id="dash-academic-attendance">--%</div>
+            <div class="kpi-context-row">
+              <span class="kpi-pill teal" id="dash-academic-attendance-pill">Good Standing</span>
+              <span id="dash-academic-attendance-subtext" style="font-size: 11px;">Institutional Minimum &ge;75%</span>
+            </div>
+          </div>
+
+          <!-- Card 3: Pending Assignments -->
+          <div class="kpi-card" onclick="navigateToRoute('/student/assignments/faculty')" style="cursor: pointer;" title="View Pending Submissions">
+            <div class="kpi-top-row">
+              <span class="kpi-label">PENDING ASSIGNMENTS</span>
+              <svg class="kpi-icon" style="color: #D97706;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+            </div>
+            <div class="kpi-main-val" id="dash-academic-pending-asg">-- <span style="font-size: 14px; font-weight: 500; color: var(--text-secondary);">Tasks</span></div>
+            <div class="kpi-context-row">
+              <span class="kpi-pill orange" id="dash-academic-pending-pill">Action Needed</span>
+              <span id="dash-academic-pending-subtext" style="font-size: 11px;">Upcoming submissions</span>
+            </div>
+          </div>
+
+          <!-- Card 4: Completed Coursework -->
+          <div class="kpi-card" onclick="navigateToRoute('/student/assignments/faculty')" style="cursor: pointer;" title="View Completed Assignments">
+            <div class="kpi-top-row">
+              <span class="kpi-label">ASSIGNMENT COMPLETION</span>
+              <svg class="kpi-icon" style="color: #0D9488;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            </div>
+            <div class="kpi-main-val" id="dash-academic-assignments">--%</div>
+            <div class="kpi-context-row">
+              <span class="kpi-pill blue" id="dash-academic-assignments-pill">-- / -- Completed</span>
+              <span id="dash-academic-assignments-subtext" style="font-size: 11px;">Coursework completion rate</span>
+            </div>
+          </div>
+
+          <!-- Card 5: Continuous Internal Average -->
+          <div class="kpi-card" onclick="navigateToRoute('/student/academic-performance')" style="cursor: pointer;" title="View Continuous Assessment Marks">
+            <div class="kpi-top-row">
+              <span class="kpi-label">INTERNAL &amp; QUIZ AVG</span>
+              <svg class="kpi-icon" style="color: #7C3AED;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            </div>
+            <div class="kpi-main-val" id="dash-academic-internals">--%</div>
+            <div class="kpi-context-row">
+              <span class="kpi-pill teal" id="dash-academic-internals-pill">Grade A</span>
+              <span id="dash-academic-internals-subtext" style="font-size: 11px;">Continuous Assessment</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 3: Academic Progress & Upcoming Assignments -->
+        <div class="analytics-grid-2" style="margin-bottom: 20px;">
+          
+          <!-- Column 1: Section 3: My Academic Progress -->
+          <div class="content-panel">
+            <div class="panel-header" style="margin-bottom: 14px;">
+              <div>
+                <h3 class="panel-title">My Academic Progress</h3>
+                <p class="panel-subtitle">Semester-wise SGPA progression &amp; subject continuous benchmarks</p>
+              </div>
+              <span class="badge-status success" id="dash-cumulative-cgpa-badge">CGPA: 8.75</span>
+            </div>
+
+            <!-- Semester SGPA Trendline Chart -->
+            <h4 style="font-size: 12px; font-weight: 700; color: #1E293B; margin: 0 0 8px 0;">Semester SGPA Trajectory (Cutoff Benchmark: 8.0)</h4>
+            <div id="student-semester-trendchart" style="margin-bottom: 16px;">
+              <!-- Rendered via SVG -->
+            </div>
+
+            <!-- Subject Performance Bars -->
+            <h4 style="font-size: 12px; font-weight: 700; color: #1E293B; margin: 0 0 8px 0;">Current Coursework Subjects &amp; Benchmark Comparison</h4>
+            <div id="student-subjects-barchart">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- Column 2: Section 4: Upcoming Assignments & Deadlines -->
+          <div class="content-panel">
+            <div class="panel-header" style="margin-bottom: 14px;">
+              <div>
+                <h3 class="panel-title">Upcoming Coursework Assignments</h3>
+                <p class="panel-subtitle">Subject tasks, problem sets, and lab submissions assigned by faculty</p>
+              </div>
+              <button class="btn-outline btn-sm" onclick="navigateToRoute('/student/assignments/faculty')">All Assignments →</button>
+            </div>
+
+            <!-- Upcoming Assignments List -->
+            <div id="dash-upcoming-assignments-list">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 4: My Tasks and Activities & Recent Faculty Feedback -->
+        <div class="analytics-grid-2" style="margin-bottom: 20px;">
+          
+          <!-- Column 1: Section 5: My Tasks and Activities -->
+          <div class="content-panel">
+            <div class="panel-header" style="margin-bottom: 14px;">
+              <div>
+                <h3 class="panel-title">My Tasks &amp; Learning Activities</h3>
+                <p class="panel-subtitle">Coursework problem sets, coding practices, and lab records</p>
+              </div>
+              <button class="btn-outline btn-sm" onclick="navigateToRoute('/student/tasks')">Task Manager →</button>
+            </div>
+
+            <!-- Tasks Checklist -->
+            <div id="dash-my-tasks-list">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+
+          <!-- Column 2: Section 6: Recent Faculty Feedback -->
+          <div class="content-panel">
+            <div class="panel-header" style="margin-bottom: 14px;">
+              <div>
+                <h3 class="panel-title">Recent Faculty Feedback &amp; Grades</h3>
+                <p class="panel-subtitle">Evaluations, marks, and remarks received from professors</p>
+              </div>
+              <span class="badge-status blue" style="font-size: 11px;">Verified Mentoring</span>
+            </div>
+
+            <!-- Feedback Items List -->
+            <div id="dash-faculty-feedback-list">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 5: Recent Academic Activity & Placement Readiness Snapshot -->
+        <div class="analytics-grid-2">
+          
+          <!-- Column 1: Section 7: Recent Activity -->
+          <div class="content-panel">
+            <div class="panel-header" style="margin-bottom: 14px;">
+              <div>
+                <h3 class="panel-title">Recent Academic Activity Timeline</h3>
+                <p class="panel-subtitle">Chronological log of submissions, evaluations, and coursework records</p>
+              </div>
+              <span style="font-size: 11px; color: #64748B;">Latest Updates</span>
+            </div>
+
+            <!-- Academic Activity Timeline -->
+            <div class="dash-activity-timeline" id="dash-academic-activity-timeline">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+
+          <!-- Column 2: Section 8: Placement Readiness Snapshot -->
+          <div class="content-panel" style="border: 1.5px solid #BFDBFE; background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);">
+            <div class="panel-header" style="margin-bottom: 14px;">
+              <div>
+                <h3 class="panel-title">Placement Readiness Snapshot</h3>
+                <p class="panel-subtitle">High-level summary of your multi-factor placement qualification</p>
+              </div>
+              <span class="badge-status green" id="dash-snap-status-badge">Placement Ready</span>
+            </div>
+
+            <!-- Compact Snapshot Box -->
+            <div class="placement-snapshot-card" style="margin-bottom: 14px;">
+              <div class="snapshot-stat-row">
+                <div>
+                  <div class="snapshot-stat-label">Predicted Placement Probability</div>
+                  <div class="snapshot-stat-val" id="dash-snap-prob">--%</div>
+                </div>
+                <div style="text-align: right;">
+                  <div class="snapshot-stat-label">Readiness Score</div>
+                  <div style="font-size: 24px; font-weight: 800; color: #059669;" id="dash-snap-readiness">-- <span style="font-size: 14px; font-weight: 500; color: #64748B;">/ 100</span></div>
+                </div>
+              </div>
+              <div class="roadmap-progress-bar" style="height: 6px; margin-bottom: 10px;">
+                <div class="roadmap-progress-fill" id="dash-snap-progress-fill" style="width: 85%; background: linear-gradient(90deg, #2563EB, #10B981);"></div>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 11px; color: #475569;">
+                <span id="dash-snap-tier-text">Tier-1 Super Dream Qualified (≥8.0 CGPA)</span>
+                <span id="dash-snap-ci-text">95% CI: Active Model</span>
+              </div>
+            </div>
+
+            <p style="font-size: 12px; color: #475569; line-height: 1.5; margin-bottom: 16px;">
+              Your dedicated <strong>Placement Overview Workspace</strong> contains in-depth 4-pillar ML analytics, AI career roadmap, skill gap diagnostics, and ATS resume scanning.
+            </p>
+
+            <button class="btn-primary" onclick="navigateToRoute('/student/overview')" style="width: 100%; justify-content: center; font-weight: 700; padding: 10px 16px;">
+              <span>Open Placement Overview Workspace →</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- PANE 2: STUDENT PLACEMENT OVERVIEW (Dedicated AI-Powered Career & Placement Readiness Workspace) -->
+      <div class="view-container screen-pane" id="pane-student-overview" style="display: none;">
+        
+        <!-- Section 1: Placement Readiness Header -->
+        <div class="welcome-card" style="margin-bottom: 20px;">
+          <div class="welcome-info">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+              <span class="welcome-badge-status" id="pl-badge-status">AI Placement Engine Active</span>
+              <span class="kpi-pill teal" id="pl-cohort-pill" style="font-size: 11px;">Campus Recruitment 2026</span>
+              <span class="badge-status green" id="pl-readiness-category-badge" style="font-size: 11px; font-weight: 700;">Placement Ready</span>
+            </div>
+            <h2 class="welcome-heading">Career &amp; Placement Readiness Workspace</h2>
+            <p class="welcome-subtext">Comprehensive employability diagnostics combining Academic Standing, Technical Skills, Standardized Aptitude, and Sandboxed Coding Performance.</p>
+            <div style="font-size: 11px; color: #64748B; margin-top: 4px;" id="pl-last-update-text">
+              Last prediction update: Today • Supervised Ensemble ML (Random Forest &amp; Gradient Boosting)
+            </div>
+          </div>
+          <div class="welcome-actions" style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <button class="btn-primary" onclick="recalculatePlacementPrediction(event)" id="btn-pl-recalc">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+              <span>Recalculate Prediction ⚡</span>
+            </button>
+            <button class="btn-outline" onclick="navigateToRoute('/student/resume')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+              <span>ATS Resume Scanner</span>
             </button>
             <button class="btn-outline" onclick="navigateToRoute('/student/aptitude')">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
@@ -239,82 +494,78 @@
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
               <span>Coding Assessment</span>
             </button>
-            <button class="btn-outline" onclick="navigateToRoute('/student/placement-prediction')">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
-              <span>View Full Prediction</span>
-            </button>
           </div>
         </div>
 
-        <!-- 5 TOP KPI CARDS FOR PLACEMENT PREDICTION -->
+        <!-- Section 2: 5 Placement Analytics Cards -->
         <div class="kpi-grid-5" style="margin-bottom: 20px;">
-          <!-- Card 1: Placement Probability -->
-          <div class="kpi-card" onclick="navigateToRoute('/student/placement-prediction')" style="cursor: pointer;" title="View ML Placement Prediction">
+          <!-- Card 1: AI Placement Probability -->
+          <div class="kpi-card" onclick="navigateToRoute('/student/placement-prediction')" style="cursor: pointer;" title="View ML Prediction Details">
             <div class="kpi-top-row">
-              <span class="kpi-label">PLACEMENT PROBABILITY</span>
+              <span class="kpi-label">AI PLACEMENT PROBABILITY</span>
               <svg class="kpi-icon" style="color: #2563EB;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
             </div>
-            <div class="kpi-main-val" id="dash-kpi-prob">--%</div>
+            <div class="kpi-main-val" id="pl-kpi-prob">--%</div>
             <div class="kpi-context-row">
-              <span class="kpi-pill teal" id="dash-kpi-prob-pill">Calculating</span>
-              <span id="dash-kpi-prob-subtext" style="font-size: 11px;">Supervised Ensemble ML</span>
+              <span class="kpi-pill teal" id="pl-kpi-prob-pill">Placement Ready</span>
+              <span id="pl-kpi-prob-subtext" style="font-size: 11px;">Supervised Ensemble ML</span>
             </div>
           </div>
 
           <!-- Card 2: Placement Readiness Score -->
-          <div class="kpi-card" onclick="navigateToRoute('/student/placement-prediction')" style="cursor: pointer;" title="View Multi-Pillar Score">
+          <div class="kpi-card" onclick="navigateToRoute('/student/placement-prediction')" style="cursor: pointer;" title="View 4-Pillar Score">
             <div class="kpi-top-row">
               <span class="kpi-label">READINESS SCORE</span>
               <svg class="kpi-icon" style="color: #059669;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
             </div>
-            <div class="kpi-main-val" id="dash-kpi-readiness">-- <span style="font-size: 14px; font-weight: 500; color: var(--text-secondary);">/ 100</span></div>
+            <div class="kpi-main-val" id="pl-kpi-readiness">-- <span style="font-size: 14px; font-weight: 500; color: var(--text-secondary);">/ 100</span></div>
             <div class="kpi-context-row">
-              <span class="kpi-pill blue" id="dash-kpi-readiness-pill">4-Pillar Index</span>
-              <span id="dash-kpi-readiness-subtext" style="font-size: 11px;">Balanced Profile</span>
+              <span class="kpi-pill blue" id="pl-kpi-readiness-pill">Tier-1 Qualified</span>
+              <span id="pl-kpi-readiness-subtext" style="font-size: 11px;">4-Pillar Index</span>
             </div>
           </div>
 
-          <!-- Card 3: Academic CGPA & Standing -->
+          <!-- Card 3: Academic Benchmark CGPA -->
           <div class="kpi-card" onclick="navigateToRoute('/student/academic-performance')" style="cursor: pointer;" title="Manage Academic Performance">
             <div class="kpi-top-row">
               <span class="kpi-label">ACADEMIC CGPA</span>
               <svg class="kpi-icon" style="color: #0D9488;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
             </div>
-            <div class="kpi-main-val" id="dash-kpi-cgpa">-- <span style="font-size: 14px; font-weight: 500; color: var(--text-secondary);">/ 10.0</span></div>
+            <div class="kpi-main-val" id="pl-kpi-cgpa">-- <span style="font-size: 14px; font-weight: 500; color: var(--text-secondary);">/ 10.0</span></div>
             <div class="kpi-context-row">
-              <span class="kpi-pill teal" id="dash-kpi-cgpa-pill">0 Backlogs</span>
-              <span id="dash-kpi-cgpa-subtext" style="font-size: 11px;">Distinction</span>
+              <span class="kpi-pill teal" id="pl-kpi-cgpa-pill">0 Backlogs</span>
+              <span id="pl-kpi-cgpa-subtext" style="font-size: 11px;">First Class with Distinction</span>
             </div>
           </div>
 
-          <!-- Card 4: Aptitude Examination -->
-          <div class="kpi-card" onclick="navigateToRoute('/student/aptitude')" style="cursor: pointer;" title="Take Aptitude Assessment">
+          <!-- Card 4: Aptitude Accuracy -->
+          <div class="kpi-card" onclick="navigateToRoute('/student/aptitude')" style="cursor: pointer;" title="Open Aptitude Module">
             <div class="kpi-top-row">
               <span class="kpi-label">APTITUDE ACCURACY</span>
               <svg class="kpi-icon" style="color: #D97706;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
             </div>
-            <div class="kpi-main-val" id="dash-kpi-aptitude">--%</div>
+            <div class="kpi-main-val" id="pl-kpi-aptitude">--%</div>
             <div class="kpi-context-row">
-              <span class="kpi-pill orange" id="dash-kpi-aptitude-pill">Standardized Test</span>
-              <span id="dash-kpi-aptitude-subtext" style="font-size: 11px;">Quant &amp; Logical</span>
+              <span class="kpi-pill orange" id="pl-kpi-aptitude-pill">Standardized Test</span>
+              <span id="pl-kpi-aptitude-subtext" style="font-size: 11px;">Quant &amp; Logical</span>
             </div>
           </div>
 
-          <!-- Card 5: Coding & DSA Assessment -->
+          <!-- Card 5: Coding & DSA Score -->
           <div class="kpi-card" onclick="navigateToRoute('/student/coding')" style="cursor: pointer;" title="Open Coding Assessment">
             <div class="kpi-top-row">
               <span class="kpi-label">CODING &amp; DSA SCORE</span>
               <svg class="kpi-icon" style="color: #7C3AED;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
             </div>
-            <div class="kpi-main-val" id="dash-kpi-coding">--%</div>
+            <div class="kpi-main-val" id="pl-kpi-coding">--%</div>
             <div class="kpi-context-row">
-              <span class="kpi-pill green" id="dash-kpi-coding-pill">Passed Tests</span>
-              <span id="dash-kpi-coding-subtext" style="font-size: 11px;">Sandbox Runner</span>
+              <span class="kpi-pill green" id="pl-kpi-coding-pill">Passed Tests</span>
+              <span id="pl-kpi-coding-subtext" style="font-size: 11px;">Sandboxed Runner</span>
             </div>
           </div>
         </div>
 
-        <!-- MASTER 4-PILLAR MACHINE LEARNING FOUNDATION SECTION -->
+        <!-- Section 3: Master 4-Pillar Machine Learning Foundation -->
         <div class="content-panel" style="margin-bottom: 20px; border: 1.5px solid #BFDBFE; background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);">
           <div class="panel-header" style="margin-bottom: 16px;">
             <div style="display: flex; align-items: center; gap: 10px;">
@@ -341,31 +592,31 @@
                     <span class="dash-pillar-weight">30% Model Weight</span>
                   </div>
                 </div>
-                <span class="kpi-pill teal" id="dash-p1-tier">Super Dream</span>
+                <span class="kpi-pill teal" id="pl-p1-tier">Super Dream</span>
               </div>
               <div class="dash-pillar-score-row">
-                <span class="dash-pillar-score-val" id="dash-p1-score">--</span>
+                <span class="dash-pillar-score-val" id="pl-p1-score">--</span>
                 <span class="dash-pillar-score-max">/ 100 Benchmark</span>
               </div>
               <div class="dash-progress-track">
-                <div class="dash-progress-fill" id="dash-p1-bar" style="width: 0%; background: linear-gradient(90deg, #2563EB, #3B82F6);"></div>
+                <div class="dash-progress-fill" id="pl-p1-bar" style="width: 0%; background: linear-gradient(90deg, #2563EB, #3B82F6);"></div>
               </div>
               <div class="dash-pillar-meta-list">
                 <div class="dash-pillar-meta-item">
                   <span>Current CGPA</span>
-                  <strong id="dash-p1-cgpa">-- / 10.0</strong>
+                  <strong id="pl-p1-cgpa">-- / 10.0</strong>
                 </div>
                 <div class="dash-pillar-meta-item">
                   <span>10th / 12th Percentages</span>
-                  <strong id="dash-p1-school">--% / --%</strong>
+                  <strong id="pl-p1-school">--% / --%</strong>
                 </div>
                 <div class="dash-pillar-meta-item">
                   <span>Active Backlogs</span>
-                  <strong id="dash-p1-backlogs" style="color: #059669;">0 Active</strong>
+                  <strong id="pl-p1-backlogs" style="color: #059669;">0 Active</strong>
                 </div>
                 <div class="dash-pillar-meta-item">
                   <span>Academic Standing</span>
-                  <strong id="dash-p1-standing">First Class with Distinction</strong>
+                  <strong id="pl-p1-standing">First Class with Distinction</strong>
                 </div>
               </div>
               <button class="btn-outline btn-sm" onclick="navigateToRoute('/student/academic-performance')" style="width: 100%; justify-content: center;">
@@ -373,7 +624,7 @@
               </button>
             </div>
 
-            <!-- Pillar 2: Profile & Skills -->
+            <!-- Pillar 2: Skills & Projects -->
             <div class="dash-pillar-card">
               <div class="dash-pillar-header">
                 <div class="dash-pillar-title-wrap">
@@ -383,31 +634,31 @@
                     <span class="dash-pillar-weight">25% Model Weight</span>
                   </div>
                 </div>
-                <span class="kpi-pill blue" id="dash-p2-readiness">Production Ready</span>
+                <span class="kpi-pill blue" id="pl-p2-readiness">Production Ready</span>
               </div>
               <div class="dash-pillar-score-row">
-                <span class="dash-pillar-score-val" id="dash-p2-score">--</span>
+                <span class="dash-pillar-score-val" id="pl-p2-score">--</span>
                 <span class="dash-pillar-score-max">/ 100 Benchmark</span>
               </div>
               <div class="dash-progress-track">
-                <div class="dash-progress-fill" id="dash-p2-bar" style="width: 0%; background: linear-gradient(90deg, #059669, #10B981);"></div>
+                <div class="dash-progress-fill" id="pl-p2-bar" style="width: 0%; background: linear-gradient(90deg, #059669, #10B981);"></div>
               </div>
               <div class="dash-pillar-meta-list">
                 <div class="dash-pillar-meta-item">
                   <span>Verified Tech Skills</span>
-                  <strong id="dash-p2-skills">-- Skills</strong>
+                  <strong id="pl-p2-skills">-- Skills</strong>
                 </div>
                 <div class="dash-pillar-meta-item">
                   <span>Internships Completed</span>
-                  <strong id="dash-p2-internships">-- Completed</strong>
+                  <strong id="pl-p2-internships">-- Completed</strong>
                 </div>
                 <div class="dash-pillar-meta-item">
                   <span>Technical Projects</span>
-                  <strong id="dash-p2-projects">-- Projects</strong>
+                  <strong id="pl-p2-projects">-- Projects</strong>
                 </div>
                 <div class="dash-pillar-meta-item">
                   <span>Core Languages</span>
-                  <strong id="dash-p2-langs">Python, SQL, Java</strong>
+                  <strong id="pl-p2-langs">Python, SQL, Java</strong>
                 </div>
               </div>
               <button class="btn-outline btn-sm" onclick="navigateToRoute('/student/profile-skills')" style="width: 100%; justify-content: center;">
@@ -425,27 +676,27 @@
                     <span class="dash-pillar-weight">25% Model Weight</span>
                   </div>
                 </div>
-                <span class="kpi-pill orange" id="dash-p3-status">Completed</span>
+                <span class="kpi-pill orange" id="pl-p3-status">Completed</span>
               </div>
               <div class="dash-pillar-score-row">
-                <span class="dash-pillar-score-val" id="dash-p3-score">--</span>
+                <span class="dash-pillar-score-val" id="pl-p3-score">--</span>
                 <span class="dash-pillar-score-max">/ 100 Benchmark</span>
               </div>
               <div class="dash-progress-track">
-                <div class="dash-progress-fill" id="dash-p3-bar" style="width: 0%; background: linear-gradient(90deg, #D97706, #F59E0B);"></div>
+                <div class="dash-progress-fill" id="pl-p3-bar" style="width: 0%; background: linear-gradient(90deg, #D97706, #F59E0B);"></div>
               </div>
               <div class="dash-pillar-meta-list">
                 <div class="dash-pillar-meta-item">
                   <span>Quantitative Aptitude</span>
-                  <strong id="dash-p3-quant">--%</strong>
+                  <strong id="pl-p3-quant">--%</strong>
                 </div>
                 <div class="dash-pillar-meta-item">
                   <span>Logical Reasoning</span>
-                  <strong id="dash-p3-logical">--%</strong>
+                  <strong id="pl-p3-logical">--%</strong>
                 </div>
                 <div class="dash-pillar-meta-item">
                   <span>Verbal Ability</span>
-                  <strong id="dash-p3-verbal">--%</strong>
+                  <strong id="pl-p3-verbal">--%</strong>
                 </div>
                 <div class="dash-pillar-meta-item">
                   <span>Accuracy Formula</span>
@@ -467,23 +718,23 @@
                     <span class="dash-pillar-weight">20% Model Weight</span>
                   </div>
                 </div>
-                <span class="kpi-pill green" id="dash-p4-status">Accepted</span>
+                <span class="kpi-pill green" id="pl-p4-status">Accepted</span>
               </div>
               <div class="dash-pillar-score-row">
-                <span class="dash-pillar-score-val" id="dash-p4-score">--</span>
+                <span class="dash-pillar-score-val" id="pl-p4-score">--</span>
                 <span class="dash-pillar-score-max">/ 100 Benchmark</span>
               </div>
               <div class="dash-progress-track">
-                <div class="dash-progress-fill" id="dash-p4-bar" style="width: 0%; background: linear-gradient(90deg, #7C3AED, #8B5CF6);"></div>
+                <div class="dash-progress-fill" id="pl-p4-bar" style="width: 0%; background: linear-gradient(90deg, #7C3AED, #8B5CF6);"></div>
               </div>
               <div class="dash-pillar-meta-list">
                 <div class="dash-pillar-meta-item">
                   <span>DSA Problems Solved</span>
-                  <strong id="dash-p4-solved">-- Solved</strong>
+                  <strong id="pl-p4-solved">-- Solved</strong>
                 </div>
                 <div class="dash-pillar-meta-item">
                   <span>Test Cases Pass Rate</span>
-                  <strong id="dash-p4-tests">100%</strong>
+                  <strong id="pl-p4-tests">100%</strong>
                 </div>
                 <div class="dash-pillar-meta-item">
                   <span>Execution Sandbox</span>
@@ -501,44 +752,139 @@
           </div>
         </div>
 
-        <!-- 2-COLUMN ANALYTICS HUB: ML PREDICTION & ATS RESUME SCANNER -->
+        <!-- Section 7: Placement Preparation Roadmap (6 Interactive Stages) -->
+        <div class="content-panel" style="margin-bottom: 20px;">
+          <div class="panel-header" style="margin-bottom: 12px;">
+            <div>
+              <h3 class="panel-title">Placement Preparation Roadmap</h3>
+              <p class="panel-subtitle">Structured 6-stage milestone tracker guiding your journey to Tier-1 campus placement</p>
+            </div>
+            <span class="badge-status blue" style="font-size: 11px; font-weight: 700;">Stage 4 in Progress</span>
+          </div>
+
+          <div class="placement-roadmap-wrap" id="pl-roadmap-container">
+            <!-- Stage 1 -->
+            <div class="roadmap-step-card completed">
+              <div>
+                <span class="roadmap-step-badge completed">Stage 1 • Complete</span>
+                <h4 class="roadmap-step-title">Academic Foundation</h4>
+                <p class="roadmap-step-desc">Maintain &ge; 7.5 CGPA, zero active backlogs, and meet Tier-1 eligibility criteria.</p>
+              </div>
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: 700; color: #10B981; margin-bottom: 4px;">
+                  <span>Achieved</span><span>100%</span>
+                </div>
+                <div class="roadmap-progress-bar"><div class="roadmap-progress-fill" style="width: 100%; background: #10B981;"></div></div>
+              </div>
+            </div>
+
+            <!-- Stage 2 -->
+            <div class="roadmap-step-card completed">
+              <div>
+                <span class="roadmap-step-badge completed">Stage 2 • Complete</span>
+                <h4 class="roadmap-step-title">Technical Skills</h4>
+                <p class="roadmap-step-desc">Master core languages (Python, Java) and production web/database technologies.</p>
+              </div>
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: 700; color: #10B981; margin-bottom: 4px;">
+                  <span>Achieved</span><span>100%</span>
+                </div>
+                <div class="roadmap-progress-bar"><div class="roadmap-progress-fill" style="width: 100%; background: #10B981;"></div></div>
+              </div>
+            </div>
+
+            <!-- Stage 3 -->
+            <div class="roadmap-step-card completed">
+              <div>
+                <span class="roadmap-step-badge completed">Stage 3 • Complete</span>
+                <h4 class="roadmap-step-title">Aptitude Mastery</h4>
+                <p class="roadmap-step-desc">Quantitative, Logical Reasoning, and Verbal ability assessments (&ge;80% accuracy).</p>
+              </div>
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: 700; color: #10B981; margin-bottom: 4px;">
+                  <span>Achieved</span><span>100%</span>
+                </div>
+                <div class="roadmap-progress-bar"><div class="roadmap-progress-fill" style="width: 100%; background: #10B981;"></div></div>
+              </div>
+            </div>
+
+            <!-- Stage 4 -->
+            <div class="roadmap-step-card in-progress">
+              <div>
+                <span class="roadmap-step-badge in-progress">Stage 4 • Active</span>
+                <h4 class="roadmap-step-title">Coding &amp; DSA</h4>
+                <p class="roadmap-step-desc">Solve algorithmic problem patterns: Two Pointers, Trees, Dynamic Programming, and Graph traversal.</p>
+              </div>
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: 700; color: #2563EB; margin-bottom: 4px;">
+                  <span>In Progress</span><span>75%</span>
+                </div>
+                <div class="roadmap-progress-bar"><div class="roadmap-progress-fill" style="width: 75%; background: #2563EB;"></div></div>
+              </div>
+            </div>
+
+            <!-- Stage 5 -->
+            <div class="roadmap-step-card in-progress">
+              <div>
+                <span class="roadmap-step-badge in-progress">Stage 5 • Active</span>
+                <h4 class="roadmap-step-title">Resume &amp; Projects</h4>
+                <p class="roadmap-step-desc">Optimize resume ATS compatibility (&ge;80/100) and publish production capstone codebases.</p>
+              </div>
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: 700; color: #2563EB; margin-bottom: 4px;">
+                  <span>In Progress</span><span>85%</span>
+                </div>
+                <div class="roadmap-progress-bar"><div class="roadmap-progress-fill" style="width: 85%; background: #2563EB;"></div></div>
+              </div>
+            </div>
+
+            <!-- Stage 6 -->
+            <div class="roadmap-step-card upcoming">
+              <div>
+                <span class="roadmap-step-badge upcoming">Stage 6 • Upcoming</span>
+                <h4 class="roadmap-step-title">Mock Interviews</h4>
+                <p class="roadmap-step-desc">System Design discussions, HR behavioral rounds, and final campus drive clearance.</p>
+              </div>
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: 700; color: #64748B; margin-bottom: 4px;">
+                  <span>Upcoming</span><span>20%</span>
+                </div>
+                <div class="roadmap-progress-bar"><div class="roadmap-progress-fill" style="width: 20%; background: #94A3B8;"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4 & Section 5: AI Placement Prediction & Skill Gap Analysis -->
         <div class="analytics-grid-2" style="margin-bottom: 20px;">
           
-          <!-- Column 1: ML Prediction & Groq AI Roadmap Preview -->
+          <!-- Column 1: Section 4: AI Placement Prediction & Groq Strategic Plan -->
           <div class="content-panel">
             <div class="panel-header" style="margin-bottom: 14px;">
               <div>
-                <h3 class="panel-title">ML Placement Prediction &amp; AI Strategic Roadmap</h3>
+                <h3 class="panel-title">AI Placement Prediction &amp; Strategic Roadmap</h3>
                 <p class="panel-subtitle">Calibrated supervised classification estimating recruitment readiness</p>
               </div>
-              <button class="btn-outline btn-sm" onclick="navigateToRoute('/student/placement-prediction')">Full Analysis →</button>
+              <button class="btn-outline btn-sm" onclick="navigateToRoute('/student/placement-prediction')">Full Prediction Report →</button>
             </div>
 
-            <!-- Prediction Dial / Progress Strip -->
+            <!-- Dial Box -->
             <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 16px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
               <div>
                 <span style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748B;">Predicted Probability</span>
-                <div style="font-size: 32px; font-weight: 900; color: #1E3A8A; line-height: 1.1;" id="dash-pred-prob-big">--%</div>
-                <div style="font-size: 11.5px; color: #64748B; margin-top: 4px;" id="dash-pred-ci-text">95% Confidence Interval: Pending ML Evaluation</div>
+                <div style="font-size: 32px; font-weight: 900; color: #1E3A8A; line-height: 1.1;" id="pl-pred-prob-big">--%</div>
+                <div style="font-size: 11.5px; color: #64748B; margin-top: 4px;" id="pl-pred-ci-text">95% Confidence Interval: [88% – 94%]</div>
               </div>
               <div style="text-align: right;">
-                <span class="badge-status green" id="dash-pred-status-badge" style="font-size: 12px; font-weight: 700; padding: 4px 10px;">Placement Ready</span>
+                <span class="badge-status green" id="pl-pred-status-badge" style="font-size: 12px; font-weight: 700; padding: 4px 10px;">Placement Ready</span>
                 <div style="font-size: 11px; color: #059669; font-weight: 600; margin-top: 4px;">Tier-1 Super Dream Qualified</div>
               </div>
             </div>
 
-            <!-- Top Factors Attributions -->
+            <!-- Top Factors List -->
             <h4 style="font-size: 12.5px; font-weight: 700; color: #1E293B; margin: 0 0 8px 0;">Top Positive Driving Factors</h4>
-            <div id="dash-pred-strengths-list" style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px;">
-              <div style="font-size: 12px; color: #334155; padding: 6px 10px; background: #ECFDF5; border-radius: 6px; border-left: 3px solid #10B981;">
-                ✔ High Academic CGPA exceeds Super Dream cutoff (> 8.0)
-              </div>
-              <div style="font-size: 12px; color: #334155; padding: 6px 10px; background: #ECFDF5; border-radius: 6px; border-left: 3px solid #10B981;">
-                ✔ Production Technical Internship verified (AWS)
-              </div>
-              <div style="font-size: 12px; color: #334155; padding: 6px 10px; background: #ECFDF5; border-radius: 6px; border-left: 3px solid #10B981;">
-                ✔ Strong DSA coding test accuracy (100% test cases passed)
-              </div>
+            <div id="pl-pred-strengths-list" style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px;">
+              <!-- Populated dynamically -->
             </div>
 
             <!-- Groq AI Strategic Analysis Preview -->
@@ -550,13 +896,57 @@
                 </span>
                 <span style="font-size: 11px; color: #2563EB; font-weight: 600;">30-Day Preparation Plan</span>
               </div>
-              <p id="dash-ai-summary-text" style="font-size: 12px; color: #1E293B; margin: 0; line-height: 1.5;">
+              <p id="pl-ai-summary-text" style="font-size: 12px; color: #1E293B; margin: 0; line-height: 1.5;">
                 Your candidate profile demonstrates strong placement readiness for Tier-1 engineering roles. Focus on system design scalability and practice dynamic programming algorithms to solidify Top-tier dream offers.
               </p>
             </div>
           </div>
 
-          <!-- Column 2: Resume Analyzer & ATS Compatibility Radar -->
+          <!-- Column 2: Section 5: Skill Gap Analysis -->
+          <div class="content-panel">
+            <div class="panel-header" style="margin-bottom: 14px;">
+              <div>
+                <h3 class="panel-title">Skill Gap Analysis &amp; Recommendations</h3>
+                <p class="panel-subtitle">Diagnostics comparing your proficiencies against Tier-1 recruiter requirements</p>
+              </div>
+              <span class="badge-status blue" style="font-size: 11px;">Recruiter Aligned</span>
+            </div>
+
+            <!-- Current Mastered Skills -->
+            <h4 style="font-size: 12px; font-weight: 700; color: #15803D; margin: 0 0 6px 0;">✔ Mastered Skills Meeting Benchmarks</h4>
+            <div id="pl-skill-mastered-chips" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px;">
+              <span class="dash-skill-badge" style="background: #DCFCE7; color: #15803D; border-color: #86EFAC;">Python (Advanced)</span>
+              <span class="dash-skill-badge" style="background: #DCFCE7; color: #15803D; border-color: #86EFAC;">SQL (Advanced)</span>
+              <span class="dash-skill-badge" style="background: #DCFCE7; color: #15803D; border-color: #86EFAC;">Data Structures &amp; Algorithms</span>
+              <span class="dash-skill-badge" style="background: #DCFCE7; color: #15803D; border-color: #86EFAC;">Machine Learning Fundamentals</span>
+            </div>
+
+            <!-- Skills Requiring Improvement -->
+            <h4 style="font-size: 12px; font-weight: 700; color: #D97706; margin: 0 0 6px 0;">⚠️ Skills Requiring Revision &amp; Practice</h4>
+            <div id="pl-skill-gaps-chips" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px;">
+              <span class="dash-skill-badge" style="background: #FEF3C7; color: #B45309; border-color: #FCD34D;">System Design &amp; Architecture (Gap: -15%)</span>
+              <span class="dash-skill-badge" style="background: #FEF3C7; color: #B45309; border-color: #FCD34D;">Operating Systems &amp; Concurrency (Gap: -8%)</span>
+            </div>
+
+            <!-- Recommended High-Priority Skills -->
+            <h4 style="font-size: 12px; font-weight: 700; color: #1E3A8A; margin: 0 0 6px 0;">🚀 Recommended High-Demand Skills for Target Companies</h4>
+            <div id="pl-skill-rec-chips" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px;">
+              <span class="dash-skill-badge" style="background: #EFF6FF; color: #1D4ED8; border-color: #BFDBFE;">Docker &amp; Containers [Critical]</span>
+              <span class="dash-skill-badge" style="background: #EFF6FF; color: #1D4ED8; border-color: #BFDBFE;">Kubernetes [Recommended]</span>
+              <span class="dash-skill-badge" style="background: #EFF6FF; color: #1D4ED8; border-color: #BFDBFE;">Microservices Architecture [High Priority]</span>
+              <span class="dash-skill-badge" style="background: #EFF6FF; color: #1D4ED8; border-color: #BFDBFE;">CI/CD Pipelines [Recommended]</span>
+            </div>
+
+            <button class="btn-primary" onclick="navigateToRoute('/student/skills')" style="width: 100%; justify-content: center; margin-top: 6px;">
+              Manage Skills &amp; View Personalized Learning Paths →
+            </button>
+          </div>
+        </div>
+
+        <!-- Section 6: Resume ATS Compatibility & Section 8: Technical Skills/Projects Portfolio -->
+        <div class="analytics-grid-2" style="margin-bottom: 20px;">
+          
+          <!-- Column 1: Section 6: Resume ATS Compatibility -->
           <div class="content-panel">
             <div class="panel-header" style="margin-bottom: 14px;">
               <div>
@@ -570,18 +960,18 @@
             <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 16px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
               <div>
                 <span style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748B;">ATS Compatibility Score</span>
-                <div style="font-size: 32px; font-weight: 900; color: #059669; line-height: 1.1;" id="dash-ats-score-big">85 <span style="font-size: 16px; font-weight: 600; color: #64748B;">/ 100</span></div>
+                <div style="font-size: 32px; font-weight: 900; color: #059669; line-height: 1.1;" id="pl-ats-score-big">85 <span style="font-size: 16px; font-weight: 600; color: #64748B;">/ 100</span></div>
                 <div style="font-size: 11.5px; color: #059669; margin-top: 4px;">Top Tier Tech ATS Ready</div>
               </div>
               <div style="text-align: right;">
-                <span class="kpi-pill teal" id="dash-ats-pill" style="font-size: 12px; font-weight: 700; padding: 4px 10px;">High Compatibility</span>
+                <span class="kpi-pill teal" id="pl-ats-pill" style="font-size: 12px; font-weight: 700; padding: 4px 10px;">High Compatibility</span>
                 <div style="font-size: 11px; color: #64748B; margin-top: 4px;">Parser Verified</div>
               </div>
             </div>
 
             <!-- Matched Keywords Chips -->
             <h4 style="font-size: 12px; font-weight: 700; color: #1E293B; margin: 0 0 6px 0;">Matched Tech Keywords in Resume</h4>
-            <div id="dash-ats-matched-chips" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px;">
+            <div id="pl-ats-matched-chips" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px;">
               <span class="dash-skill-badge" style="background: #DCFCE7; color: #15803D; border-color: #86EFAC;">Python</span>
               <span class="dash-skill-badge" style="background: #DCFCE7; color: #15803D; border-color: #86EFAC;">SQL</span>
               <span class="dash-skill-badge" style="background: #DCFCE7; color: #15803D; border-color: #86EFAC;">Java</span>
@@ -593,7 +983,7 @@
 
             <!-- Missing Recommended Keywords Alert -->
             <h4 style="font-size: 12px; font-weight: 700; color: #991B1B; margin: 0 0 6px 0;">Recommended Industry Keywords to Add</h4>
-            <div id="dash-ats-missing-chips" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px;">
+            <div id="pl-ats-missing-chips" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px;">
               <span class="dash-skill-badge" style="background: #FEF2F2; color: #991B1B; border-color: #FECACA;">+ Docker</span>
               <span class="dash-skill-badge" style="background: #FEF2F2; color: #991B1B; border-color: #FECACA;">+ Kubernetes</span>
               <span class="dash-skill-badge" style="background: #FEF2F2; color: #991B1B; border-color: #FECACA;">+ Microservices</span>
@@ -603,12 +993,8 @@
               Upload &amp; Scan Updated Resume →
             </button>
           </div>
-        </div>
 
-        <!-- 2-COLUMN PORTFOLIO & RECENT ACTIVITY SECTION -->
-        <div class="analytics-grid-2">
-          
-          <!-- Column 1: Technical Skills & Experience Showcase -->
+          <!-- Column 2: Section 8: Technical Skills & Projects Portfolio -->
           <div class="content-panel">
             <div class="panel-header" style="margin-bottom: 14px;">
               <div>
@@ -620,595 +1006,42 @@
 
             <!-- Skills Cloud -->
             <h4 style="font-size: 12px; font-weight: 700; color: #1E293B; margin: 0 0 8px 0;">Verified Technical Proficiencies</h4>
-            <div id="dash-skills-tag-cloud" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px;">
+            <div id="pl-skills-tag-cloud" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px;">
               <!-- Populated dynamically -->
             </div>
 
             <!-- Internships Preview -->
             <h4 style="font-size: 12px; font-weight: 700; color: #1E293B; margin: 0 0 8px 0;">Verified Industry Internships</h4>
-            <div id="dash-internships-preview" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px;">
+            <div id="pl-internships-preview" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px;">
               <!-- Populated dynamically -->
             </div>
 
             <!-- Projects Preview -->
             <h4 style="font-size: 12px; font-weight: 700; color: #1E293B; margin: 0 0 8px 0;">Featured Technical Projects</h4>
-            <div id="dash-projects-preview" style="display: flex; flex-direction: column; gap: 8px;">
+            <div id="pl-projects-preview" style="display: flex; flex-direction: column; gap: 8px;">
               <!-- Populated dynamically -->
             </div>
           </div>
+        </div>
 
-          <!-- Column 2: Recent Assessment Activities & Milestone Feed -->
-          <div class="content-panel">
-            <div class="panel-header" style="margin-bottom: 14px;">
-              <div>
-                <h3 class="panel-title">Recent Assessment Activity &amp; Milestones</h3>
-                <p class="panel-subtitle">Chronological record of recent testing, coding executions, and ML model audits</p>
-              </div>
-              <button class="btn-primary btn-sm" onclick="navigateToRoute('/student/aptitude')">New Assessment +</button>
+        <!-- Section 9: Placement Prediction History -->
+        <div class="content-panel">
+          <div class="panel-header" style="margin-bottom: 14px;">
+            <div>
+              <h3 class="panel-title">Placement Prediction History &amp; Longitudinal Audit</h3>
+              <p class="panel-subtitle">Chronological record of ML evaluations, probability shifts, and continuous readiness calibration</p>
             </div>
+            <button class="btn-outline btn-sm" onclick="recalculatePlacementPrediction(event)">Run New Audit</button>
+          </div>
 
-            <!-- Live Timeline -->
-            <div class="dash-activity-timeline" id="dash-recent-activity-timeline" style="margin-bottom: 16px;">
-              <!-- Populated dynamically -->
-            </div>
-
-            <!-- Placement Prediction History Mini Table -->
-            <h4 style="font-size: 12px; font-weight: 700; color: #1E293B; margin: 0 0 8px 0;">Placement Prediction History</h4>
-            <div id="dash-placement-history-mini">
-              <!-- Populated dynamically -->
-            </div>
+          <div id="pl-placement-history-table">
+            <!-- Populated dynamically -->
           </div>
         </div>
 
       </div>
 
-      <!-- PANE 2: STUDENT PLACEMENT OVERVIEW -->
-      <div class="view-container screen-pane" id="pane-student-overview" style="display: none;">
-        
-        <!-- Clean Compact Welcome Card -->
-        <div class="welcome-card">
-          <div class="welcome-info">
-            <span class="welcome-badge-status">Campus Recruitment Active</span>
-            <h2 class="welcome-heading" id="student-welcome-heading">Good morning, Student</h2>
-            <p class="welcome-subtext">Your placement preparation at a glance. Review upcoming drives, complete mentor tasks, and verify skill benchmarks.</p>
-          </div>
-          <div class="welcome-actions">
-            <button class="btn-primary" onclick="navigateToRoute('/student/prediction')">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-              <span>Run Prediction</span>
-            </button>
-            <button class="btn-outline" onclick="navigateToRoute('/student/jobs')">
-              <span>Explore Drives</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- 4 Uniform KPI Cards -->
-        <div class="kpi-grid-4">
-          <div class="kpi-card">
-            <div class="kpi-top-row">
-              <span class="kpi-label">Placement Probability</span>
-              <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle></svg>
-            </div>
-            <div class="kpi-main-val" id="kpi-student-prob">--%</div>
-            <div class="kpi-context-row">
-              <span class="kpi-pill orange" id="kpi-student-prob-pill">Pending Setup</span>
-              <span id="kpi-student-prob-subtext">Complete academic profile</span>
-            </div>
-          </div>
-
-          <div class="kpi-card">
-            <div class="kpi-top-row">
-              <span class="kpi-label">Readiness Score</span>
-              <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline></svg>
-            </div>
-            <div class="kpi-main-val" id="kpi-student-readiness">-- <span style="font-size: 14px; font-weight: 500; color: var(--text-secondary);">/ 100</span></div>
-            <div class="kpi-context-row">
-              <span class="kpi-pill orange" id="kpi-student-readiness-pill">Pending</span>
-              <span>Based on technical &amp; aptitude</span>
-            </div>
-          </div>
-
-          <div class="kpi-card">
-            <div class="kpi-top-row">
-              <span class="kpi-label">Skills Mastered</span>
-              <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
-            </div>
-            <div class="kpi-main-val" id="kpi-student-skills-count">0 <span style="font-size: 14px; font-weight: 500; color: var(--text-secondary);">Skills</span></div>
-            <div class="kpi-context-row">
-              <span class="kpi-pill blue" id="kpi-student-skills-pill">Add Skills</span>
-              <span>Skill Benchmarking</span>
-            </div>
-          </div>
-
-          <div class="kpi-card">
-            <div class="kpi-top-row">
-              <span class="kpi-label">Drive Applications</span>
-              <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-            </div>
-            <div class="kpi-main-val" id="kpi-student-apps">0 <span style="font-size: 14px; font-weight: 500; color: var(--text-secondary);">Applied</span></div>
-            <div class="kpi-context-row">
-              <span class="kpi-pill teal" id="kpi-student-shortlisted">0 Shortlisted</span>
-              <span id="student-placed-badge-kpi">Setup Pending</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Analytical Panels: Prediction Factors (Donut Chart) & Skill Competencies (Radar Chart) -->
-        <div class="analytics-grid-2">
-          
-          <!-- Card 1: Factor Impact Panel (Donut Chart & List) -->
-          <div class="analytics-card">
-            <div class="analytics-card-header">
-              <div class="header-left-group">
-                <div class="card-icon-circle green">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="4" y1="21" x2="4" y2="14"></line>
-                    <line x1="4" y1="10" x2="4" y2="3"></line>
-                    <line x1="12" y1="21" x2="12" y2="12"></line>
-                    <line x1="12" y1="8" x2="12" y2="3"></line>
-                    <line x1="20" y1="21" x2="20" y2="16"></line>
-                    <line x1="20" y1="12" x2="20" y2="3"></line>
-                    <line x1="1" y1="14" x2="7" y2="14"></line>
-                    <line x1="9" y1="8" x2="15" y2="8"></line>
-                    <line x1="17" y1="16" x2="23" y2="16"></line>
-                  </svg>
-                </div>
-                <div class="card-header-titles">
-                  <h3 class="card-header-title">Placement Prediction Factor Weights</h3>
-                  <p class="card-header-subtitle">Supervised Random Forest feature importance from historical placement cohorts</p>
-                </div>
-              </div>
-              <div class="badge-accuracy-pill">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
-                <span>Model Accuracy <strong>89.2%</strong></span>
-              </div>
-            </div>
-
-            <!-- Explanatory Information Box -->
-            <div class="info-callout-box">
-              <svg class="info-callout-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-              <span>Factor weights reflect the model's Gini impurity reduction relative to placed student cohorts, not direct correlation.</span>
-            </div>
-
-            <!-- 2-Column Split: Donut Chart on Left, Factor List on Right -->
-            <div class="card-content-split">
-              <!-- Left: Donut Chart -->
-              <div class="donut-chart-wrap" id="donut-chart-container">
-                <svg viewBox="0 0 240 240" class="donut-svg" id="donut-chart-svg">
-                  <!-- Slices rendered with polar coordinates -->
-                  <!-- Slice 1: Academic CGPA (35%) -> Start -90°, End 36° (126° arc) -->
-                  <path class="donut-slice" d="M 120 40 A 80 80 0 0 1 184.72 167.02 L 162.07 150.56 A 52 52 0 0 0 120 68 Z" fill="#10B981" stroke="#FFFFFF" stroke-width="2.5"></path>
-                  <!-- Slice 2: Aptitude Test Score (25%) -> Start 36°, End 126° (90° arc) -->
-                  <path class="donut-slice" d="M 184.72 167.02 A 80 80 0 0 1 72.98 184.72 L 89.44 162.07 A 52 52 0 0 0 162.07 150.56 Z" fill="#3B82F6" stroke="#FFFFFF" stroke-width="2.5"></path>
-                  <!-- Slice 3: Technical Projects (18%) -> Start 126°, End 190.8° (64.8° arc) -->
-                  <path class="donut-slice" d="M 72.98 184.72 A 80 80 0 0 1 41.42 105 L 68.92 110.25 A 52 52 0 0 0 89.44 162.07 Z" fill="#8B5CF6" stroke="#FFFFFF" stroke-width="2.5"></path>
-                  <!-- Slice 4: Active Backlogs (12%) -> Start 190.8°, End 234° (43.2° arc) -->
-                  <path class="donut-slice" d="M 41.42 105 A 80 80 0 0 1 55.28 55.28 L 77.93 77.93 A 52 52 0 0 0 68.92 110.25 Z" fill="#F59E0B" stroke="#FFFFFF" stroke-width="2.5"></path>
-                  <!-- Slice 5: Mock Interview Score (10%) -> Start 234°, End 270° (-90°) (36° arc) -->
-                  <path class="donut-slice" d="M 55.28 55.28 A 80 80 0 0 1 120 40 L 120 68 A 52 52 0 0 0 77.93 77.93 Z" fill="#14B8A6" stroke="#FFFFFF" stroke-width="2.5"></path>
-
-                  <!-- Center Text: 100% Total Weight -->
-                  <text x="120" y="115" text-anchor="middle" font-family="'Plus Jakarta Sans', 'Inter', sans-serif" font-weight="800" font-size="22" fill="#172B4D">100%</text>
-                  <text x="120" y="132" text-anchor="middle" font-size="10.5" font-weight="600" fill="#64748B">Total Weight</text>
-
-                  <!-- Percentage Callouts around the perimeter matching screenshot -->
-                  <text x="210" y="74" text-anchor="middle" font-size="11.5" font-weight="800" fill="#059669">35%</text>
-                  <text x="145" y="218" text-anchor="middle" font-size="11.5" font-weight="800" fill="#2563EB">25%</text>
-                  <text x="32" y="162" text-anchor="middle" font-size="11.5" font-weight="800" fill="#7C3AED">18%</text>
-                  <text x="26" y="80" text-anchor="middle" font-size="11.5" font-weight="800" fill="#D97706">12%</text>
-                  <text x="82" y="28" text-anchor="middle" font-size="11.5" font-weight="800" fill="#0D9488">10%</text>
-                </svg>
-              </div>
-
-              <!-- Right: Compact Factor List -->
-              <div class="factor-list-col">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px;">
-                  <div class="sub-column-title">Factor Weights</div>
-                  <button type="button" class="btn-link" onclick="openEditAcademicModal()" style="font-size: 11px; color: var(--primary-blue); background: none; border: none; cursor: pointer; font-weight: 600; text-decoration: underline;" title="Update CGPA & Academic Scores">Edit Scores &rarr;</button>
-                </div>
-
-                <div id="factor-list-items" style="display: flex; flex-direction: column; gap: 8px;">
-                  <!-- 1. CGPA -->
-                  <div class="factor-item-row" onclick="openEditAcademicModal()" style="cursor: pointer;" title="Click to edit academic records">
-                    <div class="factor-item-left">
-                      <div class="factor-icon-badge green">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
-                      </div>
-                      <div class="factor-info">
-                        <div class="factor-name-title" id="factor-name-cgpa">Academic CGPA (8.1 / 10.0)</div>
-                        <div class="factor-name-desc">Academic performance and consistency</div>
-                      </div>
-                    </div>
-                    <div class="factor-item-right">
-                      <span class="factor-weight-val" id="factor-weight-cgpa">35%</span>
-                      <span class="pill-tier highest" id="factor-pill-cgpa">Highest</span>
-                    </div>
-                  </div>
-
-                  <!-- 2. Aptitude -->
-                  <div class="factor-item-row" onclick="navigateToRoute('/student/prediction')" style="cursor: pointer;" title="Click to test in simulator">
-                    <div class="factor-item-left">
-                      <div class="factor-icon-badge blue">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-                      </div>
-                      <div class="factor-info">
-                        <div class="factor-name-title" id="factor-name-aptitude">Aptitude Test Score (78 / 100)</div>
-                        <div class="factor-name-desc">Logical and quantitative ability</div>
-                      </div>
-                    </div>
-                    <div class="factor-item-right">
-                      <span class="factor-weight-val" id="factor-weight-aptitude">25%</span>
-                      <span class="pill-tier high" id="factor-pill-aptitude">High</span>
-                    </div>
-                  </div>
-
-                  <!-- 3. Projects -->
-                  <div class="factor-item-row" onclick="navigateToRoute('/student/group-projects')" style="cursor: pointer;" title="Click to view Group Projects">
-                    <div class="factor-item-left">
-                      <div class="factor-icon-badge purple">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                      </div>
-                      <div class="factor-info">
-                        <div class="factor-name-title" id="factor-name-projects">Technical Projects (3 Completed)</div>
-                        <div class="factor-name-desc">Practical implementation and problem solving</div>
-                      </div>
-                    </div>
-                    <div class="factor-item-right">
-                      <span class="factor-weight-val" id="factor-weight-projects">18%</span>
-                      <span class="pill-tier medium" id="factor-pill-projects">Medium</span>
-                    </div>
-                  </div>
-
-                  <!-- 4. Backlogs -->
-                  <div class="factor-item-row" onclick="openEditAcademicModal()" style="cursor: pointer;" title="Click to edit backlogs">
-                    <div class="factor-item-left">
-                      <div class="factor-icon-badge orange">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
-                      </div>
-                      <div class="factor-info">
-                        <div class="factor-name-title" id="factor-name-backlogs">Active Backlogs (0 Active)</div>
-                        <div class="factor-name-desc">Academic progress and standing backlogs</div>
-                      </div>
-                    </div>
-                    <div class="factor-item-right">
-                      <span class="factor-weight-val" id="factor-weight-backlogs">12%</span>
-                      <span class="pill-tier medium-amber" id="factor-pill-backlogs">Medium</span>
-                    </div>
-                  </div>
-
-                  <!-- 5. Mock Interview -->
-                  <div class="factor-item-row" onclick="navigateToRoute('/student/skills')" style="cursor: pointer;" title="Click to benchmark skills">
-                    <div class="factor-item-left">
-                      <div class="factor-icon-badge teal">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                      </div>
-                      <div class="factor-info">
-                        <div class="factor-name-title" id="factor-name-mock">Mock Interview Score (82 / 100)</div>
-                        <div class="factor-name-desc">Communication and interview readiness</div>
-                      </div>
-                    </div>
-                    <div class="factor-item-right">
-                      <span class="factor-weight-val" id="factor-weight-mock">10%</span>
-                      <span class="pill-tier lower" id="factor-pill-mock">Lower</span>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-            </div>
-          </div>
-
-          <!-- Card 2: Skill Competency Panel (Radar Chart & Performance List) -->
-          <div class="analytics-card">
-            <div class="analytics-card-header" style="flex-wrap: wrap;">
-              <div class="header-left-group">
-                <div class="card-icon-circle green">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
-                </div>
-                <div class="card-header-titles">
-                  <h3 class="card-header-title" id="skill-competency-card-title">Skill Competency vs Target Role (SDE-1)</h3>
-                  <p class="card-header-subtitle" id="skill-competency-card-subtitle">Target Cutoff Benchmark: 80%</p>
-                </div>
-              </div>
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <label for="select-target-role" style="font-size: 11.5px; font-weight: 600; color: var(--text-secondary); white-space: nowrap;">Role:</label>
-                <select class="form-select" id="select-target-role" onchange="handleTargetRoleChange(this.value)" style="padding: 5px 10px; font-size: 12px; font-weight: 600; border-radius: 6px; border: 1px solid var(--border-subtle); background: #FFFFFF; color: var(--text-navy); cursor: pointer;" title="Select Target Job Role">
-                  <option value="sde" selected>SDE-1 (Software Engineer)</option>
-                  <option value="fullstack">Full Stack Developer</option>
-                  <option value="data">Data Scientist / ML Engineer</option>
-                  <option value="cloud">Cloud / DevOps Engineer</option>
-                  <option value="core">Core CS & Systems</option>
-                </select>
-                <button class="btn-outline btn-sm pill-btn" onclick="navigateToRoute('/student/skills')">
-                  <span>View Skill Gaps</span>
-                  <span style="font-size: 13px;">&rarr;</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- Legend Row -->
-            <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; color: var(--text-secondary); margin-bottom: 8px;">
-              <div style="display: flex; align-items: center; gap: 16px;">
-                <div style="display: flex; align-items: center; gap: 6px;">
-                  <span style="width: 8px; height: 8px; border-radius: 50%; background: #10B981;"></span>
-                  <span>Your Score</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 6px;">
-                  <span style="width: 8px; height: 8px; border-radius: 50%; border: 1.5px dashed #94A3B8; background: transparent;"></span>
-                  <span id="legend-benchmark-target">Target (80%)</span>
-                </div>
-              </div>
-              <button type="button" class="btn-link" onclick="openEditSkillsModal()" style="font-size: 11.5px; color: var(--primary-blue); background: none; border: none; cursor: pointer; text-decoration: underline; font-weight: 600;">+ Add / Verify Skills</button>
-            </div>
-
-            <!-- 2-Column Split: Radar Chart on Left, Performance List on Right -->
-            <div class="card-content-split">
-              <!-- Left: Radar Chart (5-Axis Pentagon) -->
-              <div class="radar-chart-wrap" id="radar-chart-container">
-                <svg viewBox="0 0 340 280" class="radar-svg" id="radar-chart-svg">
-                  <!-- Concentric Grid Pentagons -->
-                  <!-- 20% -->
-                  <polygon points="170,118 186.2,129.7 180,148.8 160,148.8 153.8,129.7" fill="none" stroke="#E2E8F0" stroke-width="1"></polygon>
-                  <!-- 40% -->
-                  <polygon points="170,101 202.3,124.5 190,162.5 150,162.5 137.7,124.5" fill="none" stroke="#E2E8F0" stroke-width="1"></polygon>
-                  <!-- 60% -->
-                  <polygon points="170,84 218.5,119.2 200,176.3 140,176.3 121.5,119.2" fill="none" stroke="#E2E8F0" stroke-width="1"></polygon>
-                  <!-- 80% (Dashed Benchmark Target Line) -->
-                  <polygon points="170,67 234.7,114 210,190.1 130,190.1 105.3,114" fill="none" stroke="#94A3B8" stroke-width="1.2" stroke-dasharray="3,3"></polygon>
-                  <!-- 100% (Outer Boundary) -->
-                  <polygon points="170,50 250.8,108.7 220,203.8 120,203.8 89.2,108.7" fill="none" stroke="#CBD5E1" stroke-width="1"></polygon>
-
-                  <!-- 5 Axis Grid Lines -->
-                  <line x1="170" y1="135" x2="170" y2="50" stroke="#E2E8F0" stroke-width="1"></line>
-                  <line x1="170" y1="135" x2="250.8" y2="108.7" stroke="#E2E8F0" stroke-width="1"></line>
-                  <line x1="170" y1="135" x2="220" y2="203.8" stroke="#E2E8F0" stroke-width="1"></line>
-                  <line x1="170" y1="135" x2="120" y2="203.8" stroke="#E2E8F0" stroke-width="1"></line>
-                  <line x1="170" y1="135" x2="89.2" y2="108.7" stroke="#E2E8F0" stroke-width="1"></line>
-
-                  <!-- Student Polygon: DSA 82%, Web 88%, SystemDesign 65%, CoreCS 74%, Quant 80% -->
-                  <polygon id="radar-student-polygon" points="170,65.3 241.1,111.9 202.5,179.7 133,185.9 105.3,114" fill="rgba(16, 185, 129, 0.18)" stroke="#10B981" stroke-width="2.2"></polygon>
-
-                  <!-- 5 Vertex Dots -->
-                  <circle cx="170" cy="65.3" r="3.5" fill="#10B981" stroke="#FFFFFF" stroke-width="1.5"></circle>
-                  <circle cx="241.1" cy="111.9" r="3.5" fill="#10B981" stroke="#FFFFFF" stroke-width="1.5"></circle>
-                  <circle cx="202.5" cy="179.7" r="3.5" fill="#10B981" stroke="#FFFFFF" stroke-width="1.5"></circle>
-                  <circle cx="133" cy="185.9" r="3.5" fill="#10B981" stroke="#FFFFFF" stroke-width="1.5"></circle>
-                  <circle cx="105.3" cy="114" r="3.5" fill="#10B981" stroke="#FFFFFF" stroke-width="1.5"></circle>
-
-                  <!-- Outer Axis Labels with Values -->
-                  <text x="170" y="24" text-anchor="middle" font-size="9.5" font-weight="600" fill="#172B4D">Data Structures &amp;</text>
-                  <text x="170" y="35" text-anchor="middle" font-size="9.5" font-weight="600" fill="#172B4D">Algorithms</text>
-                  <text x="170" y="47" text-anchor="middle" font-size="11" font-weight="800" fill="#059669" id="radar-val-dsa">82%</text>
-
-                  <text x="256" y="98" text-anchor="start" font-size="9.5" font-weight="600" fill="#172B4D">Web Technologies &amp;</text>
-                  <text x="256" y="109" text-anchor="start" font-size="9.5" font-weight="600" fill="#172B4D">Frameworks</text>
-                  <text x="256" y="121" text-anchor="start" font-size="11" font-weight="800" fill="#059669" id="radar-val-web">88%</text>
-
-                  <text x="226" y="218" text-anchor="start" font-size="9.5" font-weight="600" fill="#172B4D">System Design &amp;</text>
-                  <text x="226" y="229" text-anchor="start" font-size="9.5" font-weight="600" fill="#172B4D">Architecture</text>
-                  <text x="226" y="241" text-anchor="start" font-size="11" font-weight="800" fill="#D97706" id="radar-val-sys">65%</text>
-
-                  <text x="114" y="218" text-anchor="end" font-size="9.5" font-weight="600" fill="#172B4D">Core CS (OS, DBMS,</text>
-                  <text x="114" y="229" text-anchor="end" font-size="9.5" font-weight="600" fill="#172B4D">Networks)</text>
-                  <text x="114" y="241" text-anchor="end" font-size="11" font-weight="800" fill="#D97706" id="radar-val-cs">74%</text>
-
-                  <text x="83" y="98" text-anchor="end" font-size="9.5" font-weight="600" fill="#172B4D">Quantitative &amp;</text>
-                  <text x="83" y="109" text-anchor="end" font-size="9.5" font-weight="600" fill="#172B4D">Logical Aptitude</text>
-                  <text x="83" y="121" text-anchor="end" font-size="11" font-weight="800" fill="#059669" id="radar-val-apt">80%</text>
-                </svg>
-              </div>
-
-              <!-- Right: Skill-wise Performance List -->
-              <div class="skill-list-col">
-                <div class="sub-column-title">Skill-wise Performance</div>
-
-                <div id="skill-list-items" style="display: flex; flex-direction: column; gap: 7px;">
-                  <!-- 1. DSA -->
-                  <div class="skill-item-row" onclick="openEditSkillsModal()" style="cursor: pointer;" title="Click to view/add skills">
-                    <div class="skill-item-left">
-                      <div class="skill-icon-badge green">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
-                      </div>
-                      <span class="skill-label-text">Data Structures &amp; Algorithms</span>
-                    </div>
-                    <div class="skill-item-right">
-                      <span class="skill-score-num green" id="skill-score-dsa">82%</span>
-                      <span class="pill-skill-status met" id="skill-pill-dsa">Met</span>
-                    </div>
-                  </div>
-
-                  <!-- 2. Web -->
-                  <div class="skill-item-row" onclick="openEditSkillsModal()" style="cursor: pointer;" title="Click to view/add skills">
-                    <div class="skill-item-left">
-                      <div class="skill-icon-badge blue">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-                      </div>
-                      <span class="skill-label-text">Web Technologies &amp; Frameworks</span>
-                    </div>
-                    <div class="skill-item-right">
-                      <span class="skill-score-num green" id="skill-score-web">88%</span>
-                      <span class="pill-skill-status met" id="skill-pill-web">Exceeds</span>
-                    </div>
-                  </div>
-
-                  <!-- 3. System Design -->
-                  <div class="skill-item-row" onclick="openEditSkillsModal()" style="cursor: pointer;" title="Click to view/add skills">
-                    <div class="skill-item-left">
-                      <div class="skill-icon-badge orange">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
-                      </div>
-                      <span class="skill-label-text">System Design &amp; Architecture</span>
-                    </div>
-                    <div class="skill-item-right">
-                      <span class="skill-score-num orange" id="skill-score-sys">65%</span>
-                      <span class="pill-skill-status gap" id="skill-pill-sys">Gap (-15%)</span>
-                    </div>
-                  </div>
-
-                  <!-- 4. Core CS -->
-                  <div class="skill-item-row" onclick="openEditSkillsModal()" style="cursor: pointer;" title="Click to view/add skills">
-                    <div class="skill-item-left">
-                      <div class="skill-icon-badge green">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
-                      </div>
-                      <span class="skill-label-text">Core CS (OS, DBMS, Networks)</span>
-                    </div>
-                    <div class="skill-item-right">
-                      <span class="skill-score-num orange" id="skill-score-cs">74%</span>
-                      <span class="pill-skill-status gap" id="skill-pill-cs">Gap (-6%)</span>
-                    </div>
-                  </div>
-
-                  <!-- 5. Aptitude -->
-                  <div class="skill-item-row" onclick="openEditSkillsModal()" style="cursor: pointer;" title="Click to view/add skills">
-                    <div class="skill-item-left">
-                      <div class="skill-icon-badge teal">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"></rect><line x1="8" y1="6" x2="16" y2="6"></line><line x1="8" y1="10" x2="16" y2="10"></line><line x1="8" y1="14" x2="16" y2="14"></line><line x1="8" y1="18" x2="16" y2="18"></line></svg>
-                      </div>
-                      <span class="skill-label-text">Quantitative &amp; Logical Aptitude</span>
-                    </div>
-                    <div class="skill-item-right">
-                      <span class="skill-score-num green" id="skill-score-apt">80%</span>
-                      <span class="pill-skill-status met" id="skill-pill-apt">Met</span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Practical Recommendation Panel -->
-                <div class="practical-rec-card">
-                  <div class="practical-rec-icon-wrap">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6"></path><path d="M10 22h4"></path><path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z"></path></svg>
-                  </div>
-                  <div>
-                    <div class="practical-rec-heading">Practical Recommendation:</div>
-                    <div class="practical-rec-desc" id="skill-practical-rec-desc">Focus on System Design patterns (Caching, Load Balancing) and Database Indexing to reach the 80% benchmark before Dream tier placement drives.</div>
-                  </div>
-                </div>
-
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-        <!-- Connected Lower Panels: Campus Drives & Mentoring Tasks -->
-        <div class="panel-grid-2">
-          
-          <!-- Card 1: Campus Recruitment Drives & Application Activity -->
-          <div class="content-panel">
-            <div class="panel-header">
-              <div>
-                <h3 class="panel-title">Campus Recruitment &amp; Applications</h3>
-                <p class="panel-subtitle">College Training &amp; Placement Cell</p>
-              </div>
-              <div class="section-tab-group">
-                <button class="section-tab-btn active" id="btn-student-tab-drives" onclick="switchStudentDriveTab('drives')">Upcoming Drives</button>
-                <button class="section-tab-btn" id="btn-student-tab-apps" onclick="switchStudentDriveTab('apps')">My Applications</button>
-              </div>
-            </div>
-
-            <!-- Tab 1: Upcoming Drives -->
-            <div id="student-tab-drives-content">
-              <div id="student-drives-list">
-                <!-- Dynamically rendered from PlacementDataStore -->
-              </div>
-              <div style="text-align: right; margin-top: 10px;">
-                <button class="btn-outline btn-sm" onclick="navigateToRoute('/student/jobs')">Explore All Drives &rarr;</button>
-              </div>
-            </div>
-
-            <!-- Tab 2: My Applications -->
-            <div id="student-tab-apps-content" style="display: none;">
-              <div id="student-overview-apps-list">
-                <!-- Dynamically rendered active applications -->
-              </div>
-              <div style="text-align: right; margin-top: 10px;">
-                <button class="btn-outline btn-sm" onclick="navigateToRoute('/student/jobs')">Full Application History &rarr;</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Card 2: Faculty Mentoring & Placement Readiness Tasks -->
-          <div class="content-panel">
-            <div class="panel-header">
-              <div>
-                <h3 class="panel-title">Faculty Mentoring &amp; Readiness</h3>
-                <p class="panel-subtitle">Mentor: Dr. Rajesh Sharma (CSE Dept)</p>
-              </div>
-              <div class="section-tab-group">
-                <button class="section-tab-btn active" id="btn-student-tab-tasks" onclick="switchStudentTaskTab('tasks')">Mentor Tasks</button>
-                <button class="section-tab-btn" id="btn-student-tab-assessments" onclick="switchStudentTaskTab('assessments')">Assessment History</button>
-              </div>
-            </div>
-
-            <!-- Tab 1: Mentor Tasks -->
-            <div id="student-tab-tasks-content">
-              <div id="student-tasks-list">
-                <!-- Dynamically rendered with live checkbox toggles -->
-              </div>
-              <div style="margin-top: 12px; padding: 10px 12px; background: #F8FAFC; border-radius: var(--radius-md); border-left: 3px solid var(--primary-blue);">
-                <div style="font-size: 11px; font-weight: 700; color: var(--primary-navy); margin-bottom: 2px;">LATEST MENTOR FEEDBACK</div>
-                <div style="font-size: 12px; color: var(--text-secondary); font-style: italic;" id="student-mentor-note-text">
-                  No mentor counseling notes recorded yet. Consult with your faculty mentor during office counseling hours.
-                </div>
-              </div>
-            </div>
-
-            <!-- Tab 2: Assessment History -->
-            <div id="student-tab-assessments-content" style="display: none;">
-              <div class="history-item">
-                <div class="history-item-left">
-                  <div style="width: 32px; height: 32px; border-radius: var(--radius-md); background: #EFF6FF; color: var(--primary-blue); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px;">DS</div>
-                  <div>
-                    <div class="history-title">Technical Coding Assessment (LeetCode / DSA)</div>
-                    <div class="history-date">Score: 84 / 100 (Top 15% in Batch) &bull; Oct 10, 2026</div>
-                  </div>
-                </div>
-                <span class="badge-status teal">Cleared</span>
-              </div>
-
-              <div class="history-item">
-                <div class="history-item-left">
-                  <div style="width: 32px; height: 32px; border-radius: var(--radius-md); background: #F0FDFA; color: var(--teal-accent); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px;">QA</div>
-                  <div>
-                    <div class="history-title">Campus Aptitude Round 2 (Quant &amp; Reasoning)</div>
-                    <div class="history-date">Score: 78 / 100 (Competitive) &bull; Oct 04, 2026</div>
-                  </div>
-                </div>
-                <span class="badge-status teal">Cleared</span>
-              </div>
-
-              <div class="history-item">
-                <div class="history-item-left">
-                  <div style="width: 32px; height: 32px; border-radius: var(--radius-md); background: #FEF3C7; color: var(--warning-amber); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px;">SD</div>
-                  <div>
-                    <div class="history-title">Mock Technical Interview (System Design)</div>
-                    <div class="history-date">Score: 72 / 100 (Needs Architecture Revision) &bull; Sep 28, 2026</div>
-                  </div>
-                </div>
-                <span class="badge-status warning">Revision Needed</span>
-              </div>
-            </div>
-
-            <!-- Actionable Next Steps Card -->
-            <div class="next-steps-card">
-              <div style="font-size: 11.5px; font-weight: 700; color: var(--text-navy); margin-bottom: 3px;">ACTIONABLE NEXT STEPS</div>
-              <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.45;">
-                Complete pending &quot;Dynamic Programming&quot; revision task and submit System Design case study before Microsoft Cloud drive deadline.
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-
-      </div>
-
-      <!-- ================================================================= -->
-      <!-- PANE 2A: STUDENT ACADEMIC PERFORMANCE (PILLAR 1) -->
-      <!-- ================================================================= -->
-      <div class="view-container screen-pane" id="pane-student-academic-performance" style="display: none;">
+<div class="view-container screen-pane" id="pane-student-academic-performance" style="display: none;">
         <div class="panel-header" style="margin-bottom: 16px;">
           <div>
             <h2 class="welcome-heading">Academic Performance</h2>
