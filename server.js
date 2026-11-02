@@ -384,8 +384,29 @@ function formatAssignment(a, subs = [], currentUserId = null) {
     nextSteps: hasSub ? primarySub.nextSteps : (currentUserId ? '' : (a.next_steps || '')),
     isRevisionRequested: hasSub ? Boolean(primarySub.isRevisionRequested) : (currentUserId ? false : Boolean(a.is_revision_requested)),
     gradedDate: hasSub ? primarySub.gradedDate : (currentUserId ? null : a.graded_date),
-    submissions: userSubs
+    submissions: userSubs,
+    // Learning & Practice record fallbacks for UI rendering
+    verifiedBy: meta.verifiedBy || a.professor || 'Dr. Rajesh Sharma',
+    hoursLogged: meta.hoursLogged || 24,
+    completionDate: meta.completionDate || formatDDMMYYYY(a.due_date),
+    credentialId: meta.credentialId || a.id,
+    problemName: meta.problemName || a.title,
+    platform: meta.platform || 'StudyFlow',
+    timeComplexity: meta.timeComplexity || 'O(N)',
+    difficulty: meta.difficulty || (a.priority === 'High' ? 'Hard' : a.priority === 'Low' ? 'Easy' : 'Medium'),
+    date: meta.date || formatDDMMYYYY(a.due_date)
   };
+}
+
+function getDestinationTypeFromCategory(category, defaultType = 'faculty') {
+  if (!category) return defaultType;
+  const cat = String(category).trim();
+  if (cat === 'General Assignments') return 'general';
+  if (cat === 'Lab Assignments') return 'lab';
+  if (['Coding Practice', 'Aptitude Practice', 'Project Work', 'Placement Preparation'].includes(cat)) return 'faculty';
+  if (cat === 'Learning Records') return 'learning';
+  if (cat === 'Practice Records') return 'practice';
+  return defaultType;
 }
 
 function normalizedYear(value) {
@@ -1568,10 +1589,22 @@ app.get('/api/state', (req, res) => {
       });
     }
 
-    const facultyAssignments = allAssignments.filter(a => a.type === 'faculty').map(a => formatAssignment(a, subsByAssignment[a.id] || [], currentStudentId));
-    const labAssignments = allAssignments.filter(a => a.type === 'lab').map(a => formatAssignment(a, subsByAssignment[a.id] || [], currentStudentId));
-    const learningRecords = allAssignments.filter(a => a.type === 'learning').map(a => formatAssignment(a, subsByAssignment[a.id] || [], currentStudentId));
-    const practiceRecords = allAssignments.filter(a => a.type === 'practice').map(a => formatAssignment(a, subsByAssignment[a.id] || [], currentStudentId));
+    const facultyCategories = ['Coding Practice', 'Aptitude Practice', 'Project Work', 'Placement Preparation'];
+    const generalAssignments = allAssignments
+      .filter(a => a.id !== 'fa_002' && (a.category === 'General Assignments' || (a.type === 'general' && (!a.category || a.category === 'General Assignments'))))
+      .map(a => formatAssignment(a, subsByAssignment[a.id] || [], currentStudentId));
+    const labAssignments = allAssignments
+      .filter(a => a.category === 'Lab Assignments' || (a.type === 'lab' && (!a.category || a.category === 'Lab Assignments')))
+      .map(a => formatAssignment(a, subsByAssignment[a.id] || [], currentStudentId));
+    const facultyAssignments = allAssignments
+      .filter(a => facultyCategories.includes(a.category) || a.id === 'fa_002' || (a.type === 'faculty' && (!a.category || !['General Assignments', 'Lab Assignments', 'Learning Records', 'Practice Records'].includes(a.category))))
+      .map(a => formatAssignment(a, subsByAssignment[a.id] || [], currentStudentId));
+    const learningRecords = allAssignments
+      .filter(a => a.category === 'Learning Records' || (a.type === 'learning' && (!a.category || a.category === 'Learning Records')))
+      .map(a => formatAssignment(a, subsByAssignment[a.id] || [], currentStudentId));
+    const practiceRecords = allAssignments
+      .filter(a => a.category === 'Practice Records' || (a.type === 'practice' && (!a.category || a.category === 'Practice Records')))
+      .map(a => formatAssignment(a, subsByAssignment[a.id] || [], currentStudentId));
 
     // Fetch persistent group projects from group_projects table
     let groupProjectsRows = [];
@@ -1854,6 +1887,7 @@ app.get('/api/state', (req, res) => {
         facultyInterventions,
         notifications,
         auditLog,
+        generalAssignments,
         labAssignments,
         learningRecords,
         practiceRecords,
@@ -2004,11 +2038,50 @@ app.get(['/api/records/:type', '/api/assignments/:type'], requireRole(['student'
 
     // Cross-laptop sync: opportunistically pull assignments from Supabase
     try {
-      supabaseBackend.pullAssignmentsFromSupabase(type, db).catch(() => {});
+      supabaseBackend.pullAssignmentsFromSupabase(null, db).catch(() => {});
     } catch (_) {}
-    let assignments = db.prepare('SELECT * FROM assignments WHERE type = ?').all(type);
+
+    let assignments = [];
+    if (type === 'general' || type === 'assignments') {
+      assignments = db.prepare(`
+        SELECT * FROM assignments 
+        WHERE category = 'General Assignments' 
+           OR (type = 'general' AND (category IS NULL OR category NOT IN ('Lab Assignments', 'Coding Practice', 'Aptitude Practice', 'Project Work', 'Placement Preparation', 'Learning Records', 'Practice Records')))
+      `).all();
+    } else if (type === 'lab') {
+      assignments = db.prepare(`
+        SELECT * FROM assignments 
+        WHERE category = 'Lab Assignments' 
+           OR (type = 'lab' AND (category IS NULL OR category NOT IN ('General Assignments', 'Coding Practice', 'Aptitude Practice', 'Project Work', 'Placement Preparation', 'Learning Records', 'Practice Records')))
+      `).all();
+    } else if (type === 'faculty') {
+      assignments = db.prepare(`
+        SELECT * FROM assignments 
+        WHERE category IN ('Coding Practice', 'Aptitude Practice', 'Project Work', 'Placement Preparation') 
+           OR (type = 'faculty' AND (category IS NULL OR category NOT IN ('General Assignments', 'Lab Assignments', 'Learning Records', 'Practice Records')))
+      `).all();
+    } else if (type === 'learning') {
+      assignments = db.prepare(`
+        SELECT * FROM assignments 
+        WHERE category = 'Learning Records' 
+           OR (type = 'learning' AND (category IS NULL OR category NOT IN ('General Assignments', 'Lab Assignments', 'Coding Practice', 'Aptitude Practice', 'Project Work', 'Placement Preparation', 'Practice Records')))
+      `).all();
+    } else if (type === 'practice') {
+      assignments = db.prepare(`
+        SELECT * FROM assignments 
+        WHERE category = 'Practice Records' 
+           OR (type = 'practice' AND (category IS NULL OR category NOT IN ('General Assignments', 'Lab Assignments', 'Coding Practice', 'Aptitude Practice', 'Project Work', 'Placement Preparation', 'Learning Records')))
+      `).all();
+    } else {
+      assignments = db.prepare('SELECT * FROM assignments WHERE type = ?').all(type);
+    }
+
     assignments = filterAssignmentsForStudent(assignments, currentUserId);
-    const allSubs = db.prepare('SELECT * FROM submissions WHERE assignment_type = ?').all(type);
+    const asgIds = assignments.map(a => a.id);
+    let allSubs = [];
+    if (asgIds.length > 0) {
+      allSubs = db.prepare(`SELECT * FROM submissions WHERE assignment_id IN (${asgIds.map(() => '?').join(',')})`).all(...asgIds);
+    }
 
     const subMap = {};
     for (const s of allSubs) {
@@ -2089,7 +2162,11 @@ app.post(['/api/records/:type', '/api/assignments/:type'], requireRole(['faculty
         size: value.size || 0
       };
     });
-    const newId = body.id || (type === 'faculty' ? 'fa_' : (type === 'lab' ? 'lab_' : 'rec_')) + Date.now().toString(36);
+    const defaultCategory = type === 'faculty' ? 'Coding Practice' : (type === 'lab' ? 'Lab Assignments' : (type === 'learning' ? 'Learning Records' : (type === 'practice' ? 'Practice Records' : 'General Assignments')));
+    const assignmentCategory = body.category ? String(body.category).trim() : defaultCategory;
+    const effectiveType = body.category ? getDestinationTypeFromCategory(assignmentCategory, type) : type;
+    const prefix = effectiveType === 'faculty' ? 'fa_' : (effectiveType === 'lab' ? 'lab_' : (effectiveType === 'general' ? 'asg_' : (effectiveType === 'learning' ? 'lr_' : (effectiveType === 'practice' ? 'pr_' : 'rec_'))));
+    const newId = body.id || prefix + Date.now().toString(36);
 
     const insertTx = db.transaction(() => {
       db.prepare(`
@@ -2100,10 +2177,10 @@ app.post(['/api/records/:type', '/api/assignments/:type'], requireRole(['faculty
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         newId,
-        type,
+        effectiveType,
         body.title.trim(),
         body.subject.trim(),
-        body.category || 'General Assignments',
+        assignmentCategory,
         req.user.fullName,
         department,
         targetYear,
@@ -2135,7 +2212,7 @@ app.post(['/api/records/:type', '/api/assignments/:type'], requireRole(['faculty
             student.user_id,
             `New Assignment Published: ${body.title}`,
             `${body.subject} assignment has been published. Due on ${dueDate}.`,
-            `#/student/assignments/${type}`
+            `#/student/assignments/${effectiveType}`
           ));
       }
     });

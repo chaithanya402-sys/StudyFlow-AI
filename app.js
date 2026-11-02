@@ -85,6 +85,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       title: 'Assignments',
       icon: icons.assignments,
       children: [
+        { title: 'Assignments', route: '/student/assignments/general', icon: icons.assignments },
         { title: 'Faculty Assignments', route: '/student/assignments/faculty', icon: icons.facultyAssignments },
         { title: 'Lab Assignments', route: '/student/assignments/lab', icon: icons.lab },
         { title: 'Learning Records', route: '/student/assignments/learning', icon: icons.learning },
@@ -194,6 +195,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     '/student/dashboard': 'pane-student-dashboard',
     '/student/tasks': 'pane-student-tasks',
     '/student/projects': 'pane-student-projects',
+    '/student/assignments': 'pane-student-assignments-general',
+    '/student/assignments/general': 'pane-student-assignments-general',
     '/student/assignments/lab': 'pane-student-assignments-lab',
     '/student/assignments/learning': 'pane-student-assignments-learning',
     '/student/assignments/practice': 'pane-student-assignments-practice',
@@ -249,6 +252,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     '/student/dashboard': 'Dashboard',
     '/student/tasks': 'My Tasks',
     '/student/projects': 'Group Projects',
+    '/student/assignments': 'Assignments',
+    '/student/assignments/general': 'Assignments',
     '/student/assignments/lab': 'Lab Assignments',
     '/student/assignments/learning': 'Learning Records',
     '/student/assignments/practice': 'Practice Records',
@@ -4496,6 +4501,119 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function renderStudentAssignments(student) {
+    // 0. General Assignments
+    const generalList = document.getElementById('student-general-assignments-list');
+    if (generalList) {
+      const general = store.getGeneralAssignments ? store.getGeneralAssignments() : [];
+      if (!general || general.length === 0) {
+        generalList.innerHTML = `
+          <div class="empty-state-card" style="text-align: center; padding: 48px 20px; background: #FFFFFF; border: 1.5px dashed #CBD5E1; border-radius: 14px; margin-top: 10px;">
+            <div style="font-size: 40px; margin-bottom: 10px;">📚</div>
+            <h3 style="font-size: 16px; font-weight: 700; color: #1E293B; margin-bottom: 6px;">No General Assignments Available</h3>
+            <p style="font-size: 13px; color: #64748B; max-width: 440px; margin: 0 auto;">There are currently no active general coursework assignments published for your cohort. When faculty publish assignments, they will appear here automatically.</p>
+          </div>
+        `;
+      } else {
+        const toDDMMYYYY = dStr => {
+          if (!dStr) return 'Flexible';
+          const clean = String(dStr).split('T')[0].split(' ')[0];
+          const parts = clean.split('-');
+          if (parts.length === 3 && parts[0].length === 4) {
+            return `${parts[2]}-${parts[1]}-${parts[0]}`;
+          }
+          return dStr;
+        };
+
+        generalList.innerHTML = general.map(g => {
+          const isGraded = g.studentStatus === 'Graded' || (g.status === 'Graded' && g.studentStatus !== 'Assigned');
+          const isRevision = g.studentStatus === 'Revision Requested' || Boolean(g.isRevisionRequested) || (g.status === 'Revision Requested' && g.studentStatus !== 'Assigned');
+          const isSubmitted = g.studentStatus === 'Submitted' || (g.status === 'Submitted' && g.studentStatus !== 'Assigned') || Boolean(g.submittedFile || (g.submissionUrl && g.submissionUrl.trim().length > 0));
+
+          const formattedDueDate = g.displayDueDate || toDDMMYYYY(g.dueDate);
+
+          let statusBadgeClass = 'blue';
+          let statusText = 'Pending';
+          if (isGraded) {
+            statusBadgeClass = 'success';
+            statusText = 'Graded ✓';
+          } else if (isRevision) {
+            statusBadgeClass = 'warning';
+            statusText = 'Revision Requested';
+          } else if (isSubmitted) {
+            const isLate = Boolean(g.isLate || (g.submissions && g.submissions[0] && g.submissions[0].isLate));
+            statusBadgeClass = isLate ? 'warning' : 'teal';
+            statusText = isLate ? 'Late' : 'Submitted';
+          } else {
+            let isPastDue = false;
+            if (g.dueDate) {
+              const dueTime = g.dueTime || '23:59';
+              const dueAt = new Date(`${g.dueDate}T${dueTime}:00`);
+              if (!isNaN(dueAt.getTime()) && new Date() > dueAt) {
+                isPastDue = true;
+              }
+            }
+            if (isPastDue) {
+              statusBadgeClass = 'error';
+              statusText = 'Late';
+            } else {
+              statusBadgeClass = 'blue';
+              statusText = 'Pending';
+            }
+          }
+
+          const displayScore = isGraded 
+            ? (g.studentMarks !== null && g.studentMarks !== undefined ? `${g.studentMarks} / ${g.maxMarks || 50}` : (g.marks || 'Graded'))
+            : 'Pending Evaluation';
+
+          const pdfUrl = g.attachmentUrl || g.attachment || (g.attachments && g.attachments[0] ? (g.attachments[0].url || g.attachments[0].href) : '');
+          const rawPdfName = g.attachmentName || (g.attachments && g.attachments[0] ? (g.attachments[0].fileName || g.attachments[0].originalName) : '') || (pdfUrl ? pdfUrl.split('/').pop().split('?')[0] : '');
+          const pdfName = rawPdfName || (pdfUrl ? 'Assignment_Document.pdf' : '');
+
+          return `
+            <div class="assignment-card-box" style="cursor: pointer;" onclick="openSubmissionDetailsModal('general', '${g.id}')">
+              <div class="assignment-card-header">
+                <div>
+                  <span class="badge-status blue" style="font-size: 11px; font-weight: 700;">${g.subject || g.department || 'Coursework'}</span>
+                  <span style="font-size: 12px; color: var(--text-secondary); margin-left: 6px;">Faculty: <strong>${g.facultyName || g.professor || 'Faculty Mentor'}</strong></span>
+                  <h3 style="font-size: 16px; font-weight: 700; color: #0F172A; margin-top: 4px;">${g.title}</h3>
+                </div>
+                <div style="text-align: right;">
+                  <span class="badge-status ${statusBadgeClass}">${statusText}</span>
+                  <div style="font-size: 12px; font-weight: 700; color: #0F172A; margin-top: 4px;">Score: ${displayScore}</div>
+                </div>
+              </div>
+
+              <div style="background: #F8FAFC; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                <strong>Description / Instructions:</strong> ${g.description || g.instructions || 'Review the requirements and submit your coursework solution.'}
+              </div>
+
+              ${pdfUrl ? `
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: var(--radius-sm); padding: 8px 12px; margin-top: 6px;" onclick="event.stopPropagation();">
+                  <div style="display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: #1E40AF; min-width: 0;">
+                    <span style="font-size: 16px;">📄</span>
+                    <strong style="color: #1E3A8A; font-size: 12px;">Assignment PDF:</strong>
+                    <span style="color: #0F172A; font-weight: 600; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 250px;">${pdfName}</span>
+                  </div>
+                  <div style="display: flex; gap: 6px;">
+                    <button type="button" class="btn-outline btn-sm" style="font-size: 11px; padding: 3px 10px; background: #FFFFFF;" onclick="event.stopPropagation(); window._currentAssignmentPdfUrl='${pdfUrl}'; window._currentAssignmentPdfName='${pdfName}'; viewAssignmentPdf();">View PDF</button>
+                    <a href="${pdfUrl}" download="${pdfName}" class="btn-primary btn-sm" style="font-size: 11px; padding: 3px 10px; text-decoration: none;" onclick="event.stopPropagation();">Download PDF</a>
+                  </div>
+                </div>
+              ` : ''}
+
+              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 12px; color: var(--text-muted); margin-top: 6px;" onclick="event.stopPropagation();">
+                <span>Due Date: <strong>${formattedDueDate}</strong> ${g.dueTime ? `(${g.dueTime})` : ''} <span class="badge-status ${g.priority === 'High' ? 'error' : 'blue'}" style="margin-left: 4px; font-size: 10px;">${g.priority || 'Medium'}</span></span>
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                  <button class="btn-outline btn-sm" onclick="event.stopPropagation(); openSubmissionDetailsModal('general', '${g.id}')">View Details</button>
+                  <button class="btn-primary btn-sm" onclick="event.stopPropagation(); openSubmissionDetailsModal('general', '${g.id}')">${isSubmitted || isGraded ? 'Update Submission' : 'Submit Assignment'}</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
     // 1. Lab Assignments
     const labsList = document.getElementById('student-lab-assignments-list');
     if (labsList) {
@@ -4766,13 +4884,26 @@ document.addEventListener('DOMContentLoaded', async () => {
           const rawPdfName = f.attachmentName || (f.attachments && f.attachments[0] ? (f.attachments[0].fileName || f.attachments[0].originalName) : '') || (pdfUrl ? pdfUrl.split('/').pop().split('?')[0] : '');
           const pdfName = rawPdfName || (pdfUrl ? 'Assignment_Document.pdf' : '');
 
+          const catBadges = {
+            'Coding Practice': { label: 'Coding Practice', bg: '#EFF6FF', color: '#1D4ED8', border: '#BFDBFE', icon: '💻' },
+            'Aptitude Practice': { label: 'Aptitude Practice', bg: '#F5F3FF', color: '#6D28D9', border: '#DDD6FE', icon: '🧠' },
+            'Project Work': { label: 'Project Work', bg: '#ECFDF5', color: '#047857', border: '#A7F3D0', icon: '🚀' },
+            'Placement Preparation': { label: 'Placement Preparation', bg: '#FFF7ED', color: '#C2410C', border: '#FFEDD5', icon: '🎯' }
+          };
+          const badgeCfg = catBadges[f.category] || { label: f.category || 'Faculty Assignment', bg: '#F8FAFC', color: '#475569', border: '#CBD5E1', icon: '📋' };
+
           return `
             <div class="assignment-card-box" style="cursor: pointer;" onclick="openSubmissionDetailsModal('faculty', '${f.id}')">
               <div class="assignment-card-header">
                 <div>
-                  <span class="badge-status blue" style="font-size: 11px; font-weight: 700;">${f.subject || f.department || 'Coursework'}</span>
-                  <span style="font-size: 12px; color: var(--text-secondary); margin-left: 6px;">Faculty: <strong>${f.facultyName || f.professor || 'Faculty Mentor'}</strong></span>
-                  <h3 style="font-size: 16px; font-weight: 700; color: #0F172A; margin-top: 4px;">${f.title}</h3>
+                  <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 4px;">
+                    <span style="display: inline-flex; align-items: center; gap: 4px; background: ${badgeCfg.bg}; color: ${badgeCfg.color}; border: 1px solid ${badgeCfg.border}; border-radius: 9999px; padding: 2px 8px; font-size: 11px; font-weight: 700;">
+                      <span>${badgeCfg.icon}</span> ${badgeCfg.label}
+                    </span>
+                    <span class="badge-status blue" style="font-size: 11px; font-weight: 700;">${f.subject || f.department || 'Coursework'}</span>
+                    <span style="font-size: 12px; color: var(--text-secondary); margin-left: 2px;">Faculty: <strong>${f.facultyName || f.professor || 'Faculty Mentor'}</strong></span>
+                  </div>
+                  <h3 style="font-size: 16px; font-weight: 700; color: #0F172A; margin-top: 2px;">${f.title}</h3>
                 </div>
                 <div style="text-align: right;">
                   <span class="badge-status ${statusBadgeClass}">${statusText}</span>

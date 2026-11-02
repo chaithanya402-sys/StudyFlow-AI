@@ -101,6 +101,7 @@
     notifications: [],
     facultyNotifications: [],
     auditLog: [],
+    generalAssignments: [],
     labAssignments: [],
     learningRecords: [],
     practiceRecords: [],
@@ -235,6 +236,7 @@
         if (Array.isArray(s.facultyInterventions)) this.data.facultyInterventions = s.facultyInterventions;
         if (Array.isArray(s.notifications)) this.data.notifications = s.notifications;
         if (Array.isArray(s.auditLog)) this.data.auditLog = s.auditLog;
+        if (Array.isArray(s.generalAssignments)) this.data.generalAssignments = s.generalAssignments;
         if (Array.isArray(s.labAssignments)) this.data.labAssignments = s.labAssignments;
         if (Array.isArray(s.learningRecords)) this.data.learningRecords = s.learningRecords;
         if (Array.isArray(s.practiceRecords)) this.data.practiceRecords = s.practiceRecords;
@@ -1087,6 +1089,14 @@
       }
     }
 
+    getGeneralAssignments() {
+      return this.data.generalAssignments || [];
+    }
+
+    getGeneralAssignmentById(id) {
+      return (this.data.generalAssignments || []).find(g => g.id === id) || null;
+    }
+
     getLabAssignments() {
       return this.data.labAssignments || [];
     }
@@ -1122,11 +1132,16 @@
     getRecordById(type, id) {
       if (!type || !id) return null;
       const normalized = type.toLowerCase();
+      if (normalized === 'general' || normalized === 'assignments') return this.getGeneralAssignmentById(id);
       if (normalized === 'faculty') return this.getFacultyAssignmentById(id);
       if (normalized === 'lab') return this.getLabAssignmentById(id);
       if (normalized === 'learning') return this.getLearningRecordById(id);
       if (normalized === 'practice') return this.getPracticeRecordById(id);
-      return null;
+      return (this.data.generalAssignments || []).find(x => x.id === id) ||
+             (this.data.facultyAssignments || []).find(x => x.id === id) ||
+             (this.data.labAssignments || []).find(x => x.id === id) ||
+             (this.data.learningRecords || []).find(x => x.id === id) ||
+             (this.data.practiceRecords || []).find(x => x.id === id) || null;
     }
 
     invalidateRecordCache(type = null, id = null) {
@@ -1277,16 +1292,50 @@
     }
 
     createFacultyAssignment(assignmentObj) {
-      const newId = 'fa_' + Date.now().toString(36);
+      const category = assignmentObj.category || 'General Assignments';
+      let destType = 'faculty';
+      let destEndpoint = '/api/records/faculty';
+      let actionRoute = '#/student/assignments/faculty';
+      let prefix = 'fa_';
+
+      if (category === 'General Assignments') {
+        destType = 'general';
+        destEndpoint = '/api/records/general';
+        actionRoute = '#/student/assignments/general';
+        prefix = 'asg_';
+      } else if (category === 'Lab Assignments') {
+        destType = 'lab';
+        destEndpoint = '/api/records/lab';
+        actionRoute = '#/student/assignments/lab';
+        prefix = 'lab_';
+      } else if (['Coding Practice', 'Aptitude Practice', 'Project Work', 'Placement Preparation'].includes(category)) {
+        destType = 'faculty';
+        destEndpoint = '/api/records/faculty';
+        actionRoute = '#/student/assignments/faculty';
+        prefix = 'fa_';
+      } else if (category === 'Learning Records') {
+        destType = 'learning';
+        destEndpoint = '/api/records/learning';
+        actionRoute = '#/student/assignments/learning';
+        prefix = 'lr_';
+      } else if (category === 'Practice Records') {
+        destType = 'practice';
+        destEndpoint = '/api/records/practice';
+        actionRoute = '#/student/assignments/practice';
+        prefix = 'pr_';
+      }
+
+      const newId = prefix + Date.now().toString(36);
       const attUrl = assignmentObj.attachment || assignmentObj.attachmentUrl || '';
       const attName = attUrl ? attUrl.split('/').pop().split('?')[0] : '';
       const newAssignment = {
         id: newId,
+        type: destType,
         title: assignmentObj.title || 'Untitled Assignment',
         subject: assignmentObj.subject || 'Computer Science',
-        category: assignmentObj.category || 'General Assignments',
-        professor: this.data.roles.faculty.name || 'Dr. Rajesh Sharma',
-        facultyName: this.data.roles.faculty.name || 'Dr. Rajesh Sharma',
+        category,
+        professor: this.data.roles?.faculty?.name || 'Dr. Rajesh Sharma',
+        facultyName: this.data.roles?.faculty?.name || 'Dr. Rajesh Sharma',
         targetYear: assignmentObj.targetYear || '1st Year',
         targetClass: assignmentObj.targetClass || 'CSE',
         department: assignmentObj.department || assignmentObj.targetClass || 'CSE',
@@ -1307,8 +1356,55 @@
         submissions: []
       };
 
+      // Always maintain in facultyAssignments list for the Faculty portal management table
       if (!this.data.facultyAssignments) this.data.facultyAssignments = [];
-      this.data.facultyAssignments.unshift(newAssignment);
+      const existingFaIdx = this.data.facultyAssignments.findIndex(a => a.id === newId);
+      if (existingFaIdx >= 0) {
+        this.data.facultyAssignments[existingFaIdx] = newAssignment;
+      } else {
+        this.data.facultyAssignments.unshift(newAssignment);
+      }
+
+      // Route to destination collection for Student Portal views
+      if (destType === 'general') {
+        if (!this.data.generalAssignments) this.data.generalAssignments = [];
+        this.data.generalAssignments.unshift(newAssignment);
+      } else if (destType === 'lab') {
+        if (!this.data.labAssignments) this.data.labAssignments = [];
+        const labItem = {
+          ...newAssignment,
+          code: assignmentObj.subject ? assignmentObj.subject.substring(0, 3).toUpperCase() + '301' : 'CSL301',
+          status: 'Assigned',
+          studentStatus: 'Pending',
+          grade: 'Pending',
+          rubric: newAssignment.instructions
+        };
+        const existingLabIdx = this.data.labAssignments.findIndex(l => l.id === newId || l.title === newAssignment.title);
+        if (existingLabIdx >= 0) {
+          this.data.labAssignments[existingLabIdx] = labItem;
+        } else {
+          this.data.labAssignments.unshift(labItem);
+        }
+      } else if (destType === 'learning') {
+        if (!this.data.learningRecords) this.data.learningRecords = [];
+        this.data.learningRecords.unshift({
+          ...newAssignment,
+          verifiedBy: newAssignment.professor,
+          hoursLogged: 24,
+          credentialId: newId,
+          completionDate: newAssignment.dueDate
+        });
+      } else if (destType === 'practice') {
+        if (!this.data.practiceRecords) this.data.practiceRecords = [];
+        this.data.practiceRecords.unshift({
+          ...newAssignment,
+          problemName: newAssignment.title,
+          platform: 'StudyFlow',
+          timeComplexity: 'O(N)',
+          difficulty: newAssignment.priority === 'High' ? 'Hard' : 'Medium',
+          date: newAssignment.dueDate
+        });
+      }
 
       // Add to faculty activities
       if (!this.data.facultyActivities) this.data.facultyActivities = [];
@@ -1331,49 +1427,13 @@
           message: `${newAssignment.professor} published "${newAssignment.title}" due on ${newAssignment.dueDate}.`,
           date: 'Just now',
           read: false,
-          actionUrl: '#/student/assignments/faculty'
+          actionUrl: actionRoute
         });
       }
 
       this.addAudit(`Faculty ${this.data.roles.faculty.name} created assignment: "${newAssignment.title}"`);
-      
-      // If category is Lab Assignments, also add/sync to labAssignments
-      const isLab = (assignmentObj.category || '').toLowerCase().includes('lab');
-      if (isLab) {
-        if (!this.data.labAssignments) this.data.labAssignments = [];
-        const labItem = {
-          id: newId,
-          code: assignmentObj.subject ? assignmentObj.subject.substring(0, 3).toUpperCase() + '301' : 'CSL301',
-          title: newAssignment.title,
-          subject: newAssignment.subject,
-          facultyName: newAssignment.facultyName,
-          professor: newAssignment.professor,
-          dueDate: newAssignment.dueDate,
-          dueTime: newAssignment.dueTime,
-          status: 'Assigned',
-          studentStatus: 'Pending',
-          grade: 'Pending',
-          maxMarks: newAssignment.maxMarks,
-          rubric: newAssignment.instructions,
-          description: newAssignment.description,
-          instructions: newAssignment.instructions,
-          attachment: newAssignment.attachment,
-          attachmentUrl: newAssignment.attachmentUrl,
-          attachmentName: newAssignment.attachmentName,
-          attachments: newAssignment.attachments,
-          submissions: []
-        };
-        const existingIdx = this.data.labAssignments.findIndex(l => l.id === newId || l.title === newAssignment.title);
-        if (existingIdx >= 0) {
-          this.data.labAssignments[existingIdx] = labItem;
-        } else {
-          this.data.labAssignments.unshift(labItem);
-        }
-        sendBackendMutation('/api/records/lab', 'POST', labItem).catch(e => console.warn('[DataStore] Lab assignment creation warning:', e));
-      }
-
       this.save();
-      sendBackendMutation('/api/records/faculty', 'POST', newAssignment).catch(e => console.warn('[DataStore] Assignment creation warning:', e));
+      sendBackendMutation(destEndpoint, 'POST', newAssignment).catch(e => console.warn('[DataStore] Assignment creation warning:', e));
       return newAssignment;
     }
 
@@ -1535,10 +1595,18 @@
         }
       };
 
-      if (type === 'faculty') updateList('facultyAssignments');
+      if (type === 'general' || type === 'assignments') updateList('generalAssignments');
+      else if (type === 'faculty') updateList('facultyAssignments');
       else if (type === 'lab') updateList('labAssignments');
       else if (type === 'learning') updateList('learningRecords');
       else if (type === 'practice') updateList('practiceRecords');
+      else {
+        updateList('generalAssignments');
+        updateList('facultyAssignments');
+        updateList('labAssignments');
+        updateList('learningRecords');
+        updateList('practiceRecords');
+      }
 
       this.invalidateRecordCache(type, id);
       this.addAudit(`Student submitted ${type} assignment: ${id}`);
