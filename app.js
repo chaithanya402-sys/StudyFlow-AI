@@ -7647,52 +7647,122 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   window.handleSaveFacultyAssignment = function(e) {
-    e.preventDefault();
-    const id = document.getElementById('faculty-asg-id').value;
-    const title = document.getElementById('faculty-asg-title').value;
-    const subject = document.getElementById('faculty-asg-subject').value;
-    const category = document.getElementById('faculty-asg-category').value;
-    const targetClass = document.getElementById('faculty-asg-class').value;
-    const targetYear = document.getElementById('faculty-asg-year').value;
-    const maxMarks = document.getElementById('faculty-asg-max-marks').value;
-    const dueVal = document.getElementById('faculty-asg-due').value;
-    const priority = document.getElementById('faculty-asg-priority').value;
-    const instructions = document.getElementById('faculty-asg-instructions').value;
-    const attachment = document.getElementById('faculty-asg-attachment').value;
-    const status = document.getElementById('faculty-asg-status').value;
+    if (e && e.preventDefault) e.preventDefault();
+    const saveBtn = document.getElementById('btn-save-assignment-submit');
+    const origBtnText = saveBtn ? saveBtn.textContent : 'Save Assignment';
 
-    const parts = dueVal.split('T');
-    const dueDate = parts[0];
-    const dueTime = parts[1] || '23:59';
+    try {
+      const id = (document.getElementById('faculty-asg-id')?.value || '').trim();
+      const title = (document.getElementById('faculty-asg-title')?.value || '').trim();
+      const subject = (document.getElementById('faculty-asg-subject')?.value || 'Advanced DBMS').trim();
+      const category = (document.getElementById('faculty-asg-category')?.value || 'General Assignments').trim();
+      const targetClass = (document.getElementById('faculty-asg-class')?.value || 'CSE').trim();
+      const targetYear = (document.getElementById('faculty-asg-year')?.value || '1st Year').trim();
+      const maxMarksVal = document.getElementById('faculty-asg-max-marks')?.value || '100';
+      const maxMarks = parseInt(maxMarksVal, 10) || 50;
+      const dueVal = document.getElementById('faculty-asg-due')?.value || '';
+      const priority = document.getElementById('faculty-asg-priority')?.value || 'Medium';
+      const instructions = (document.getElementById('faculty-asg-instructions')?.value || '').trim();
+      const attachmentInputVal = (document.getElementById('faculty-asg-attachment')?.value || '').trim();
+      const status = document.getElementById('faculty-asg-status')?.value || 'Published';
 
-    const uploaded = window._currentFacultyUploadedFile;
-    const attachmentPayload = uploaded ? {
-      url: uploaded.downloadUrl || attachment,
-      fileName: uploaded.fileName || uploaded.originalName,
-      originalName: uploaded.originalName || uploaded.fileName,
-      size: uploaded.size,
-      storageBucket: uploaded.storageBucket,
-      storagePath: uploaded.storagePath
-    } : attachment;
+      if (!title) {
+        if (typeof window.showToast === 'function') window.showToast('Please enter an Assignment Title.', 'error');
+        document.getElementById('faculty-asg-title')?.focus();
+        return;
+      }
 
-    const assignmentData = {
-      title, subject, category, targetYear, targetClass, department: targetClass, maxMarks: parseInt(maxMarks, 10),
-      dueDate, dueTime, priority, instructions, description: instructions, attachment: attachmentPayload,
-      attachments: uploaded ? [attachmentPayload] : (attachment ? [attachment] : []),
-      storageBucket: uploaded?.storageBucket,
-      storagePath: uploaded?.storagePath,
-      status
-    };
+      let dueDate = '';
+      let dueTime = '23:59';
+      if (dueVal) {
+        const parts = dueVal.split('T');
+        dueDate = parts[0];
+        if (parts[1]) dueTime = parts[1];
+      } else {
+        const d = new Date();
+        d.setDate(d.getDate() + 14);
+        dueDate = d.toISOString().split('T')[0];
+      }
 
-    if (id) {
-      store.updateFacultyAssignment(id, assignmentData);
-      window.showToast?.('✓ Assignment updated successfully.', 'success');
-    } else {
-      store.createFacultyAssignment(assignmentData);
-      window.showToast?.(`✓ Assignment "${title}" created and ${status.toLowerCase()}!`, 'success');
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving Assignment...';
+      }
+
+      const uploaded = window._currentFacultyUploadedFile;
+      const effectiveAttachmentUrl = uploaded?.downloadUrl || uploaded?.url || attachmentInputVal || '';
+      const effectiveAttachmentName = uploaded?.originalName || uploaded?.fileName || (effectiveAttachmentUrl ? effectiveAttachmentUrl.split('/').pop().split('?')[0] : '');
+
+      const attachmentPayload = uploaded ? {
+        url: effectiveAttachmentUrl,
+        fileName: uploaded.fileName || effectiveAttachmentName,
+        originalName: effectiveAttachmentName,
+        size: uploaded.size || 0,
+        storageBucket: uploaded.storageBucket || 'studyflow-uploads',
+        storagePath: uploaded.storagePath || null
+      } : (effectiveAttachmentUrl ? {
+        url: effectiveAttachmentUrl,
+        fileName: effectiveAttachmentName,
+        originalName: effectiveAttachmentName,
+        size: 0,
+        storageBucket: 'studyflow-uploads',
+        storagePath: null
+      } : '');
+
+      const assignmentData = {
+        title,
+        subject,
+        category,
+        targetYear,
+        targetClass,
+        department: targetClass,
+        maxMarks,
+        dueDate,
+        dueTime,
+        priority,
+        instructions: instructions || 'Complete the assignment according to provided specifications.',
+        description: instructions || 'Complete the assignment according to provided specifications.',
+        attachment: effectiveAttachmentUrl,
+        attachmentUrl: effectiveAttachmentUrl,
+        attachmentName: effectiveAttachmentName,
+        attachments: attachmentPayload ? [attachmentPayload] : [],
+        storageBucket: uploaded?.storageBucket || 'studyflow-uploads',
+        storagePath: uploaded?.storagePath || null,
+        status
+      };
+
+      if (id) {
+        store.updateFacultyAssignment(id, assignmentData);
+        window.showToast?.('✓ Assignment updated successfully.', 'success');
+      } else {
+        store.createFacultyAssignment(assignmentData);
+        window.showToast?.(`✓ Assignment "${title}" created and ${status.toLowerCase()}!`, 'success');
+      }
+
+      closeCreateAssignmentModal();
+
+      // Trigger re-render of faculty tables and views
+      if (typeof renderFacultyAssignments === 'function') {
+        renderFacultyAssignments();
+      }
+      if (typeof renderFacultyOverview === 'function') {
+        renderFacultyOverview();
+      }
+      if (typeof renderFacultyViews === 'function') {
+        renderFacultyViews();
+      }
+      if (typeof renderStudentAssignments === 'function') {
+        renderStudentAssignments();
+      }
+    } catch (err) {
+      console.error('[Save Faculty Assignment Error]:', err);
+      window.showToast?.('Failed to save assignment: ' + err.message, 'error');
+    } finally {
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = origBtnText;
+      }
     }
-
-    closeCreateAssignmentModal();
   };
 
   window.deleteFacultyAssignment = function(id) {

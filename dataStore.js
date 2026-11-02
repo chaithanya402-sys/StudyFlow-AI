@@ -1328,8 +1328,53 @@
       }
 
       const newId = prefix + Date.now().toString(36);
-      const attUrl = assignmentObj.attachment || assignmentObj.attachmentUrl || '';
-      const attName = attUrl ? attUrl.split('/').pop().split('?')[0] : '';
+      const rawAtt = assignmentObj.attachment || assignmentObj.attachmentUrl || null;
+      let attUrl = '';
+      let attName = '';
+      let attStorageBucket = assignmentObj.storageBucket || 'studyflow-uploads';
+      let attStoragePath = assignmentObj.storagePath || null;
+      let attachmentsList = [];
+
+      if (rawAtt) {
+        if (typeof rawAtt === 'string') {
+          attUrl = rawAtt.trim();
+          attName = attUrl ? attUrl.split('/').pop().split('?')[0] : '';
+        } else if (typeof rawAtt === 'object') {
+          attUrl = rawAtt.url || rawAtt.downloadUrl || rawAtt.href || '';
+          attName = rawAtt.fileName || rawAtt.originalName || rawAtt.name || (attUrl ? String(attUrl).split('/').pop().split('?')[0] : '');
+          if (rawAtt.storageBucket) attStorageBucket = rawAtt.storageBucket;
+          if (rawAtt.storagePath) attStoragePath = rawAtt.storagePath;
+        }
+      }
+
+      if (Array.isArray(assignmentObj.attachments) && assignmentObj.attachments.length > 0) {
+        attachmentsList = assignmentObj.attachments.map(a => {
+          if (typeof a === 'string') {
+            const fName = a.split('/').pop().split('?')[0];
+            return { url: a, fileName: fName, originalName: fName, storageBucket: attStorageBucket };
+          }
+          const u = a.url || a.downloadUrl || a.href || attUrl;
+          const fn = a.fileName || a.originalName || a.name || (u ? String(u).split('/').pop().split('?')[0] : 'Assignment_Attachment.pdf');
+          return {
+            url: u,
+            fileName: fn,
+            originalName: a.originalName || fn,
+            size: a.size || 0,
+            storageBucket: a.storageBucket || attStorageBucket,
+            storagePath: a.storagePath || attStoragePath
+          };
+        });
+      } else if (attUrl) {
+        attachmentsList = [{
+          url: attUrl,
+          fileName: attName || 'Assignment_Attachment.pdf',
+          originalName: attName || 'Assignment_Attachment.pdf',
+          size: assignmentObj.size || 0,
+          storageBucket: attStorageBucket,
+          storagePath: attStoragePath
+        }];
+      }
+
       const newAssignment = {
         id: newId,
         type: destType,
@@ -1354,7 +1399,9 @@
         attachment: attUrl,
         attachmentUrl: attUrl,
         attachmentName: attName,
-        attachments: attUrl ? [{ url: attUrl, fileName: attName, originalName: attName }] : [],
+        attachments: attachmentsList,
+        storageBucket: attStorageBucket,
+        storagePath: attStoragePath,
         submissions: []
       };
 
@@ -1444,12 +1491,32 @@
       if (!assignment) return null;
 
       if (updateObj.attachment || updateObj.attachmentUrl) {
-        const attUrl = updateObj.attachment || updateObj.attachmentUrl;
-        const attName = attUrl.split('/').pop().split('?')[0];
+        const rawAtt = updateObj.attachment || updateObj.attachmentUrl;
+        let attUrl = '';
+        let attName = '';
+        let attStorageBucket = updateObj.storageBucket || 'studyflow-uploads';
+        let attStoragePath = updateObj.storagePath || null;
+        if (typeof rawAtt === 'string') {
+          attUrl = rawAtt.trim();
+          attName = attUrl ? attUrl.split('/').pop().split('?')[0] : '';
+        } else if (typeof rawAtt === 'object' && rawAtt) {
+          attUrl = rawAtt.url || rawAtt.downloadUrl || rawAtt.href || '';
+          attName = rawAtt.fileName || rawAtt.originalName || rawAtt.name || (attUrl ? String(attUrl).split('/').pop().split('?')[0] : '');
+          if (rawAtt.storageBucket) attStorageBucket = rawAtt.storageBucket;
+          if (rawAtt.storagePath) attStoragePath = rawAtt.storagePath;
+        }
         updateObj.attachment = attUrl;
         updateObj.attachmentUrl = attUrl;
         updateObj.attachmentName = attName;
-        updateObj.attachments = [{ url: attUrl, fileName: attName, originalName: attName }];
+        updateObj.storageBucket = attStorageBucket;
+        updateObj.storagePath = attStoragePath;
+        updateObj.attachments = [{
+          url: attUrl,
+          fileName: attName,
+          originalName: attName,
+          storageBucket: attStorageBucket,
+          storagePath: attStoragePath
+        }];
       }
 
       Object.assign(assignment, updateObj);

@@ -20,6 +20,7 @@ backup_pre_sqlite/
 uploads/rc_*
 uploads/sub_*
 uploads/resume_*
+uploads/fac_*
 
 # Environment secrets (NEVER commit live API keys or credentials)
 .env
