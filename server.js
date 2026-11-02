@@ -22,6 +22,7 @@ const { predictFinalExamScore, predictPlacementOutcome, getPlacementModelBenchma
 const groqClient = require('./groqClient.js');
 const localCodeExecutionEngine = require('./localCodeExecutionEngine');
 const supabaseBackend = require('./supabaseBackend.js');
+const supabaseStorage = require('./supabaseStorage.js');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -329,7 +330,9 @@ function formatAssignment(a, subs = [], currentUserId = null) {
     originalName: primarySub.fileName || primarySub.fileUrl.split('/').pop(),
     fileName: primarySub.fileName || primarySub.fileUrl.split('/').pop(),
     downloadUrl: primarySub.fileUrl,
-    size: primarySub.fileSize || 0
+    size: primarySub.fileSize || 0,
+    storageBucket: primarySub.storage_bucket || 'studyflow-uploads',
+    storagePath: primarySub.storage_path || null
   } : null;
 
   const parsedAttachments = (() => {
@@ -370,6 +373,8 @@ function formatAssignment(a, subs = [], currentUserId = null) {
     attachmentUrl,
     attachmentName,
     attachments: parsedAttachments,
+    storageBucket: a.storage_bucket || 'studyflow-uploads',
+    storagePath: a.storage_path || null,
     description: a.description || a.instructions || '',
     instructions: a.instructions || a.description || '',
     dueDate: a.due_date,
@@ -1840,7 +1845,8 @@ app.get('/api/state', (req, res) => {
           e.feedback, e.suggestions, e.status as evaluation_status, e.published, e.evaluation_date, e.updated_at,
           a.title as assignment_title, a.subject as subject_name, a.category as assignment_category,
           a.type as assignment_type, a.professor as faculty_name,
-          s.id as submission_id, s.submitted_date, s.file_url, s.file_name, s.remarks as student_remarks
+          s.id as submission_id, s.submitted_date, s.file_url, s.file_name, s.remarks as student_remarks,
+          s.storage_bucket, s.storage_path
         FROM assignment_evaluations e
         JOIN assignments a ON e.assignment_id = a.id
         LEFT JOIN submissions s ON e.assignment_id = s.assignment_id AND e.student_id = s.student_id
@@ -1855,7 +1861,8 @@ app.get('/api/state', (req, res) => {
           'Awaiting Evaluation' as evaluation_status, 0 as published, NULL as evaluation_date, s.updated_at,
           a.title as assignment_title, a.subject as subject_name, a.category as assignment_category,
           a.type as assignment_type, a.professor as faculty_name,
-          s.id as submission_id, s.submitted_date, s.file_url, s.file_name, s.remarks as student_remarks
+          s.id as submission_id, s.submitted_date, s.file_url, s.file_name, s.remarks as student_remarks,
+          s.storage_bucket, s.storage_path
         FROM submissions s
         JOIN assignments a ON s.assignment_id = a.id
         WHERE s.student_id = ? AND (s.published = 0 OR s.marks IS NULL OR s.status = 'Submitted')
@@ -1999,9 +2006,9 @@ const MIME_TYPES = {
   '.c': 'text/plain; charset=utf-8'
 };
 
-app.post('/api/upload', requireRole(['student', 'faculty', 'officer']), (req, res) => {
+app.post('/api/upload', requireRole(['student', 'faculty', 'officer']), async (req, res) => {
   try {
-    const { fileName, fileType, fileData } = req.body;
+    const { fileName, fileType, fileData, purpose } = req.body;
     if (!fileName || !fileData) {
       return res.status(400).json({ success: false, error: 'fileName and fileData (base64) are required.' });
     }
@@ -2014,7 +2021,7 @@ app.post('/api/upload', requireRole(['student', 'faculty', 'officer']), (req, re
     }
 
     const ext = path.extname(fileName).toLowerCase();
-    const allowedExts = ['.pdf', '.doc', '.docx', '.zip', '.tar', '.gz', '.png', '.jpg', '.jpeg', '.txt', '.py', '.java', '.cpp'];
+    const allowedExts = ['.pdf', '.doc', '.docx', '.zip', '.tar', '.gz', '.png', '.jpg', '.jpeg', '.txt', '.py', '.java', '.cpp', '.c'];
     if (!allowedExts.includes(ext)) {
       return res.status(400).json({ success: false, error: `File type '${ext}' is not permitted.` });
     }
@@ -2032,10 +2039,43 @@ app.post('/api/upload', requireRole(['student', 'faculty', 'officer']), (req, re
     }
 
     const cleanBase = path.basename(fileName).replace(/[^a-zA-Z0-9._-]/g, '_');
-    const safeStoredName = `sub_${Date.now()}_${cleanBase}`;
+    const isFaculty = req.user.role === 'faculty' || purpose === 'faculty_assignment';
+    const prefix = isFaculty ? 'fac_' : 'sub_';
+    const safeStoredName = `${prefix}${Date.now()}_${cleanBase}`;
     const targetPath = path.join(UPLOADS_DIR, safeStoredName);
 
+    // Save locally for instant cache and offline resilience
     fs.writeFileSync(targetPath, buffer);
+
+    // Supabase Storage integration: Save to private bucket 'studyflow-uploads'
+    const storageBucket = supabaseStorage.DEFAULT_BUCKET || 'studyflow-uploads';
+    const storageFolder = isFaculty ? 'faculty/assignments' : 'student/submissions';
+    const storagePath = `${storageFolder}/${safeStoredName}`;
+    const contentType = fileType || MIME_TYPES[ext] || 'application/octet-stream';
+
+    let storageResult = null;
+    let signedUrl = null;
+
+    try {
+      storageResult = await supabaseStorage.uploadFile({
+        bucket: storageBucket,
+        path: storagePath,
+        buffer,
+        contentType,
+        upsert: true
+      });
+
+      if (storageResult && storageResult.success) {
+        const signRes = await supabaseStorage.createSignedUrl({
+          bucket: storageBucket,
+          path: storagePath,
+          expiresIn: 3600
+        });
+        if (signRes.success) signedUrl = signRes.signedUrl;
+      }
+    } catch (sErr) {
+      console.warn('[Supabase Storage Upload Notice]:', sErr.message);
+    }
 
     res.json({
       success: true,
@@ -2043,8 +2083,13 @@ app.post('/api/upload', requireRole(['student', 'faculty', 'officer']), (req, re
         fileName: safeStoredName,
         originalName: fileName,
         size: buffer.length,
-        mimeType: fileType || MIME_TYPES[ext] || 'application/octet-stream',
-        downloadUrl: `/api/files/${encodeURIComponent(safeStoredName)}`
+        mimeType: contentType,
+        downloadUrl: `/api/files/${encodeURIComponent(safeStoredName)}`,
+        previewUrl: `/api/files/${encodeURIComponent(safeStoredName)}?view=1`,
+        storageBucket,
+        storagePath,
+        signedUrl,
+        storageSynced: Boolean(storageResult && storageResult.success)
       }
     });
   } catch (err) {
@@ -2053,14 +2098,19 @@ app.post('/api/upload', requireRole(['student', 'faculty', 'officer']), (req, re
   }
 });
 
-app.get('/api/files/:filename', (req, res) => {
+app.get('/api/files/:filename', async (req, res) => {
   const filename = req.params.filename;
   if (!/^[a-zA-Z0-9._-]+$/.test(filename)) {
     return res.status(400).json({ success: false, error: 'Invalid filename' });
   }
 
   // Security: Check if file belongs to a student submission record
-  const sub = db.prepare('SELECT student_id FROM submissions WHERE file_url LIKE ? OR file_name = ?').get('%' + filename, filename);
+  const sub = db.prepare(`
+    SELECT student_id, storage_bucket, storage_path, file_name
+    FROM submissions 
+    WHERE file_url LIKE ? OR file_name = ? OR storage_path LIKE ?
+  `).get('%' + filename, filename, '%' + filename);
+
   if (sub) {
     if (!req.user) {
       return res.status(401).json({ success: false, error: 'Authentication required to access submission files.' });
@@ -2070,20 +2120,172 @@ app.get('/api/files/:filename', (req, res) => {
     }
   }
 
-  const targetPath = path.join(UPLOADS_DIR, filename);
-  if (!fs.existsSync(targetPath)) {
-    return res.status(404).json({ success: false, error: 'File not found' });
+  // Security: Check if file belongs to an assignment attachment
+  const asg = db.prepare(`
+    SELECT id, storage_bucket, storage_path, target_year, target_class, department 
+    FROM assignments 
+    WHERE submission_url LIKE ? OR attachments_json LIKE ? OR storage_path LIKE ?
+  `).get('%' + filename, '%' + filename + '%', '%' + filename);
+
+  if (asg && req.user && req.user.role === 'student') {
+    if (!assignmentMatchesStudent(asg, getStudentAssignmentTarget(req.user.id), req.user.id)) {
+      return res.status(403).json({ success: false, error: 'Forbidden: You are not enrolled in the cohort for this assignment.' });
+    }
   }
 
+  const targetPath = path.join(UPLOADS_DIR, filename);
   const ext = path.extname(filename).toLowerCase();
   const contentType = MIME_TYPES[ext] || 'application/octet-stream';
-
-  res.setHeader('Content-Type', contentType);
-  res.setHeader('X-Content-Type-Options', 'nosniff');
   const isInline = req.query.view === '1' || req.query.inline === '1' || req.query.preview === '1';
-  res.setHeader('Content-Disposition', `${isInline ? 'inline' : 'attachment'}; filename="${filename}"`);
-  res.setHeader('Cache-Control', 'private, max-age=86400');
-  fs.createReadStream(targetPath).pipe(res);
+
+  // 1. Check if file is available in local disk cache
+  if (fs.existsSync(targetPath)) {
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Content-Disposition', `${isInline ? 'inline' : 'attachment'}; filename="${filename}"`);
+    res.setHeader('Cache-Control', 'private, max-age=86400');
+    return fs.createReadStream(targetPath).pipe(res);
+  }
+
+  // 2. Cross-laptop fallback: File was uploaded on another laptop, fetch from Supabase Storage
+  const storageBucket = (sub && sub.storage_bucket) || (asg && asg.storage_bucket) || supabaseStorage.DEFAULT_BUCKET || 'studyflow-uploads';
+  let storagePath = (sub && sub.storage_path) || (asg && asg.storage_path) || null;
+
+  if (!storagePath) {
+    storagePath = filename.startsWith('fac_') 
+      ? `faculty/assignments/${filename}` 
+      : (filename.startsWith('sub_') ? `student/submissions/${filename}` : `general/${filename}`);
+  }
+
+  try {
+    const dlResult = await supabaseStorage.downloadFile({ bucket: storageBucket, path: storagePath });
+    if (dlResult.success && dlResult.buffer) {
+      // Cache locally on this laptop for fast subsequent reads
+      try { fs.writeFileSync(targetPath, dlResult.buffer); } catch (_) {}
+
+      res.setHeader('Content-Type', dlResult.contentType || contentType);
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('Content-Disposition', `${isInline ? 'inline' : 'attachment'}; filename="${filename}"`);
+      res.setHeader('Cache-Control', 'private, max-age=86400');
+      return res.send(dlResult.buffer);
+    }
+
+    // Try alternate folder if primary failed
+    const alternatePath = storagePath.startsWith('faculty/') 
+      ? `student/submissions/${filename}` 
+      : `faculty/assignments/${filename}`;
+    const altResult = await supabaseStorage.downloadFile({ bucket: storageBucket, path: alternatePath });
+    if (altResult.success && altResult.buffer) {
+      try { fs.writeFileSync(targetPath, altResult.buffer); } catch (_) {}
+      res.setHeader('Content-Type', altResult.contentType || contentType);
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('Content-Disposition', `${isInline ? 'inline' : 'attachment'}; filename="${filename}"`);
+      res.setHeader('Cache-Control', 'private, max-age=86400');
+      return res.send(altResult.buffer);
+    }
+  } catch (err) {
+    console.warn('[Cross-Laptop Storage Sync] Failed to download from Supabase Storage:', err.message);
+  }
+
+  // 3. File not found locally or in Supabase Storage
+  return res.status(404).json({
+    success: false,
+    error: 'File not found',
+    message: `File '${filename}' was not found in local cache or Supabase Storage bucket '${storageBucket}'.`,
+    hint: 'Ensure file was uploaded or RLS policy is applied in Supabase SQL Editor.'
+  });
+});
+
+// Secure Signed URL Generation Endpoint for Supabase Storage
+app.get(['/api/files/:filename/signed-url', '/api/storage/signed-url'], requireRole(['student', 'faculty', 'officer']), async (req, res) => {
+  try {
+    const filename = req.params.filename || req.query.filename || (req.query.path ? req.query.path.split('/').pop() : '');
+    const bucket = req.query.bucket || supabaseStorage.DEFAULT_BUCKET || 'studyflow-uploads';
+    const isDownload = req.query.download === '1' || req.query.download === 'true';
+
+    // Access control checks
+    if (filename) {
+      const sub = db.prepare(`
+        SELECT student_id, storage_path, storage_bucket 
+        FROM submissions 
+        WHERE file_url LIKE ? OR file_name = ? OR storage_path LIKE ?
+      `).get('%' + filename, filename, '%' + filename);
+
+      if (sub && req.user.role === 'student' && sub.student_id !== req.user.id) {
+        return res.status(403).json({ success: false, error: 'Forbidden: You cannot access another student\'s submission file.' });
+      }
+
+      const asg = db.prepare(`
+        SELECT id, storage_path, storage_bucket, target_year, target_class, department 
+        FROM assignments 
+        WHERE submission_url LIKE ? OR attachments_json LIKE ? OR storage_path LIKE ?
+      `).get('%' + filename, '%' + filename + '%', '%' + filename);
+
+      if (asg && req.user.role === 'student') {
+        if (!assignmentMatchesStudent(asg, getStudentAssignmentTarget(req.user.id), req.user.id)) {
+          return res.status(403).json({ success: false, error: 'Forbidden: You are not enrolled in the cohort for this assignment.' });
+        }
+      }
+    }
+
+    // Determine storage path
+    let storagePath = req.query.path;
+    if (!storagePath && filename) {
+      const sub = db.prepare('SELECT storage_path FROM submissions WHERE file_url LIKE ? OR file_name = ?').get('%' + filename, filename);
+      const asg = db.prepare('SELECT storage_path FROM assignments WHERE submission_url LIKE ? OR attachments_json LIKE ?').get('%' + filename, '%' + filename + '%');
+      storagePath = (sub && sub.storage_path) || (asg && asg.storage_path) || (filename.startsWith('fac_') ? `faculty/assignments/${filename}` : `student/submissions/${filename}`);
+    }
+
+    if (!storagePath) {
+      return res.status(400).json({ success: false, error: 'Storage path or valid filename is required.' });
+    }
+
+    const signResult = await supabaseStorage.createSignedUrl({
+      bucket,
+      path: storagePath,
+      expiresIn: 3600,
+      download: isDownload ? filename : false
+    });
+
+    if (!signResult.success) {
+      // Fallback: If signed URL is not ready from Supabase (e.g. object not yet synced),
+      // provide the authenticated local proxy URL which streams from local cache or storage
+      const fallbackUrl = `/api/files/${encodeURIComponent(filename || storagePath.split('/').pop())}${isDownload ? '' : '?view=1'}`;
+      return res.json({
+        success: true,
+        bucket,
+        path: storagePath,
+        signedUrl: fallbackUrl,
+        isFallback: true,
+        expiresIn: 3600
+      });
+    }
+
+    res.json({
+      success: true,
+      bucket,
+      path: storagePath,
+      signedUrl: signResult.signedUrl,
+      expiresIn: 3600
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Storage Health & Policy Diagnostic Endpoint
+app.get('/api/storage/status', async (req, res) => {
+  try {
+    const health = await supabaseStorage.checkStorageHealth();
+    res.json({
+      success: true,
+      bucket: supabaseStorage.DEFAULT_BUCKET,
+      supabaseUrl: supabaseStorage.SUPABASE_URL,
+      status: health
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 // -----------------------------------------------------------------------------
@@ -2208,7 +2410,7 @@ app.post(['/api/records/:type', '/api/assignments/:type'], requireRole(['faculty
     const asList = value => value === undefined || value === null || value === '' ? [] : (Array.isArray(value) ? value : [value]);
     const attachmentValues = [...asList(body.attachment), ...asList(body.attachments), ...asList(body.links)].filter(Boolean);
     for (const value of attachmentValues) {
-      const url = typeof value === 'string' ? value : (value.url || value.href || '');
+      const url = typeof value === 'string' ? value : (value.url || value.href || value.downloadUrl || '');
       if (typeof value !== 'string' && (!value || typeof value !== 'object' || typeof url !== 'string' || !url)) {
         return res.status(400).json({ success: false, error: 'Each attachment must be an http or https link.' });
       }
@@ -2225,13 +2427,16 @@ app.post(['/api/records/:type', '/api/assignments/:type'], requireRole(['faculty
     const structuredAttachments = attachmentValues.map(value => {
       if (typeof value === 'string') {
         const fileName = value.split('/').pop().split('?')[0] || 'Assignment_Paper.pdf';
-        return { url: value, fileName, originalName: fileName };
+        return { url: value, fileName, originalName: fileName, storageBucket: supabaseStorage.DEFAULT_BUCKET };
       }
+      const resolvedUrl = value.url || value.href || value.downloadUrl || '';
       return {
-        url: value.url || value.href || '',
-        fileName: value.fileName || value.name || (value.url ? value.url.split('/').pop().split('?')[0] : 'Assignment_Paper.pdf'),
+        url: resolvedUrl,
+        fileName: value.fileName || value.name || (resolvedUrl ? resolvedUrl.split('/').pop().split('?')[0] : 'Assignment_Paper.pdf'),
         originalName: value.originalName || value.fileName || value.name || 'Assignment_Paper.pdf',
-        size: value.size || 0
+        size: value.size || 0,
+        storageBucket: value.storageBucket || supabaseStorage.DEFAULT_BUCKET,
+        storagePath: value.storagePath || null
       };
     });
     const defaultCategory = type === 'faculty' ? 'Coding Practice' : (type === 'lab' ? 'Lab Assignments' : (type === 'learning' ? 'Learning Records' : (type === 'practice' ? 'Practice Records' : 'General Assignments')));
@@ -2240,13 +2445,17 @@ app.post(['/api/records/:type', '/api/assignments/:type'], requireRole(['faculty
     const prefix = effectiveType === 'faculty' ? 'fa_' : (effectiveType === 'lab' ? 'lab_' : (effectiveType === 'general' ? 'asg_' : (effectiveType === 'learning' ? 'lr_' : (effectiveType === 'practice' ? 'pr_' : 'rec_'))));
     const newId = body.id || prefix + Date.now().toString(36);
 
+    const firstAttachment = structuredAttachments[0] || null;
+    const asgStorageBucket = (firstAttachment && firstAttachment.storageBucket) || (body.storageBucket) || supabaseStorage.DEFAULT_BUCKET || 'studyflow-uploads';
+    const asgStoragePath = (firstAttachment && firstAttachment.storagePath) || (body.storagePath) || (firstAttachment && firstAttachment.url ? (firstAttachment.url.startsWith('/api/files/') ? `faculty/assignments/${firstAttachment.url.split('/').pop()}` : null) : null);
+
     const insertTx = db.transaction(() => {
       db.prepare(`
         INSERT INTO assignments (
           id, type, title, subject, category, professor, department, target_year, target_class, created_by, attachments_json,
           description, instructions, due_date, due_time, priority, status,
-          max_marks, meta_json
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          max_marks, meta_json, storage_bucket, storage_path
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         newId,
         effectiveType,
@@ -2266,7 +2475,9 @@ app.post(['/api/records/:type', '/api/assignments/:type'], requireRole(['faculty
         body.priority || 'Medium',
         body.status === 'Draft' ? 'Draft' : 'Published',
         maxMarks,
-        JSON.stringify({ attachments: structuredAttachments })
+        JSON.stringify({ attachments: structuredAttachments }),
+        asgStorageBucket,
+        asgStoragePath
       );
 
       if (body.status !== 'Draft') {
@@ -2378,14 +2589,18 @@ app.post(['/api/records/:type/:id/submit', '/api/assignments/:type/:id/submit'],
     const isLate = Boolean(dueAt && !Number.isNaN(dueAt.getTime()) && !Number.isNaN(submittedAt.getTime()) && submittedAt > dueAt);
     const submissionStatus = isLate ? 'Late' : 'Submitted';
 
+    let subStorageBucket = (body.file && body.file.storageBucket) || (body.files && body.files[0] && body.files[0].storageBucket) || (body.storageBucket) || (existingSub ? existingSub.storage_bucket : null) || supabaseStorage.DEFAULT_BUCKET || 'studyflow-uploads';
+    let subStoragePath = (body.file && body.file.storagePath) || (body.files && body.files[0] && body.files[0].storagePath) || (body.storagePath) || (hasNewFile ? `student/submissions/${fileUrl.split('/').pop()}` : (existingSub ? existingSub.storage_path : null));
+
     const submitTx = db.transaction(() => {
-      // Upsert into submissions table with accurate assignment category and timestamps
+      // Upsert into submissions table with accurate assignment category, timestamps, and Supabase Storage metadata
       const subId = existingSub ? existingSub.id : (body.submissionId || ('sub_' + Date.now().toString(36)));
       db.prepare(`
         INSERT INTO submissions (
           id, assignment_id, assignment_type, student_id, student_name, roll_no,
-          submitted_date, updated_at, status, is_late, file_url, file_name, file_size, remarks
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?, ?, ?, ?)
+          submitted_date, updated_at, status, is_late, file_url, file_name, file_size, remarks,
+          storage_bucket, storage_path
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(assignment_id, student_id) DO UPDATE SET
           submitted_date = excluded.submitted_date,
           updated_at = datetime('now'),
@@ -2394,8 +2609,10 @@ app.post(['/api/records/:type/:id/submit', '/api/assignments/:type/:id/submit'],
           file_url = excluded.file_url,
           file_name = excluded.file_name,
           file_size = excluded.file_size,
-          remarks = excluded.remarks
-      `).run(subId, id, assignment.type || type.toLowerCase(), studentId, studentName, rollNo, finalSubmittedDate, submissionStatus, isLate ? 1 : 0, fileUrl, fileName, fileSize, remarks);
+          remarks = excluded.remarks,
+          storage_bucket = excluded.storage_bucket,
+          storage_path = excluded.storage_path
+      `).run(subId, id, assignment.type || type.toLowerCase(), studentId, studentName, rollNo, finalSubmittedDate, submissionStatus, isLate ? 1 : 0, fileUrl, fileName, fileSize, remarks, subStorageBucket, subStoragePath);
 
       // Notify the faculty member who owns this assignment.
       if (assignment.created_by) db.prepare(`

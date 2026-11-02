@@ -7444,6 +7444,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ========================================================================
 
   window.openCreateAssignmentModal = function(assignmentId = null) {
+    window._currentFacultyUploadedFile = null;
     const modal = document.getElementById('modal-create-assignment');
     if (!modal) return;
 
@@ -7582,6 +7583,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
       const data = await res.json();
       if (data.success && data.file) {
+        window._currentFacultyUploadedFile = data.file;
         const fileUrl = data.file.downloadUrl || `/api/files/${data.file.fileName}`;
         if (attInput) attInput.value = fileUrl;
         if (titleEl) titleEl.textContent = `Attached: ${file.name}`;
@@ -7622,6 +7624,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       e.preventDefault();
       e.stopPropagation();
     }
+    window._currentFacultyUploadedFile = null;
     const fileInput = document.getElementById('faculty-asg-pdf-file');
     if (fileInput) fileInput.value = '';
     const attInput = document.getElementById('faculty-asg-attachment');
@@ -7638,6 +7641,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   window.closeCreateAssignmentModal = function() {
+    window._currentFacultyUploadedFile = null;
     const modal = document.getElementById('modal-create-assignment');
     if (modal) modal.style.display = 'none';
   };
@@ -7661,17 +7665,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     const dueDate = parts[0];
     const dueTime = parts[1] || '23:59';
 
+    const uploaded = window._currentFacultyUploadedFile;
+    const attachmentPayload = uploaded ? {
+      url: uploaded.downloadUrl || attachment,
+      fileName: uploaded.fileName || uploaded.originalName,
+      originalName: uploaded.originalName || uploaded.fileName,
+      size: uploaded.size,
+      storageBucket: uploaded.storageBucket,
+      storagePath: uploaded.storagePath
+    } : attachment;
+
+    const assignmentData = {
+      title, subject, category, targetYear, targetClass, department: targetClass, maxMarks: parseInt(maxMarks, 10),
+      dueDate, dueTime, priority, instructions, description: instructions, attachment: attachmentPayload,
+      attachments: uploaded ? [attachmentPayload] : (attachment ? [attachment] : []),
+      storageBucket: uploaded?.storageBucket,
+      storagePath: uploaded?.storagePath,
+      status
+    };
+
     if (id) {
-      store.updateFacultyAssignment(id, {
-        title, subject, category, targetYear, targetClass, department: targetClass, maxMarks: parseInt(maxMarks, 10),
-        dueDate, dueTime, priority, instructions, description: instructions, attachment, status
-      });
+      store.updateFacultyAssignment(id, assignmentData);
       window.showToast?.('✓ Assignment updated successfully.', 'success');
     } else {
-      store.createFacultyAssignment({
-        title, subject, category, targetYear, targetClass, department: targetClass, maxMarks: parseInt(maxMarks, 10),
-        dueDate, dueTime, priority, instructions, description: instructions, attachment, status
-      });
+      store.createFacultyAssignment(assignmentData);
       window.showToast?.(`✓ Assignment "${title}" created and ${status.toLowerCase()}!`, 'success');
     }
 

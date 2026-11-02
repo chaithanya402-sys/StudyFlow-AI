@@ -122,6 +122,8 @@ function initSchema() {
       is_revision_requested INTEGER DEFAULT 0,
       graded_date TEXT,
       meta_json TEXT DEFAULT '{}',
+      storage_bucket TEXT DEFAULT 'studyflow-uploads',
+      storage_path TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
     CREATE INDEX IF NOT EXISTS idx_assignments_type ON assignments(type);
@@ -150,6 +152,8 @@ function initSchema() {
       is_revision_requested INTEGER DEFAULT 0,
       published INTEGER DEFAULT 1,
       graded_date TEXT,
+      storage_bucket TEXT DEFAULT 'studyflow-uploads',
+      storage_path TEXT,
       updated_at TEXT DEFAULT (datetime('now')),
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       UNIQUE(assignment_id, student_id)
@@ -744,13 +748,14 @@ function initSchema() {
     console.warn('[DB] Aptitude migration note:', mErr.message);
   }
 
-  // Assignment cohort targeting. Keep the legacy target_class value and infer a
-  // year where possible so existing records remain usable after migration.
+  // Assignment cohort targeting and storage metadata.
   const assignmentCols = db.prepare('PRAGMA table_info(assignments)').all().map(c => c.name);
   for (const col of [
     { name: 'target_year', def: 'TEXT DEFAULT NULL' },
     { name: 'created_by', def: 'TEXT DEFAULT NULL' },
-    { name: 'attachments_json', def: "TEXT NOT NULL DEFAULT '[]'" }
+    { name: 'attachments_json', def: "TEXT NOT NULL DEFAULT '[]'" },
+    { name: 'storage_bucket', def: "TEXT DEFAULT 'studyflow-uploads'" },
+    { name: 'storage_path', def: 'TEXT DEFAULT NULL' }
   ]) {
     if (!assignmentCols.includes(col.name)) {
       try { db.exec(`ALTER TABLE assignments ADD COLUMN ${col.name} ${col.def}`); } catch (e) {}
@@ -782,6 +787,12 @@ function initSchema() {
   }
   if (!existingSubCols.includes('suggestions')) {
     try { db.exec("ALTER TABLE submissions ADD COLUMN suggestions TEXT DEFAULT ''"); } catch (e) {}
+  }
+  if (!existingSubCols.includes('storage_bucket')) {
+    try { db.exec("ALTER TABLE submissions ADD COLUMN storage_bucket TEXT DEFAULT 'studyflow-uploads'"); } catch (e) {}
+  }
+  if (!existingSubCols.includes('storage_path')) {
+    try { db.exec("ALTER TABLE submissions ADD COLUMN storage_path TEXT DEFAULT NULL"); } catch (e) {}
   }
 
   // 5B. Assignment Evaluations Table (Explicit evaluation records tracking faculty marks, feedback & suggestions)
