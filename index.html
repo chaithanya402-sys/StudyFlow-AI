@@ -319,6 +319,126 @@
           </div>
         </div>
 
+        <!-- Section 2B: Assignment Performance (Real Faculty Evaluations & Coursework Scoring) -->
+        <div class="content-panel" style="margin-bottom: 20px; border-radius: 14px; border: 1.5px solid #E2E8F0; background: #FFFFFF; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+          <div class="panel-header" style="margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 20px;">📊</span>
+                <h3 class="panel-title" style="margin: 0; font-size: 16px; font-weight: 700; color: #0F172A;">Assignment Performance</h3>
+                <span class="badge-status teal" id="dash-asg-perf-grade-badge">Grade --</span>
+              </div>
+              <p class="panel-subtitle" style="margin: 4px 0 0 0; font-size: 12px; color: #64748B;">
+                Verified marks awarded by faculty, personalized feedback, and continuous assignment completion metrics.
+              </p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <button type="button" class="btn-outline btn-sm" onclick="refreshStudentAssignmentPerformance()" title="Sync Latest Marks">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                <span>Refresh Marks</span>
+              </button>
+              <button class="btn-outline btn-sm" onclick="navigateToRoute('/student/assignments/faculty')">
+                <span>View All Assignments →</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 5 Compact Metric Cards matching StudyFlow AI design -->
+          <div class="kpi-grid-5" style="margin-bottom: 20px;">
+            <!-- Card 1: Evaluated Assignments -->
+            <div class="kpi-card" style="background: #F8FAFC; border-color: #E2E8F0;">
+              <div class="kpi-top-row">
+                <span class="kpi-label">EVALUATED ASSIGNMENTS</span>
+                <span style="font-size: 16px;">✅</span>
+              </div>
+              <div class="kpi-main-val" id="dash-perf-evaluated" style="color: #0F172A;">0</div>
+              <div class="kpi-context-row">
+                <span class="kpi-pill teal" id="dash-perf-evaluated-pill">Verified Marks</span>
+                <span style="font-size: 11px; color: #64748B;">Faculty graded</span>
+              </div>
+            </div>
+
+            <!-- Card 2: Submitted Assignments -->
+            <div class="kpi-card" style="background: #F8FAFC; border-color: #E2E8F0;">
+              <div class="kpi-top-row">
+                <span class="kpi-label">SUBMITTED ASSIGNMENTS</span>
+                <span style="font-size: 16px;">📥</span>
+              </div>
+              <div class="kpi-main-val" id="dash-perf-submitted" style="color: #0F172A;">0</div>
+              <div class="kpi-context-row">
+                <span class="kpi-pill blue" id="dash-perf-submitted-pill">0 Pending Review</span>
+                <span style="font-size: 11px; color: #64748B;">Total solutions sent</span>
+              </div>
+            </div>
+
+            <!-- Card 3: Marks Obtained -->
+            <div class="kpi-card" style="background: #F8FAFC; border-color: #E2E8F0;">
+              <div class="kpi-top-row">
+                <span class="kpi-label">MARKS OBTAINED</span>
+                <span style="font-size: 16px;">🎯</span>
+              </div>
+              <div class="kpi-main-val" id="dash-perf-obtained" style="color: #2563EB;">0</div>
+              <div class="kpi-context-row">
+                <span class="kpi-pill teal" id="dash-perf-obtained-pill">Scored Points</span>
+                <span style="font-size: 11px; color: #64748B;">Earned aggregate</span>
+              </div>
+            </div>
+
+            <!-- Card 4: Maximum Marks -->
+            <div class="kpi-card" style="background: #F8FAFC; border-color: #E2E8F0;">
+              <div class="kpi-top-row">
+                <span class="kpi-label">MAXIMUM MARKS</span>
+                <span style="font-size: 16px;">📋</span>
+              </div>
+              <div class="kpi-main-val" id="dash-perf-max" style="color: #475569;">0</div>
+              <div class="kpi-context-row">
+                <span class="kpi-pill blue">Evaluated Total</span>
+                <span style="font-size: 11px; color: #64748B;">Maximum possible</span>
+              </div>
+            </div>
+
+            <!-- Card 5: Overall Percentage -->
+            <div class="kpi-card" style="background: #EFF6FF; border-color: #BFDBFE;">
+              <div class="kpi-top-row">
+                <span class="kpi-label" style="color: #1D4ED8;">OVERALL PERCENTAGE</span>
+                <span style="font-size: 16px;">🏆</span>
+              </div>
+              <div class="kpi-main-val" id="dash-perf-percentage" style="color: #1D4ED8;">0%</div>
+              <div class="kpi-context-row">
+                <span class="kpi-pill teal" id="dash-perf-percentage-pill">Ready</span>
+                <span style="font-size: 11px; color: #1E40AF;" id="dash-perf-percentage-sub">Performance Tier</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Evaluation Table -->
+          <div>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+              <h4 style="font-size: 13px; font-weight: 700; color: #1E293B; margin: 0; display: flex; align-items: center; gap: 6px;">
+                <span>📝</span> Recent Assignment Evaluations &amp; Marks
+              </h4>
+              <span style="font-size: 11.5px; color: #64748B;">Click any row to view detailed marks, feedback &amp; suggestions</span>
+            </div>
+
+            <div style="overflow-x: auto; border: 1px solid #E2E8F0; border-radius: 10px;">
+              <table class="table-compact" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 12.5px;">
+                <thead>
+                  <tr style="background: #F8FAFC; border-bottom: 1px solid #E2E8F0; color: #475569; font-weight: 700; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.5px;">
+                    <th style="padding: 10px 14px;">Assignment</th>
+                    <th style="padding: 10px 14px;">Category</th>
+                    <th style="padding: 10px 14px;">Marks</th>
+                    <th style="padding: 10px 14px;">Status</th>
+                    <th style="padding: 10px 14px; text-align: right;">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="dash-recent-evaluations-table-body">
+                  <!-- Populated dynamically from actual database records -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
         <!-- Row 3: Academic Progress & Upcoming Assignments -->
         <div class="analytics-grid-2" style="margin-bottom: 20px;">
           
@@ -5544,6 +5664,7 @@
       <form id="form-grade-submission" class="modal-form" onsubmit="handleSaveGradeSubmission(event)">
         <input type="hidden" id="grade-hidden-asg-id">
         <input type="hidden" id="grade-hidden-sub-id">
+        <input type="hidden" id="grade-hidden-student-id">
         <div class="modal-body">
           <div style="background: #F8FAFC; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px; margin-bottom: 14px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
@@ -5959,6 +6080,120 @@
       <div class="modal-footer" style="display: flex; justify-content: flex-end; align-items: center; gap: 12px; padding: 14px 20px; border-top: 1px solid #E2E8F0;">
         <button type="button" class="btn-outline btn-sm" onclick="closeSubmissionDetailsModal()" style="font-size: 13px; padding: 8px 16px;">Cancel</button>
         <button type="button" class="btn-submit-modal-action" id="btn-sub-detail-update-action" onclick="handleUpdateSubmissionAction()">Update Submission</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       MODAL: DETAILED MARKS EVALUATION & FACULTY FEEDBACK
+       ======================================================== -->
+  <div class="modal-overlay" id="modal-evaluation-details" style="display: none; z-index: 10000;">
+    <div class="modal-box" style="max-width: 620px; width: 92%; border-radius: 16px; max-height: 90vh; overflow-y: auto;">
+      <div class="modal-header" style="align-items: flex-start; padding-bottom: 12px; border-bottom: 1px solid #E2E8F0;">
+        <div style="flex: 1; min-width: 0;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+            <span id="eval-modal-category-badge" class="badge-status blue" style="font-size: 11px; font-weight: 700;">General Assignment</span>
+            <span id="eval-modal-status-badge" class="badge-status teal" style="font-size: 11px; font-weight: 700;">Evaluated</span>
+          </div>
+          <h3 class="modal-title" id="eval-modal-title" style="font-size: 18px; font-weight: 700; color: #0F172A; margin: 0; line-height: 1.3;">Assignment Title</h3>
+          <div id="eval-modal-subject" style="font-size: 12.5px; color: #64748B; margin-top: 4px;">Subject Name • Coursework</div>
+        </div>
+        <button class="modal-close-btn" onclick="closeEvaluationDetailsModal()" title="Close details">✕</button>
+      </div>
+
+      <div class="modal-body" style="padding-top: 14px;">
+        <!-- Prominent Score Showcase Box -->
+        <div id="eval-modal-score-box" style="background: #ECFDF5; border: 1.5px solid #A7F3D0; border-radius: 12px; padding: 16px 20px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <div style="font-size: 11px; font-weight: 700; color: #065F46; text-transform: uppercase; letter-spacing: 0.5px;">Awarded Marks</div>
+            <div style="display: flex; align-items: baseline; gap: 6px; margin-top: 2px;">
+              <span id="eval-modal-marks-obtained" style="font-size: 32px; font-weight: 800; color: #065F46;">85</span>
+              <span id="eval-modal-max-marks" style="font-size: 16px; font-weight: 600; color: #047857;">/ 100</span>
+            </div>
+            <div style="font-size: 11.5px; color: #047857;" id="eval-modal-marks-note">Verified and released by faculty mentor</div>
+          </div>
+          <div style="text-align: right;">
+            <div id="eval-modal-percentage-badge" style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: 50%; background: #059669; color: #FFFFFF; font-size: 18px; font-weight: 800; box-shadow: 0 4px 6px -1px rgba(5,150,105,0.3);">
+              85%
+            </div>
+            <div style="font-size: 11px; font-weight: 700; color: #065F46; margin-top: 4px;" id="eval-modal-grade-label">Grade A+</div>
+          </div>
+        </div>
+
+        <!-- Pending State Notice (shown if awaiting evaluation) -->
+        <div id="eval-modal-pending-box" style="display: none; background: #EFF6FF; border: 1.5px solid #BFDBFE; border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 24px;">⏳</span>
+            <div>
+              <strong style="color: #1E40AF; font-size: 13.5px;">Awaiting Faculty Evaluation</strong>
+              <p style="margin: 3px 0 0 0; font-size: 12px; color: #3B82F6;">
+                Your submission is currently in the instructor's grading queue. Marks, evaluation remarks, and suggestions will appear here as soon as released.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Meta Info Grid -->
+        <div class="meta-pill-box" style="margin-bottom: 16px;">
+          <div class="meta-pill-item">
+            <span>Faculty Evaluator:</span>
+            <strong id="eval-modal-faculty-name">Dr. Rajesh Sharma</strong>
+          </div>
+          <div class="meta-pill-item">
+            <span>Evaluation Date:</span>
+            <strong id="eval-modal-date">02-11-2026</strong>
+          </div>
+          <div class="meta-pill-item">
+            <span>Submission Status:</span>
+            <strong id="eval-modal-sub-status">Submitted</strong>
+          </div>
+        </div>
+
+        <!-- Faculty Feedback Box -->
+        <div style="margin-bottom: 16px;">
+          <div style="font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+            <span>💬</span> Faculty Feedback &amp; Evaluation Remarks
+          </div>
+          <div id="eval-modal-feedback-box" style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 12px 16px; font-size: 13px; color: #1E293B; line-height: 1.5; font-style: italic;">
+            "Great work on this coursework assignment."
+          </div>
+        </div>
+
+        <!-- Faculty Suggestions Box -->
+        <div style="margin-bottom: 16px;">
+          <div style="font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+            <span>💡</span> Recommended Next Steps &amp; Suggestions
+          </div>
+          <div id="eval-modal-suggestions-box" style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 12px 16px; font-size: 13px; color: #1E293B; line-height: 1.5;">
+            No additional suggestions provided.
+          </div>
+        </div>
+
+        <!-- Student Submitted Artifact Box -->
+        <div style="border-top: 1px dashed #E2E8F0; padding-top: 14px;" id="eval-modal-submission-info-box">
+          <div style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Submitted Solution File &amp; Remarks</div>
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; background: #F1F5F9; border-radius: 8px; padding: 8px 12px; font-size: 12px;">
+            <div style="display: flex; align-items: center; gap: 6px; min-width: 0;">
+              <span>📄</span>
+              <strong style="color: #1E293B; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 250px;" id="eval-modal-filename">solution.pdf</strong>
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <button type="button" class="btn-outline btn-sm" id="btn-eval-view-solution" onclick="viewEvaluatedSolutionInline()" style="font-size: 11px; padding: 3px 10px; background: #FFFFFF;">
+                👁️ View Solution
+              </button>
+              <a href="#" download id="eval-modal-download-link" class="btn-outline btn-sm" style="font-size: 11px; padding: 3px 10px; text-decoration: none;">
+                📥 Download
+              </a>
+            </div>
+          </div>
+          <div style="margin-top: 8px; font-size: 11.5px; color: #64748B;" id="eval-modal-student-remarks-wrap">
+            <span>Student Remarks: </span><em id="eval-modal-student-remarks">"Ready for review"</em>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 10px; padding: 12px 20px; border-top: 1px solid #E2E8F0;">
+        <button type="button" class="btn-outline btn-sm" onclick="closeEvaluationDetailsModal()">Close</button>
       </div>
     </div>
   </div>

@@ -242,6 +242,7 @@
         if (Array.isArray(s.practiceRecords)) this.data.practiceRecords = s.practiceRecords;
         if (Array.isArray(s.facultyAssignments)) this.data.facultyAssignments = s.facultyAssignments;
         if (Array.isArray(s.groupProjects)) this.data.groupProjects = s.groupProjects;
+        if (s.assignmentPerformance) this.data.assignmentPerformance = s.assignmentPerformance;
         if (Array.isArray(s.mlPredictions) && s.mlPredictions.length > 0) {
           if (this.data.roles?.student?.academicProfile) {
             this.data.roles.student.academicProfile.predictionHistory = s.mlPredictions;
@@ -1646,69 +1647,80 @@
     }
 
     async gradeAssignment(type, id, gradingData = {}) {
-      const { submissionId, marks, feedback, strengths, improvements, nextSteps, isRevisionRequested, publish = true } = gradingData;
+      const { submissionId, studentId, marks, feedback, strengths, improvements, nextSteps, suggestions, isRevisionRequested, publish = true } = gradingData;
       const numMarks = parseFloat(marks);
       const gradedDate = new Date().toISOString().split('T')[0];
+      const effSuggestions = suggestions || nextSteps || '';
 
-      if (type === 'faculty') {
-        const assignment = (this.data.facultyAssignments || []).find(a => a.id === id);
-        if (assignment) {
-          if (assignment.submissions) {
-            const sub = assignment.submissions.find(s => s.id === submissionId) || assignment.submissions[0];
-            if (sub) {
-              sub.marks = numMarks;
-              sub.feedback = feedback || '';
-              sub.strengths = strengths || '';
-              sub.improvements = improvements || '';
-              sub.nextSteps = nextSteps || '';
-              sub.status = isRevisionRequested ? 'Revision Requested' : (publish ? 'Graded' : 'Under Review');
-              sub.isRevisionRequested = !!isRevisionRequested;
-              sub.published = !!publish;
-              sub.gradedDate = gradedDate;
-            }
+      const updateItem = (collectionKey) => {
+        const item = (this.data[collectionKey] || []).find(a => a.id === id);
+        if (!item) return false;
+
+        if (item.submissions) {
+          const sub = (submissionId && item.submissions.find(s => s.id === submissionId)) ||
+                      (studentId && item.submissions.find(s => s.studentId === studentId)) ||
+                      item.submissions[0];
+          if (sub) {
+            sub.marks = numMarks;
+            sub.feedback = feedback || '';
+            sub.strengths = strengths || '';
+            sub.improvements = improvements || '';
+            sub.nextSteps = effSuggestions;
+            sub.suggestions = effSuggestions;
+            sub.status = isRevisionRequested ? 'Revision Requested' : (publish ? 'Graded' : 'Under Review');
+            sub.isRevisionRequested = !!isRevisionRequested;
+            sub.published = !!publish;
+            sub.gradedDate = gradedDate;
           }
-
-          if (publish) {
-            assignment.marks = `${numMarks} / ${assignment.maxMarks || 50}`;
-            assignment.studentMarks = numMarks;
-            assignment.feedback = feedback || '';
-            assignment.strengths = strengths || '';
-            assignment.improvements = improvements || '';
-            assignment.nextSteps = nextSteps || '';
-            assignment.isRevisionRequested = !!isRevisionRequested;
-            assignment.status = isRevisionRequested ? 'Revision Requested' : 'Graded';
-            assignment.studentStatus = assignment.status;
-
-            // Student notification
-            if (this.data.notifications) {
-              this.data.notifications.unshift({
-                id: 'notif_' + Date.now().toString(36),
-                category: 'Faculty',
-                type: isRevisionRequested ? 'warning' : 'update',
-                title: isRevisionRequested ? `Revision Requested: ${assignment.title}` : `Marks Published: ${assignment.title}`,
-                message: isRevisionRequested
-                  ? `${assignment.professor} requested revisions on your submission: "${feedback}". Please inspect details and resubmit.`
-                  : `${assignment.professor} evaluated your submission: ${numMarks}/${assignment.maxMarks} marks. Feedback: "${feedback}"`,
-                date: 'Just now',
-                read: false,
-                actionUrl: '#/student/assignments/faculty'
-              });
-            }
-          }
-
-          if (!this.data.facultyActivities) this.data.facultyActivities = [];
-          this.data.facultyActivities.unshift({
-            id: 'fact_' + Date.now().toString(36),
-            title: isRevisionRequested ? 'Revision Requested' : 'Marks Published',
-            detail: `Evaluated student for "${assignment.title}" (${numMarks}/${assignment.maxMarks})`,
-            time: 'Just now',
-            icon: 'check',
-            type: 'grading'
-          });
         }
-      } else if (type === 'lab') {
-        this.gradeLabAssignment(id, numMarks, feedback);
-      }
+
+        if (publish) {
+          item.marks = `${numMarks} / ${item.maxMarks || 50}`;
+          item.studentMarks = numMarks;
+          item.feedback = feedback || '';
+          item.strengths = strengths || '';
+          item.improvements = improvements || '';
+          item.nextSteps = effSuggestions;
+          item.suggestions = effSuggestions;
+          item.isRevisionRequested = !!isRevisionRequested;
+          item.status = isRevisionRequested ? 'Revision Requested' : 'Graded';
+          item.studentStatus = item.status;
+          item.gradedDate = gradedDate;
+
+          // Student notification
+          if (this.data.notifications) {
+            this.data.notifications.unshift({
+              id: 'notif_' + Date.now().toString(36),
+              category: 'Faculty',
+              type: isRevisionRequested ? 'warning' : 'update',
+              title: isRevisionRequested ? `Revision Requested: ${item.title}` : `Marks Published: ${item.title}`,
+              message: isRevisionRequested
+                ? `${item.professor || 'Faculty'} requested revisions on your submission: "${feedback}". Please inspect details and resubmit.`
+                : `${item.professor || 'Faculty'} evaluated your submission: ${numMarks}/${item.maxMarks || 50} marks. Feedback: "${feedback}"`,
+              date: 'Just now',
+              read: false,
+              actionUrl: '#/student/assignments/faculty'
+            });
+          }
+        }
+
+        if (!this.data.facultyActivities) this.data.facultyActivities = [];
+        this.data.facultyActivities.unshift({
+          id: 'fact_' + Date.now().toString(36),
+          title: isRevisionRequested ? 'Revision Requested' : 'Marks Published',
+          detail: `Evaluated student for "${item.title}" (${numMarks}/${item.maxMarks || 50})`,
+          time: 'Just now',
+          icon: 'check',
+          type: 'grading'
+        });
+        return true;
+      };
+
+      updateItem('generalAssignments');
+      updateItem('labAssignments');
+      updateItem('facultyAssignments');
+      updateItem('learningRecords');
+      updateItem('practiceRecords');
 
       this.invalidateRecordCache(type, id);
       this.addAudit(`Faculty evaluated ${type} record ${id}: ${numMarks} marks.`);
@@ -1716,16 +1728,20 @@
       this.notify();
 
       try {
+        const headers = { 'Content-Type': 'application/json', ...this.getAuthHeaders() };
         const response = await fetch(`/api/records/${type}/${id}/grade`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
+          credentials: 'same-origin',
           body: JSON.stringify({
             submissionId,
+            studentId,
             marks: numMarks,
             feedback,
             strengths,
             improvements,
-            nextSteps,
+            nextSteps: effSuggestions,
+            suggestions: effSuggestions,
             isRevisionRequested: !!isRevisionRequested,
             publish: !!publish
           })
@@ -1736,6 +1752,152 @@
         console.warn('[DataStore] Backend grading persistence failed, saved locally:', e);
         return { success: true, localOnly: true };
       }
+    }
+
+    getAssignmentPerformance() {
+      const student = (this.data.roles && this.data.roles.student) ? this.data.roles.student : {};
+      const studentId = student.id;
+
+      // Check if authoritative server payload is present in this.data.assignmentPerformance
+      const serverPerf = this.data.assignmentPerformance;
+      if (serverPerf && Array.isArray(serverPerf.evaluations) && (serverPerf.evaluations.length > 0 || (serverPerf.pending && serverPerf.pending.length > 0))) {
+        return {
+          totalEvaluated: serverPerf.totalEvaluated || 0,
+          totalSubmitted: serverPerf.totalSubmitted || 0,
+          totalMarksObtained: serverPerf.totalMarksObtained || 0,
+          totalMaxMarks: serverPerf.totalMaxMarks || 0,
+          overallPercentage: serverPerf.overallPercentage || 0,
+          evaluations: serverPerf.evaluations || [],
+          pending: serverPerf.pending || [],
+          allRecent: serverPerf.allRecent || [...(serverPerf.evaluations || []), ...(serverPerf.pending || [])]
+        };
+      }
+
+      // Gather coursework items across all 5 collections (encompassing all 8 categories)
+      const allCoursework = [
+        ...(this.data.generalAssignments || []),
+        ...(this.data.labAssignments || []),
+        ...(this.data.facultyAssignments || []),
+        ...(this.data.learningRecords || []),
+        ...(this.data.practiceRecords || [])
+      ];
+
+      const seenIds = new Set();
+      const uniqueItems = [];
+      for (const item of allCoursework) {
+        if (!item || !item.id || seenIds.has(item.id)) continue;
+        seenIds.add(item.id);
+        uniqueItems.push(item);
+      }
+
+      const evaluations = [];
+      const pending = [];
+
+      for (const item of uniqueItems) {
+        const subs = Array.isArray(item.submissions) ? item.submissions : [];
+        const studentSub = studentId
+          ? subs.find(s => s.studentId === studentId)
+          : (subs[0] || null);
+
+        const hasSub = Boolean(studentSub || item.submittedFile || (item.submissionUrl && item.submissionUrl.trim().length > 0));
+        const isReleased = Boolean(
+          (studentSub && studentSub.published !== false && (studentSub.marks !== null && studentSub.marks !== undefined)) ||
+          (item.studentMarks !== null && item.studentMarks !== undefined && (item.studentStatus === 'Graded' || item.status === 'Graded'))
+        );
+
+        const maxMarks = item.maxMarks || item.maxScore || 50;
+
+        if (isReleased) {
+          const marksObtained = (studentSub && studentSub.marks !== null && studentSub.marks !== undefined)
+            ? Number(studentSub.marks)
+            : Number(item.studentMarks || 0);
+
+          evaluations.push({
+            id: (studentSub && studentSub.id) || `eval_${item.id}`,
+            assignmentId: item.id,
+            title: item.title,
+            subject: item.subject || 'Coursework',
+            category: item.category || (item.type === 'lab' ? 'Lab Assignment' : item.type === 'learning' ? 'Learning Records' : item.type === 'practice' ? 'Practice Records' : 'General Assignment'),
+            type: item.type || 'faculty',
+            marks: marksObtained,
+            maxMarks: maxMarks,
+            percentage: maxMarks > 0 ? Math.round((marksObtained / maxMarks) * 100) : 0,
+            facultyName: item.professor || item.facultyName || 'Dr. Rajesh Sharma',
+            evaluationDate: (studentSub && studentSub.gradedDate) || item.gradedDate || new Date().toISOString().split('T')[0],
+            feedback: (studentSub && studentSub.feedback) || item.feedback || 'Great work on this coursework assignment.',
+            suggestions: (studentSub && (studentSub.suggestions || studentSub.nextSteps)) || item.suggestions || item.nextSteps || 'Continue practicing and follow instructor recommendations.',
+            status: (studentSub && studentSub.status) || item.status || 'Evaluated',
+            isEvaluated: true,
+            submittedFile: (studentSub && (studentSub.fileUrl || studentSub.fileName)) ? { fileName: studentSub.fileName, fileUrl: studentSub.fileUrl } : item.submittedFile,
+            remarks: (studentSub && studentSub.remarks) || item.studentRemarks || ''
+          });
+        } else if (hasSub) {
+          pending.push({
+            id: (studentSub && studentSub.id) || `pending_${item.id}`,
+            assignmentId: item.id,
+            title: item.title,
+            subject: item.subject || 'Coursework',
+            category: item.category || (item.type === 'lab' ? 'Lab Assignment' : item.type === 'learning' ? 'Learning Records' : item.type === 'practice' ? 'Practice Records' : 'General Assignment'),
+            type: item.type || 'faculty',
+            marks: null,
+            maxMarks: maxMarks,
+            percentage: 0,
+            facultyName: item.professor || item.facultyName || 'Faculty Mentor',
+            evaluationDate: null,
+            feedback: '',
+            suggestions: '',
+            status: 'Awaiting Evaluation',
+            isEvaluated: false,
+            submittedFile: (studentSub && (studentSub.fileUrl || studentSub.fileName)) ? { fileName: studentSub.fileName, fileUrl: studentSub.fileUrl } : item.submittedFile,
+            remarks: (studentSub && studentSub.remarks) || item.studentRemarks || ''
+          });
+        }
+      }
+
+      const totalEvaluated = evaluations.length;
+      const totalSubmitted = evaluations.length + pending.length;
+      const totalMarksObtained = evaluations.reduce((sum, e) => sum + e.marks, 0);
+      const totalMaxMarks = evaluations.reduce((sum, e) => sum + e.maxMarks, 0);
+      const overallPercentage = totalMaxMarks > 0 ? Math.round((totalMarksObtained / totalMaxMarks) * 1000) / 10 : 0;
+
+      return {
+        totalEvaluated,
+        totalSubmitted,
+        totalMarksObtained,
+        totalMaxMarks,
+        overallPercentage,
+        evaluations,
+        pending,
+        allRecent: [...evaluations, ...pending]
+      };
+    }
+
+    async fetchStudentEvaluations() {
+      try {
+        const headers = { ...this.getAuthHeaders() };
+        const res = await fetch('/api/student/evaluations', { headers, credentials: 'same-origin' });
+        if (res.ok) {
+          const json = await res.json();
+          if (json && json.success) {
+            this.data.assignmentPerformance = {
+              totalEvaluated: json.metrics?.totalEvaluated || 0,
+              totalSubmitted: json.metrics?.totalSubmitted || 0,
+              totalMarksObtained: json.metrics?.totalMarksObtained || 0,
+              totalMaxMarks: json.metrics?.totalMaxMarks || 0,
+              overallPercentage: json.metrics?.overallPercentage || 0,
+              evaluations: json.evaluations || [],
+              pending: json.pending || [],
+              allRecent: json.allRecent || []
+            };
+            this.save();
+            this.notify();
+            return { success: true, data: this.data.assignmentPerformance };
+          }
+        }
+      } catch (err) {
+        console.warn('[DataStore] Failed to fetch student evaluations:', err);
+      }
+      return { success: false, data: this.getAssignmentPerformance() };
     }
 
     gradeSubmission(assignmentId, submissionId, marks, feedback, publish = true) {

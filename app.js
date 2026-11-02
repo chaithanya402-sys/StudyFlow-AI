@@ -1399,8 +1399,364 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // --- STUDYFLOW AI VIEWS RENDERING ---
 
+  window.renderStudentAssignmentPerformance = function(student) {
+    if (!student) return;
+    const perf = (store && typeof store.getAssignmentPerformance === 'function')
+      ? store.getAssignmentPerformance()
+      : {
+          totalEvaluated: 0,
+          totalSubmitted: 0,
+          totalMarksObtained: 0,
+          totalMaxMarks: 0,
+          overallPercentage: 0,
+          evaluations: [],
+          pending: [],
+          allRecent: []
+        };
+
+    // Update 5 Metric KPI Cards
+    const elEvaluated = document.getElementById('dash-perf-evaluated');
+    const elEvaluatedPill = document.getElementById('dash-perf-evaluated-pill');
+    if (elEvaluated) elEvaluated.textContent = perf.totalEvaluated;
+    if (elEvaluatedPill) elEvaluatedPill.textContent = `${perf.totalEvaluated} Graded`;
+
+    const elSubmitted = document.getElementById('dash-perf-submitted');
+    const elSubmittedPill = document.getElementById('dash-perf-submitted-pill');
+    if (elSubmitted) elSubmitted.textContent = perf.totalSubmitted;
+    const pendingCount = (perf.pending ? perf.pending.length : Math.max(0, perf.totalSubmitted - perf.totalEvaluated)) || 0;
+    if (elSubmittedPill) {
+      elSubmittedPill.textContent = pendingCount > 0 ? `${pendingCount} Pending Review` : 'All Graded';
+      elSubmittedPill.className = pendingCount > 0 ? 'kpi-pill orange' : 'kpi-pill teal';
+    }
+
+    const elObtained = document.getElementById('dash-perf-obtained');
+    if (elObtained) elObtained.textContent = perf.totalMarksObtained;
+
+    const elMax = document.getElementById('dash-perf-max');
+    if (elMax) elMax.textContent = perf.totalMaxMarks;
+
+    const elPct = document.getElementById('dash-perf-percentage');
+    const elPctPill = document.getElementById('dash-perf-percentage-pill');
+    const elPctSub = document.getElementById('dash-perf-percentage-sub');
+    const elGradeBadge = document.getElementById('dash-asg-perf-grade-badge');
+
+    const pct = perf.overallPercentage || 0;
+    if (elPct) elPct.textContent = `${pct}%`;
+
+    let gradeTier = 'Grade --';
+    let gradeLabel = 'Pending Review';
+    let pillClass = 'teal';
+    if (perf.totalEvaluated > 0) {
+      if (pct >= 90) { gradeTier = 'Grade O (Outstanding)'; gradeLabel = 'Top Tier'; pillClass = 'teal'; }
+      else if (pct >= 80) { gradeTier = 'Grade A+ (Excellent)'; gradeLabel = 'Distinction'; pillClass = 'teal'; }
+      else if (pct >= 70) { gradeTier = 'Grade A (Very Good)'; gradeLabel = 'First Class'; pillClass = 'blue'; }
+      else if (pct >= 60) { gradeTier = 'Grade B+ (Good)'; gradeLabel = 'Second Class'; pillClass = 'blue'; }
+      else { gradeTier = 'Needs Improvement'; gradeLabel = 'Academic Alert'; pillClass = 'orange'; }
+    }
+    if (elGradeBadge) {
+      elGradeBadge.textContent = gradeTier;
+      elGradeBadge.className = `badge-status ${pct >= 75 ? 'teal' : (pct >= 60 ? 'blue' : 'warning')}`;
+    }
+    if (elPctPill) {
+      elPctPill.textContent = gradeLabel;
+      elPctPill.className = `kpi-pill ${pillClass}`;
+    }
+    if (elPctSub) {
+      elPctSub.textContent = perf.totalEvaluated > 0 ? `${perf.totalMarksObtained} / ${perf.totalMaxMarks} Pts` : 'Awaiting evaluations';
+    }
+
+    // Render Recent Evaluations Table
+    const tbody = document.getElementById('dash-recent-evaluations-table-body');
+    if (tbody) {
+      const items = (perf.allRecent && perf.allRecent.length > 0)
+        ? perf.allRecent
+        : [...(perf.evaluations || []), ...(perf.pending || [])];
+
+      if (items.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" style="text-align: center; padding: 32px 16px; color: #64748B;">
+              <div style="font-size: 28px; margin-bottom: 6px;">📚</div>
+              <strong style="color: #1E293B; font-size: 13.5px;">No Assignment Submissions or Evaluations Yet</strong>
+              <p style="margin: 4px 0 0 0; font-size: 12px; color: #94A3B8;">When you submit coursework and faculty awards marks, your verified grades and feedback will display here.</p>
+            </td>
+          </tr>
+        `;
+      } else {
+        const catBadges = {
+          'Coding Practice': { bg: '#EFF6FF', color: '#1D4ED8', border: '#BFDBFE', icon: '💻' },
+          'Aptitude Practice': { bg: '#F5F3FF', color: '#6D28D9', border: '#DDD6FE', icon: '🧠' },
+          'Project Work': { bg: '#ECFDF5', color: '#047857', border: '#A7F3D0', icon: '🚀' },
+          'Placement Preparation': { bg: '#FFF7ED', color: '#C2410C', border: '#FFEDD5', icon: '🎯' },
+          'Lab Assignment': { bg: '#FEF3C7', color: '#B45309', border: '#FDE68A', icon: '🧪' },
+          'Lab Assignments': { bg: '#FEF3C7', color: '#B45309', border: '#FDE68A', icon: '🧪' },
+          'Learning Records': { bg: '#EEF2FF', color: '#4338CA', border: '#C7D2FE', icon: '📖' },
+          'Practice Records': { bg: '#F0FDF4', color: '#15803D', border: '#BBF7D0', icon: '⚡' },
+          'General Assignments': { bg: '#F1F5F9', color: '#334155', border: '#CBD5E1', icon: '📋' }
+        };
+
+        tbody.innerHTML = items.slice(0, 10).map(item => {
+          const isEvaluated = item.isEvaluated || (item.marks !== null && item.marks !== undefined && item.status !== 'Awaiting Evaluation' && item.evaluation_status !== 'Awaiting Evaluation');
+          const maxMarks = item.maxMarks || item.max_marks || 50;
+          const marksObtained = item.marks !== null && item.marks !== undefined ? item.marks : null;
+          const cat = item.category || item.assignment_category || 'General Assignment';
+          const cfg = catBadges[cat] || { bg: '#F8FAFC', color: '#475569', border: '#CBD5E1', icon: '📋' };
+          const asgId = item.assignmentId || item.assignment_id || item.id;
+          const title = item.title || item.assignment_title || 'Coursework Assignment';
+          const subject = item.subject || item.subject_name || 'Subject';
+
+          let marksDisplay = `<span style="color: #94A3B8; font-style: italic;">—</span>`;
+          let statusBadge = `<span class="badge-status orange">Pending</span>`;
+
+          if (isEvaluated && marksObtained !== null) {
+            const pctVal = maxMarks > 0 ? Math.round((marksObtained / maxMarks) * 100) : 0;
+            marksDisplay = `
+              <div style="display: flex; align-items: baseline; gap: 4px;">
+                <strong style="color: #065F46; font-size: 13.5px;">${marksObtained}</strong>
+                <span style="color: #64748B; font-size: 11px;">/ ${maxMarks}</span>
+                <span class="badge-status teal" style="font-size: 10px; padding: 1px 6px; margin-left: 2px;">${pctVal}%</span>
+              </div>
+            `;
+            statusBadge = `<span class="badge-status success" style="font-weight: 700;">Evaluated ✓</span>`;
+          } else {
+            marksDisplay = `<span style="color: #D97706; font-weight: 600; font-size: 12px;">Pending</span>`;
+            statusBadge = `<span class="badge-status blue" style="font-weight: 700;">Awaiting Evaluation ⏳</span>`;
+          }
+
+          return `
+            <tr style="border-bottom: 1px solid #F1F5F9; cursor: pointer; transition: background 0.15s;" onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background='transparent'" onclick="openEvaluationDetailsModal('${asgId}')">
+              <td style="padding: 12px 14px;">
+                <div style="font-weight: 700; color: #0F172A; font-size: 13px;">${title}</div>
+                <div style="font-size: 11px; color: #64748B; margin-top: 2px;">
+                  <span>${subject}</span> • <span>Faculty: ${item.facultyName || item.faculty_name || 'Dr. Rajesh Sharma'}</span>
+                </div>
+              </td>
+              <td style="padding: 12px 14px;">
+                <span style="display: inline-flex; align-items: center; gap: 4px; background: ${cfg.bg}; color: ${cfg.color}; border: 1px solid ${cfg.border}; border-radius: 9999px; padding: 2px 8px; font-size: 11px; font-weight: 700;">
+                  <span>${cfg.icon}</span> ${cat}
+                </span>
+              </td>
+              <td style="padding: 12px 14px;">
+                ${marksDisplay}
+              </td>
+              <td style="padding: 12px 14px;">
+                ${statusBadge}
+              </td>
+              <td style="padding: 12px 14px; text-align: right;">
+                <button type="button" class="btn-outline btn-sm" style="font-size: 11px; padding: 4px 10px;" onclick="event.stopPropagation(); openEvaluationDetailsModal('${asgId}')">
+                  ${isEvaluated ? 'View Marks & Feedback' : 'View Status'}
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+    }
+
+    // Update Section 6: Recent Faculty Feedback with real feedback from evaluated assignments
+    const feedbackListEl = document.getElementById('dash-faculty-feedback-list');
+    if (feedbackListEl) {
+      const evaluatedList = (perf.evaluations || []).filter(e => e.feedback && e.feedback.trim().length > 0);
+      if (evaluatedList.length === 0) {
+        feedbackListEl.innerHTML = `
+          <div style="padding: 24px 16px; text-align: center; color: #64748B; background: #F8FAFC; border: 1px dashed #CBD5E1; border-radius: 10px;">
+            <div style="font-size: 24px; margin-bottom: 4px;">💬</div>
+            <strong style="color: #1E293B; font-size: 13px;">No Faculty Feedback Published Yet</strong>
+            <p style="margin: 4px 0 0 0; font-size: 11.5px; color: #94A3B8;">Personalized evaluations, remarks, and recommendations will appear here once faculty grades your coursework.</p>
+          </div>
+        `;
+      } else {
+        feedbackListEl.innerHTML = evaluatedList.slice(0, 3).map(e => {
+          const profName = e.facultyName || e.faculty_name || 'Dr. Rajesh Sharma';
+          const initials = profName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+          const title = e.title || e.assignment_title || 'Coursework Assignment';
+          const marks = e.marks !== null && e.marks !== undefined ? e.marks : 0;
+          const max = e.maxMarks || e.max_marks || 50;
+          const feedback = e.feedback;
+          const suggestions = e.suggestions ? `<div style="margin-top: 6px; font-size: 11.5px; color: #1D4ED8;"><strong>💡 Suggestion:</strong> ${e.suggestions}</div>` : '';
+          const dateStr = e.evaluationDate || e.evaluation_date || 'Recently';
+
+          return `
+            <div class="feedback-item-card" style="cursor: pointer;" onclick="openEvaluationDetailsModal('${e.assignmentId || e.assignment_id}')">
+              <div class="feedback-header-row">
+                <div class="feedback-prof-info">
+                  <div class="feedback-avatar">${initials}</div>
+                  <div>
+                    <div class="feedback-prof-name">${profName}</div>
+                    <div class="feedback-asg-title">${title}</div>
+                  </div>
+                </div>
+                <span class="kpi-pill teal feedback-grade-badge">${marks} / ${max} • Grade ${marks/max >= 0.9 ? 'O' : marks/max >= 0.8 ? 'A+' : 'A'}</span>
+              </div>
+              <div class="feedback-body-text">
+                &ldquo;${feedback}&rdquo;
+              </div>
+              ${suggestions}
+              <div class="feedback-date">Evaluated on ${dateStr}</div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+  };
+
+  window.openEvaluationDetailsModal = function(assignmentId) {
+    if (!assignmentId) return;
+    const modal = document.getElementById('modal-evaluation-details');
+    if (!modal) return;
+
+    const allCoursework = [
+      ...(store.data.generalAssignments || []),
+      ...(store.data.labAssignments || []),
+      ...(store.data.facultyAssignments || []),
+      ...(store.data.learningRecords || []),
+      ...(store.data.practiceRecords || [])
+    ];
+    const item = allCoursework.find(a => a.id === assignmentId) || {};
+    const student = store.data.roles?.student || {};
+    const subs = Array.isArray(item.submissions) ? item.submissions : [];
+    const studentSub = student.id
+      ? subs.find(s => s.studentId === student.id)
+      : (subs[0] || null);
+
+    const perf = store.getAssignmentPerformance ? store.getAssignmentPerformance() : null;
+    const evalRecord = perf?.evaluations?.find(e => (e.assignmentId === assignmentId || e.assignment_id === assignmentId)) || null;
+
+    const titleEl = document.getElementById('eval-modal-title');
+    const subjectEl = document.getElementById('eval-modal-subject');
+    const catBadge = document.getElementById('eval-modal-category-badge');
+    const statusBadge = document.getElementById('eval-modal-status-badge');
+    const scoreBox = document.getElementById('eval-modal-score-box');
+    const pendingBox = document.getElementById('eval-modal-pending-box');
+    const marksObtEl = document.getElementById('eval-modal-marks-obtained');
+    const maxMarksEl = document.getElementById('eval-modal-max-marks');
+    const pctBadge = document.getElementById('eval-modal-percentage-badge');
+    const gradeLabel = document.getElementById('eval-modal-grade-label');
+    const profEl = document.getElementById('eval-modal-faculty-name');
+    const dateEl = document.getElementById('eval-modal-date');
+    const subStatusEl = document.getElementById('eval-modal-sub-status');
+    const feedbackBox = document.getElementById('eval-modal-feedback-box');
+    const suggestionsBox = document.getElementById('eval-modal-suggestions-box');
+    const fileNameEl = document.getElementById('eval-modal-filename');
+    const dlLink = document.getElementById('eval-modal-download-link');
+    const viewWorkBtn = document.getElementById('btn-eval-view-solution');
+    const studentRemarksEl = document.getElementById('eval-modal-student-remarks');
+
+    const title = evalRecord?.title || evalRecord?.assignment_title || item.title || 'Coursework Assignment';
+    const subject = evalRecord?.subject || evalRecord?.subject_name || item.subject || 'Coursework';
+    const cat = evalRecord?.category || evalRecord?.assignment_category || item.category || 'General Assignment';
+    const prof = evalRecord?.facultyName || evalRecord?.faculty_name || item.professor || item.facultyName || 'Dr. Rajesh Sharma';
+    const maxMarks = evalRecord?.maxMarks || evalRecord?.max_marks || item.maxMarks || item.maxScore || 50;
+
+    const marksObt = (evalRecord && evalRecord.marks !== null && evalRecord.marks !== undefined)
+      ? Number(evalRecord.marks)
+      : ((studentSub && studentSub.marks !== null && studentSub.marks !== undefined) ? Number(studentSub.marks) : (item.studentMarks !== null && item.studentMarks !== undefined ? Number(item.studentMarks) : null));
+
+    const isEvaluated = marksObt !== null && marksObt !== undefined;
+
+    if (titleEl) titleEl.textContent = title;
+    if (subjectEl) subjectEl.textContent = `${subject} • Evaluator: ${prof}`;
+    if (catBadge) catBadge.textContent = cat;
+    if (profEl) profEl.textContent = prof;
+    if (maxMarksEl) maxMarksEl.textContent = `/ ${maxMarks}`;
+
+    if (isEvaluated) {
+      if (statusBadge) {
+        statusBadge.textContent = 'Evaluated ✓';
+        statusBadge.className = 'badge-status teal';
+      }
+      if (scoreBox) scoreBox.style.display = 'flex';
+      if (pendingBox) pendingBox.style.display = 'none';
+      if (marksObtEl) marksObtEl.textContent = marksObt;
+
+      const pct = maxMarks > 0 ? Math.round((marksObt / maxMarks) * 100) : 0;
+      if (pctBadge) pctBadge.textContent = `${pct}%`;
+      if (gradeLabel) {
+        gradeLabel.textContent = pct >= 90 ? 'Grade O (Outstanding)' : (pct >= 80 ? 'Grade A+ (Excellent)' : (pct >= 70 ? 'Grade A (Very Good)' : 'Grade B+ (Good)'));
+      }
+      if (dateEl) dateEl.textContent = evalRecord?.evaluationDate || evalRecord?.evaluation_date || studentSub?.gradedDate || item.gradedDate || 'Recently';
+      if (subStatusEl) subStatusEl.textContent = 'Evaluated & Released';
+
+      const fb = evalRecord?.feedback || studentSub?.feedback || item.feedback || 'Good work on this coursework assignment.';
+      if (feedbackBox) feedbackBox.textContent = `"${fb}"`;
+
+      const sug = evalRecord?.suggestions || studentSub?.suggestions || studentSub?.nextSteps || item.suggestions || item.nextSteps || 'Review coursework topics and follow professor guidelines.';
+      if (suggestionsBox) suggestionsBox.textContent = sug;
+    } else {
+      if (statusBadge) {
+        statusBadge.textContent = 'Awaiting Evaluation ⏳';
+        statusBadge.className = 'badge-status blue';
+      }
+      if (scoreBox) scoreBox.style.display = 'none';
+      if (pendingBox) pendingBox.style.display = 'block';
+      if (dateEl) dateEl.textContent = 'Pending Review';
+      if (subStatusEl) subStatusEl.textContent = 'Submitted (In Queue)';
+      if (feedbackBox) feedbackBox.textContent = 'Evaluation remarks will appear here once your professor reviews your submission.';
+      if (suggestionsBox) suggestionsBox.textContent = 'Instructor recommendations will be displayed once evaluated.';
+    }
+
+    const subFile = evalRecord?.submittedFile || (studentSub && studentSub.fileUrl ? { fileName: studentSub.fileName, downloadUrl: studentSub.fileUrl } : item.submittedFile);
+    const subUrl = (subFile && (subFile.downloadUrl || subFile.fileUrl || subFile.url)) || (studentSub && studentSub.fileUrl) || item.submissionUrl || '';
+    const subName = (subFile && (subFile.fileName || subFile.originalName)) || (studentSub && studentSub.fileName) || (subUrl ? subUrl.split('/').pop().split('?')[0] : 'solution.pdf');
+
+    window._currentEvaluatedFileUrl = subUrl;
+    window._currentEvaluatedFileName = subName;
+
+    if (fileNameEl) fileNameEl.textContent = subName;
+    if (dlLink) {
+      dlLink.href = subUrl || '#';
+      dlLink.setAttribute('download', subName);
+      dlLink.style.display = subUrl ? 'inline-flex' : 'none';
+    }
+    if (viewWorkBtn) viewWorkBtn.style.display = subUrl ? 'inline-flex' : 'none';
+
+    const remarks = evalRecord?.remarks || studentSub?.remarks || item.studentRemarks || '';
+    if (studentRemarksEl) {
+      studentRemarksEl.textContent = remarks ? `"${remarks}"` : 'No remarks submitted.';
+    }
+
+    modal.classList.add('active');
+    modal.style.display = 'flex';
+  };
+
+  window.closeEvaluationDetailsModal = function() {
+    const modal = document.getElementById('modal-evaluation-details');
+    if (modal) {
+      modal.classList.remove('active');
+      modal.style.display = 'none';
+    }
+  };
+
+  window.viewEvaluatedSolutionInline = function() {
+    const url = window._currentEvaluatedFileUrl;
+    const name = window._currentEvaluatedFileName || 'Student_Solution.pdf';
+    if (!url) {
+      window.showToast?.('No submitted solution file available to preview.', 'info');
+      return;
+    }
+    if (typeof previewFileInline === 'function') {
+      previewFileInline(url, name);
+    } else {
+      window.open(url, '_blank');
+    }
+  };
+
+  window.refreshStudentAssignmentPerformance = async function() {
+    if (store.fetchStudentEvaluations) {
+      await store.fetchStudentEvaluations();
+    }
+    if (typeof renderStudentAssignmentPerformance === 'function') {
+      renderStudentAssignmentPerformance(store.data.roles?.student);
+    }
+    window.showToast?.('✓ Assignment performance and marks synchronized with server.', 'success');
+  };
+
   function renderStudentDashboard(student) {
     if (!student) return;
+
+    if (typeof renderStudentAssignmentPerformance === 'function') {
+      renderStudentAssignmentPerformance(student);
+    }
 
     const dashName = document.getElementById('dash-welcome-name');
     if (dashName) dashName.textContent = student.name || 'Student';
@@ -7375,6 +7731,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('grade-hidden-asg-id').value = asgObj.id;
     document.getElementById('grade-hidden-sub-id').value = subObj.id;
+    const stdIdEl = document.getElementById('grade-hidden-student-id');
+    if (stdIdEl) stdIdEl.value = subObj.studentId || subObj.student_id || '';
     document.getElementById('grade-display-student-name').textContent = subObj.studentName;
     document.getElementById('grade-display-roll').textContent = subObj.rollNo;
     document.getElementById('grade-display-asg-title').textContent = asgObj.title;
@@ -7433,6 +7791,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     e.preventDefault();
     const asgId = document.getElementById('grade-hidden-asg-id').value;
     const subId = document.getElementById('grade-hidden-sub-id').value;
+    const studentId = document.getElementById('grade-hidden-student-id')?.value;
     const marks = parseFloat(document.getElementById('grade-input-marks').value);
     const maxMarks = parseFloat(document.getElementById('grade-display-max-marks').value || '50');
     const feedback = document.getElementById('grade-input-feedback').value;
@@ -7447,20 +7806,21 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    if (asgId === 'lab') {
-      store.gradeLabAssignment(subId, marks, feedback);
-      window.showToast?.('✓ Lab evaluation saved and updated on student dashboard.', 'success');
-    } else if (asgId === 'project') {
+    if (asgId === 'project') {
       store.gradeGroupProject(subId, marks, feedback);
       window.showToast?.('✓ Project milestone marks saved and published.', 'success');
     } else {
-      await store.gradeAssignment('faculty', asgId, {
+      const type = asgId === 'lab' ? 'lab' : 'faculty';
+      await store.gradeAssignment(type, asgId, {
         submissionId: subId,
+        studentId,
         marks,
+        maxMarks,
         feedback,
         strengths,
         improvements,
         nextSteps,
+        suggestions: nextSteps,
         isRevisionRequested,
         publish: isPublished
       });
@@ -7477,6 +7837,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (typeof renderFacultySubmissionsLab === 'function') renderFacultySubmissionsLab();
     if (typeof renderFacultyAssignments === 'function') renderFacultyAssignments();
     if (typeof renderStudentAssignments === 'function') renderStudentAssignments(store.data.roles.student);
+    if (typeof renderStudentDashboard === 'function' && store.data.roles && store.data.roles.student) {
+      renderStudentDashboard(store.data.roles.student);
+    }
     if (typeof renderStudentViews === 'function') renderStudentViews();
   };
 

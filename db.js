@@ -774,6 +774,61 @@ function initSchema() {
       db.exec("UPDATE submissions SET updated_at = submitted_date WHERE updated_at IS NULL");
     } catch (e) {}
   }
+  if (!existingSubCols.includes('faculty_id')) {
+    try { db.exec("ALTER TABLE submissions ADD COLUMN faculty_id TEXT DEFAULT NULL"); } catch (e) {}
+  }
+  if (!existingSubCols.includes('max_marks')) {
+    try { db.exec("ALTER TABLE submissions ADD COLUMN max_marks REAL DEFAULT NULL"); } catch (e) {}
+  }
+  if (!existingSubCols.includes('suggestions')) {
+    try { db.exec("ALTER TABLE submissions ADD COLUMN suggestions TEXT DEFAULT ''"); } catch (e) {}
+  }
+
+  // 5B. Assignment Evaluations Table (Explicit evaluation records tracking faculty marks, feedback & suggestions)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS assignment_evaluations (
+      id TEXT PRIMARY KEY,
+      assignment_id TEXT NOT NULL REFERENCES assignments(id) ON DELETE CASCADE,
+      student_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      faculty_id TEXT REFERENCES users(id),
+      marks REAL NOT NULL,
+      max_marks REAL NOT NULL DEFAULT 50,
+      feedback TEXT DEFAULT '',
+      suggestions TEXT DEFAULT '',
+      status TEXT DEFAULT 'Graded',
+      published INTEGER DEFAULT 1,
+      evaluation_date TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now')),
+      UNIQUE(assignment_id, student_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_evaluations_student ON assignment_evaluations(student_id);
+    CREATE INDEX IF NOT EXISTS idx_evaluations_assignment ON assignment_evaluations(assignment_id);
+  `);
+
+  // Opportunistic backfill: Sync any existing evaluated submissions into assignment_evaluations table
+  try {
+    db.exec(`
+      INSERT OR IGNORE INTO assignment_evaluations (
+        id, assignment_id, student_id, faculty_id, marks, max_marks, feedback, suggestions, status, published, evaluation_date, updated_at
+      )
+      SELECT 
+        'eval_' || s.student_id || '_' || s.assignment_id,
+        s.assignment_id,
+        s.student_id,
+        COALESCE(s.faculty_id, a.created_by, 'fac_001'),
+        s.marks,
+        COALESCE(s.max_marks, a.max_marks, 50),
+        COALESCE(s.feedback, ''),
+        COALESCE(s.suggestions, s.next_steps, ''),
+        COALESCE(s.status, 'Graded'),
+        COALESCE(s.published, 1),
+        COALESCE(s.graded_date, s.submitted_date, datetime('now')),
+        COALESCE(s.updated_at, datetime('now'))
+      FROM submissions s
+      JOIN assignments a ON s.assignment_id = a.id
+      WHERE s.marks IS NOT NULL AND (s.published = 1 OR s.published IS NULL);
+    `);
+  } catch (e) {}
 
   // Ensure assignments table stores clean template data without leaking specific student submissions
   try {

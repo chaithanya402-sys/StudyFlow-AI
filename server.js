@@ -304,17 +304,26 @@ function formatAssignment(a, subs = [], currentUserId = null) {
     : (normalizedSubs[0] || null);
 
   const userSubs = currentUserId
-    ? normalizedSubs.filter(s => s.studentId === currentUserId)
+    ? normalizedSubs.filter(s => s.studentId === currentUserId && (s.published === true || s.published === 1))
     : normalizedSubs;
 
   const hasSub = Boolean(primarySub);
-  const effectiveStatus = hasSub ? primarySub.status : (currentUserId ? 'Assigned' : (a.student_status || 'Assigned'));
-  const effectiveMarks = hasSub && primarySub.marks !== null && primarySub.marks !== undefined ? primarySub.marks : (currentUserId ? null : a.student_marks);
+  const isReleased = hasSub && (primarySub.published === true || primarySub.published === 1);
+  const effectiveStatus = hasSub 
+    ? (isReleased ? primarySub.status : 'Awaiting Evaluation') 
+    : (currentUserId ? 'Assigned' : (a.student_status || 'Assigned'));
+  const effectiveMarks = hasSub && isReleased && primarySub.marks !== null && primarySub.marks !== undefined 
+    ? primarySub.marks 
+    : (currentUserId ? null : a.student_marks);
   const effectiveFileUrl = hasSub ? primarySub.fileUrl : (currentUserId ? null : a.submission_url);
   const effectiveSubmittedDate = hasSub ? primarySub.submittedDate : (currentUserId ? null : a.submitted_date);
   const effectiveUpdatedAt = hasSub ? primarySub.updatedAt : null;
   const effectiveRemarks = hasSub ? primarySub.remarks : (currentUserId ? '' : (a.student_remarks || ''));
-  const effectiveFeedback = hasSub ? primarySub.feedback : (currentUserId ? '' : (a.feedback || ''));
+  const effectiveFeedback = (hasSub && isReleased) ? primarySub.feedback : (currentUserId ? '' : (a.feedback || ''));
+  const effectiveStrengths = (hasSub && isReleased) ? primarySub.strengths : (currentUserId ? '' : (a.strengths || ''));
+  const effectiveImprovements = (hasSub && isReleased) ? primarySub.improvements : (currentUserId ? '' : (a.improvements || ''));
+  const effectiveNextSteps = (hasSub && isReleased) ? (primarySub.suggestions || primarySub.nextSteps) : (currentUserId ? '' : (a.next_steps || ''));
+  const effectiveSuggestions = (hasSub && isReleased) ? (primarySub.suggestions || primarySub.nextSteps) : (currentUserId ? '' : (a.next_steps || ''));
 
   const submittedFile = (hasSub && primarySub.fileUrl) ? {
     originalName: primarySub.fileName || primarySub.fileUrl.split('/').pop(),
@@ -371,8 +380,11 @@ function formatAssignment(a, subs = [], currentUserId = null) {
     maxMarks: a.max_marks || 50,
     marks: a.marks,
     feedback: effectiveFeedback,
+    suggestions: effectiveSuggestions,
+    facultySuggestions: effectiveSuggestions,
     studentStatus: effectiveStatus,
     studentMarks: effectiveMarks,
+    isEvaluated: Boolean(hasSub && isReleased && effectiveMarks !== null),
     submissionUrl: effectiveFileUrl,
     submittedFile,
     submittedDate: effectiveSubmittedDate,
@@ -1810,6 +1822,65 @@ app.get('/api/state', (req, res) => {
       timestamp: a.timestamp
     }));
 
+    // 6. Assignment Performance & Verified Faculty Evaluations
+    let assignmentPerformance = {
+      totalEvaluated: 0,
+      totalSubmitted: 0,
+      totalMarksObtained: 0,
+      totalMaxMarks: 0,
+      overallPercentage: 0,
+      evaluations: [],
+      pending: [],
+      allRecent: []
+    };
+    if (currentStudentId) {
+      const evalRows = db.prepare(`
+        SELECT 
+          e.id as evaluation_id, e.assignment_id, e.student_id, e.faculty_id, e.marks, e.max_marks,
+          e.feedback, e.suggestions, e.status as evaluation_status, e.published, e.evaluation_date, e.updated_at,
+          a.title as assignment_title, a.subject as subject_name, a.category as assignment_category,
+          a.type as assignment_type, a.professor as faculty_name,
+          s.id as submission_id, s.submitted_date, s.file_url, s.file_name, s.remarks as student_remarks
+        FROM assignment_evaluations e
+        JOIN assignments a ON e.assignment_id = a.id
+        LEFT JOIN submissions s ON e.assignment_id = s.assignment_id AND e.student_id = s.student_id
+        WHERE e.student_id = ? AND e.published = 1
+        ORDER BY e.updated_at DESC
+      `).all(currentStudentId);
+
+      const pendingRows = db.prepare(`
+        SELECT 
+          NULL as evaluation_id, s.assignment_id, s.student_id, NULL as faculty_id, NULL as marks,
+          COALESCE(s.max_marks, a.max_marks, 50) as max_marks, '' as feedback, '' as suggestions,
+          'Awaiting Evaluation' as evaluation_status, 0 as published, NULL as evaluation_date, s.updated_at,
+          a.title as assignment_title, a.subject as subject_name, a.category as assignment_category,
+          a.type as assignment_type, a.professor as faculty_name,
+          s.id as submission_id, s.submitted_date, s.file_url, s.file_name, s.remarks as student_remarks
+        FROM submissions s
+        JOIN assignments a ON s.assignment_id = a.id
+        WHERE s.student_id = ? AND (s.published = 0 OR s.marks IS NULL OR s.status = 'Submitted')
+          AND s.assignment_id NOT IN (SELECT assignment_id FROM assignment_evaluations WHERE student_id = ? AND published = 1)
+        ORDER BY s.submitted_date DESC
+      `).all(currentStudentId, currentStudentId);
+
+      const totalEvaluated = evalRows.length;
+      const totalSubmitted = evalRows.length + pendingRows.length;
+      const totalMarksObtained = evalRows.reduce((sum, e) => sum + (Number(e.marks) || 0), 0);
+      const totalMaxMarks = evalRows.reduce((sum, e) => sum + (Number(e.max_marks) || 50), 0);
+      const overallPercentage = totalMaxMarks > 0 ? Math.round((totalMarksObtained / totalMaxMarks) * 1000) / 10 : 0;
+
+      assignmentPerformance = {
+        totalEvaluated,
+        totalSubmitted,
+        totalMarksObtained,
+        totalMaxMarks,
+        overallPercentage,
+        evaluations: evalRows,
+        pending: pendingRows,
+        allRecent: [...evalRows, ...pendingRows]
+      };
+    }
+
     // 6. ML Predictions History
     let mlPredsRows = db.prepare('SELECT * FROM ml_predictions ORDER BY created_at DESC').all();
     if (currentStudentId) {
@@ -1893,7 +1964,8 @@ app.get('/api/state', (req, res) => {
         practiceRecords,
         facultyAssignments,
         groupProjects,
-        mlPredictions
+        mlPredictions,
+        assignmentPerformance
       }
     });
   } catch (err) {
@@ -2373,18 +2445,28 @@ app.post(['/api/records/:type/:id/grade', '/api/assignments/:type/:id/grade'], r
     if (!assignment) {
       return res.status(404).json({ success: false, error: `Assignment '${id}' not found.` });
     }
-    if (req.user.role === 'faculty' && assignment.created_by !== req.user.id) {
-      return res.status(403).json({ success: false, error: 'You can only grade assignments that you created.' });
+    if (req.user.role === 'faculty' && assignment.created_by && assignment.created_by !== req.user.id) {
+      const profMatches = req.user.fullName && assignment.professor && assignment.professor.toLowerCase().includes(req.user.fullName.toLowerCase());
+      if (!profMatches) {
+        return res.status(403).json({ success: false, error: 'You can only grade assignments that you created.' });
+      }
     }
-    if (!body.studentId) {
+
+    let targetStudentId = body.studentId;
+    if (!targetStudentId && body.submissionId) {
+      const s = db.prepare('SELECT student_id FROM submissions WHERE id = ?').get(body.submissionId);
+      if (s) targetStudentId = s.student_id;
+    }
+    if (!targetStudentId) {
       return res.status(400).json({ success: false, error: 'studentId is required to grade a submission.' });
     }
 
+    const maxMarks = assignment.max_marks || 50;
     const marks = parseFloat(body.marks);
-    if (isNaN(marks) || marks < 0 || (assignment.max_marks && marks > assignment.max_marks)) {
+    if (isNaN(marks) || marks < 0 || marks > maxMarks) {
       return res.status(400).json({
         success: false,
-        error: `Awarded marks must be between 0 and maximum marks (${assignment.max_marks || 50}).`
+        error: `Awarded marks must be between 0 and maximum marks (${maxMarks}).`
       });
     }
 
@@ -2392,31 +2474,41 @@ app.post(['/api/records/:type/:id/grade', '/api/assignments/:type/:id/grade'], r
     const isPublished = body.publish !== false;
     const gradedDate = new Date().toISOString().split('T')[0];
     const status = isRevision ? 'Revision Requested' : (isPublished ? 'Graded' : 'Under Review');
+    const feedback = String(body.feedback || '').trim();
+    const suggestions = String(body.suggestions || body.nextSteps || '').trim();
+    const strengths = String(body.strengths || '').trim();
+    const improvements = String(body.improvements || '').trim();
 
     const gradeTx = db.transaction(() => {
-      let sub = null;
-      sub = db.prepare('SELECT * FROM submissions WHERE assignment_id = ? AND student_id = ?').get(id, body.studentId);
+      let sub = db.prepare('SELECT * FROM submissions WHERE assignment_id = ? AND student_id = ?').get(id, targetStudentId);
 
       if (sub) {
         // Update existing submission record
         db.prepare(`
           UPDATE submissions SET
             marks = ?,
+            max_marks = ?,
+            faculty_id = ?,
             feedback = ?,
             strengths = ?,
             improvements = ?,
             next_steps = ?,
+            suggestions = ?,
             is_revision_requested = ?,
             published = ?,
             graded_date = ?,
-            status = ?
+            status = ?,
+            updated_at = datetime('now')
           WHERE id = ?
         `).run(
           marks,
-          body.feedback || '',
-          body.strengths || '',
-          body.improvements || '',
-          body.nextSteps || '',
+          maxMarks,
+          req.user.id,
+          feedback,
+          strengths,
+          improvements,
+          suggestions,
+          suggestions,
           isRevision ? 1 : 0,
           isPublished ? 1 : 0,
           gradedDate,
@@ -2425,33 +2517,68 @@ app.post(['/api/records/:type/:id/grade', '/api/assignments/:type/:id/grade'], r
         );
       } else {
         // Create submission record for graded student if not already present
-        const sUser = db.prepare('SELECT full_name, roll_no FROM users WHERE id = ?').get(body.studentId);
+        const sUser = db.prepare('SELECT full_name, roll_no FROM users WHERE id = ?').get(targetStudentId);
         db.prepare(`
           INSERT INTO submissions (
             id, assignment_id, assignment_type, student_id, student_name, roll_no,
             submitted_date, status, is_late, file_url, file_name, file_size, remarks,
-            marks, feedback, strengths, improvements, next_steps, is_revision_requested, published, graded_date
-          ) VALUES (?, ?, ?, ?, ?, ?, datetime('now'), ?, 0, '', 'submission.pdf', 0, '', ?, ?, ?, ?, ?, ?, ?, ?)
+            marks, max_marks, faculty_id, feedback, strengths, improvements, next_steps, suggestions,
+            is_revision_requested, published, graded_date, created_at, updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, datetime('now'), ?, 0, '', 'submission.pdf', 0, '', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
         `).run(
           'sub_' + Date.now().toString(36),
           id,
           type,
-          body.studentId,
+          targetStudentId,
           sUser ? sUser.full_name : 'Student',
           sUser ? sUser.roll_no : '',
           status,
           marks,
-          body.feedback || '',
-          body.strengths || '',
-          body.improvements || '',
-          body.nextSteps || '',
+          maxMarks,
+          req.user.id,
+          feedback,
+          strengths,
+          improvements,
+          suggestions,
+          suggestions,
           isRevision ? 1 : 0,
           isPublished ? 1 : 0,
           gradedDate
         );
       }
 
-      // Update assignment table row
+      // Upsert into assignment_evaluations table
+      const evalId = 'eval_' + targetStudentId + '_' + id;
+      db.prepare(`
+        INSERT INTO assignment_evaluations (
+          id, assignment_id, student_id, faculty_id, marks, max_marks,
+          feedback, suggestions, status, published, evaluation_date, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        ON CONFLICT(assignment_id, student_id) DO UPDATE SET
+          faculty_id = excluded.faculty_id,
+          marks = excluded.marks,
+          max_marks = excluded.max_marks,
+          feedback = excluded.feedback,
+          suggestions = excluded.suggestions,
+          status = excluded.status,
+          published = excluded.published,
+          evaluation_date = excluded.evaluation_date,
+          updated_at = datetime('now')
+      `).run(
+        evalId,
+        id,
+        targetStudentId,
+        req.user.id,
+        marks,
+        maxMarks,
+        feedback,
+        suggestions,
+        status,
+        isPublished ? 1 : 0,
+        gradedDate
+      );
+
+      // Update assignment template row
       if (isPublished) {
         db.prepare(`
           UPDATE assignments SET
@@ -2467,12 +2594,12 @@ app.post(['/api/records/:type/:id/grade', '/api/assignments/:type/:id/grade'], r
             graded_date = ?
           WHERE id = ?
         `).run(
-          `${marks} / ${assignment.max_marks || 50}`,
+          `${marks} / ${maxMarks}`,
           marks,
-          body.feedback || '',
-          body.strengths || '',
-          body.improvements || '',
-          body.nextSteps || '',
+          feedback,
+          strengths,
+          improvements,
+          suggestions,
           isRevision ? 1 : 0,
           status,
           status,
@@ -2482,7 +2609,6 @@ app.post(['/api/records/:type/:id/grade', '/api/assignments/:type/:id/grade'], r
       }
 
       // Notify student
-      const targetStudentId = body.studentId || (sub ? sub.student_id : null);
       if (targetStudentId) {
         db.prepare(`
           INSERT INTO notifications (id, user_id, target_role, category, type, title, message, date, action_url)
@@ -2495,8 +2621,8 @@ app.post(['/api/records/:type/:id/grade', '/api/assignments/:type/:id/grade'], r
           isRevision ? 'warning' : 'success',
           `Submission Graded: ${assignment.title}`,
           isRevision
-            ? `Revision requested by ${req.user ? req.user.fullName : 'Faculty Mentor'}. Feedback: "${body.feedback || ''}"`
-            : `You scored ${marks}/${assignment.max_marks || 50}. Feedback: "${body.feedback || ''}"`,
+            ? `Revision requested by ${req.user ? req.user.fullName : 'Faculty Mentor'}. Feedback: "${feedback}"`
+            : `You scored ${marks}/${maxMarks}. Feedback: "${feedback}"`,
           'Just now',
           `#/student/assignments/${type}`
         );
@@ -2507,7 +2633,7 @@ app.post(['/api/records/:type/:id/grade', '/api/assignments/:type/:id/grade'], r
 
     // Cross-Laptop Supabase Synchronization: Push marks and feedback to centralized PostgreSQL
     try {
-      const gradedSub = db.prepare('SELECT * FROM submissions WHERE assignment_id = ? AND student_id = ?').get(id, body.studentId);
+      const gradedSub = db.prepare('SELECT * FROM submissions WHERE assignment_id = ? AND student_id = ?').get(id, targetStudentId);
       if (gradedSub) {
         supabaseBackend.pushSubmissionToSupabase(gradedSub).catch(err => {
           console.warn('[Supabase Sync Notice]:', err.message);
@@ -2517,9 +2643,99 @@ app.post(['/api/records/:type/:id/grade', '/api/assignments/:type/:id/grade'], r
 
     const updated = db.prepare('SELECT * FROM assignments WHERE id = ?').get(id);
     const submissions = db.prepare('SELECT * FROM submissions WHERE assignment_id = ?').all(id);
-    res.json({ success: true, type, id, data: formatAssignment(updated, submissions) });
+    res.json({ success: true, type, id, data: formatAssignment(updated, submissions, targetStudentId) });
   } catch (err) {
     console.error('[Grade Error]:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Student Assignment Evaluations & Marks API Endpoint
+app.get('/api/student/evaluations', requireRole(['student']), (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const evaluations = db.prepare(`
+      SELECT 
+        e.id as evaluation_id,
+        e.assignment_id,
+        e.student_id,
+        e.faculty_id,
+        e.marks,
+        e.max_marks,
+        e.feedback,
+        e.suggestions,
+        e.status as evaluation_status,
+        e.published,
+        e.evaluation_date,
+        e.updated_at,
+        a.title as assignment_title,
+        a.subject as subject_name,
+        a.category as assignment_category,
+        a.type as assignment_type,
+        a.professor as faculty_name,
+        s.id as submission_id,
+        s.submitted_date,
+        s.file_url,
+        s.file_name,
+        s.remarks as student_remarks
+      FROM assignment_evaluations e
+      JOIN assignments a ON e.assignment_id = a.id
+      LEFT JOIN submissions s ON e.assignment_id = s.assignment_id AND e.student_id = s.student_id
+      WHERE e.student_id = ? AND e.published = 1
+      ORDER BY e.updated_at DESC
+    `).all(studentId);
+
+    const pendingSubs = db.prepare(`
+      SELECT 
+        NULL as evaluation_id,
+        s.assignment_id,
+        s.student_id,
+        NULL as faculty_id,
+        NULL as marks,
+        COALESCE(s.max_marks, a.max_marks, 50) as max_marks,
+        '' as feedback,
+        '' as suggestions,
+        'Awaiting Evaluation' as evaluation_status,
+        0 as published,
+        NULL as evaluation_date,
+        s.updated_at,
+        a.title as assignment_title,
+        a.subject as subject_name,
+        a.category as assignment_category,
+        a.type as assignment_type,
+        a.professor as faculty_name,
+        s.id as submission_id,
+        s.submitted_date,
+        s.file_url,
+        s.file_name,
+        s.remarks as student_remarks
+      FROM submissions s
+      JOIN assignments a ON s.assignment_id = a.id
+      WHERE s.student_id = ? AND (s.published = 0 OR s.marks IS NULL OR s.status = 'Submitted')
+        AND s.assignment_id NOT IN (SELECT assignment_id FROM assignment_evaluations WHERE student_id = ? AND published = 1)
+      ORDER BY s.submitted_date DESC
+    `).all(studentId, studentId);
+
+    const totalEvaluated = evaluations.length;
+    const totalSubmitted = evaluations.length + pendingSubs.length;
+    const totalMarksObtained = evaluations.reduce((sum, e) => sum + (Number(e.marks) || 0), 0);
+    const totalMaxMarks = evaluations.reduce((sum, e) => sum + (Number(e.max_marks) || 50), 0);
+    const overallPercentage = totalMaxMarks > 0 ? Math.round((totalMarksObtained / totalMaxMarks) * 1000) / 10 : 0;
+
+    res.json({
+      success: true,
+      metrics: {
+        totalEvaluated,
+        totalSubmitted,
+        totalMarksObtained,
+        totalMaxMarks,
+        overallPercentage
+      },
+      evaluations,
+      pending: pendingSubs,
+      allRecent: [...evaluations, ...pendingSubs]
+    });
+  } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
