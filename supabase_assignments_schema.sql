@@ -87,10 +87,31 @@ CREATE INDEX IF NOT EXISTS idx_submissions_assignment ON public.submissions(assi
 CREATE INDEX IF NOT EXISTS idx_submissions_student ON public.submissions(student_id);
 
 -- ------------------------------------------------------------------------------
--- 3. ROW LEVEL SECURITY (RLS) POLICIES FOR ASSIGNMENTS & SUBMISSIONS
+-- 3. FACULTY SUBJECT ASSIGNMENTS TABLE (Subject-Wise Access Control)
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.faculty_subject_assignments (
+  id TEXT PRIMARY KEY,
+  faculty_id TEXT NOT NULL,
+  faculty_name TEXT NOT NULL,
+  subject TEXT NOT NULL,
+  subject_code TEXT,
+  department TEXT DEFAULT 'Computer Science & Engineering',
+  semester TEXT DEFAULT '5th Semester',
+  academic_year TEXT DEFAULT '3rd Year',
+  section TEXT DEFAULT 'All',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT unq_faculty_subject UNIQUE(faculty_id, subject)
+);
+
+CREATE INDEX IF NOT EXISTS idx_fsa_faculty ON public.faculty_subject_assignments(faculty_id);
+CREATE INDEX IF NOT EXISTS idx_fsa_subject ON public.faculty_subject_assignments(subject);
+
+-- ------------------------------------------------------------------------------
+-- 4. ROW LEVEL SECURITY (RLS) POLICIES FOR ASSIGNMENTS, SUBMISSIONS & MAPPINGS
 -- ------------------------------------------------------------------------------
 ALTER TABLE public.assignments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.submissions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.faculty_subject_assignments ENABLE ROW LEVEL SECURITY;
 
 -- Allow anon and authenticated clients full access for backend centralized sync
 DROP POLICY IF EXISTS "Assignments: Backend & Client Sync Policy" ON public.assignments;
@@ -104,6 +125,14 @@ WITH CHECK (true);
 DROP POLICY IF EXISTS "Submissions: Backend & Client Sync Policy" ON public.submissions;
 CREATE POLICY "Submissions: Backend & Client Sync Policy"
 ON public.submissions
+FOR ALL
+TO anon, authenticated
+USING (true)
+WITH CHECK (true);
+
+DROP POLICY IF EXISTS "FSA: Backend & Client Sync Policy" ON public.faculty_subject_assignments;
+CREATE POLICY "FSA: Backend & Client Sync Policy"
+ON public.faculty_subject_assignments
 FOR ALL
 TO anon, authenticated
 USING (true)
@@ -167,3 +196,4 @@ CREATE POLICY "StudyFlow Storage: Delete Policy"
 ON storage.objects FOR DELETE
 TO anon, authenticated
 USING (bucket_id = 'studyflow-uploads');
+

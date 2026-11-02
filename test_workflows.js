@@ -147,7 +147,7 @@ async function runVerificationSuite() {
     const asgTitle = `SQLite Architecture Blueprint ${Date.now()}`;
     const newAsg = await request('POST', '/api/records/faculty', {
       title: asgTitle,
-      subject: 'Database Systems',
+      subject: 'Distributed Systems & Cloud Computing',
       category: 'System Design',
       targetYear: '4th Year',
       targetClass: 'CSE',

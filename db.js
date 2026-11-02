@@ -357,7 +357,11 @@ function initSchema() {
       faculty_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       faculty_name TEXT NOT NULL,
       subject TEXT NOT NULL,
+      subject_code TEXT,
       department TEXT DEFAULT 'Computer Science & Engineering',
+      semester TEXT DEFAULT '5th Semester',
+      academic_year TEXT DEFAULT '3rd Year',
+      section TEXT DEFAULT 'All',
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       UNIQUE(faculty_id, subject)
     );
@@ -841,6 +845,25 @@ function initSchema() {
     `);
   } catch (e) {}
 
+  // 5C. Faculty Subject Assignments schema migration (subject_code, semester, academic_year, section)
+  try {
+    const fsaCols = db.prepare('PRAGMA table_info(faculty_subject_assignments)').all().map(c => c.name);
+    if (!fsaCols.includes('subject_code')) {
+      try { db.exec("ALTER TABLE faculty_subject_assignments ADD COLUMN subject_code TEXT DEFAULT NULL"); } catch (_) {}
+    }
+    if (!fsaCols.includes('semester')) {
+      try { db.exec("ALTER TABLE faculty_subject_assignments ADD COLUMN semester TEXT DEFAULT '5th Semester'"); } catch (_) {}
+    }
+    if (!fsaCols.includes('academic_year')) {
+      try { db.exec("ALTER TABLE faculty_subject_assignments ADD COLUMN academic_year TEXT DEFAULT '3rd Year'"); } catch (_) {}
+    }
+    if (!fsaCols.includes('section')) {
+      try { db.exec("ALTER TABLE faculty_subject_assignments ADD COLUMN section TEXT DEFAULT 'All'"); } catch (_) {}
+    }
+  } catch (fsaErr) {
+    console.warn('[DB] FSA migration note:', fsaErr.message);
+  }
+
   // Ensure assignments table stores clean template data without leaking specific student submissions
   try {
     db.exec(`
@@ -853,6 +876,25 @@ function initSchema() {
       WHERE student_status != 'Assigned' OR submission_url IS NOT NULL OR student_remarks IS NOT NULL;
     `);
   } catch (e) {}
+
+  // 5C. Faculty Subject Assignments schema migration (subject_code, semester, academic_year, section)
+  try {
+    const fsaCols = db.prepare('PRAGMA table_info(faculty_subject_assignments)').all().map(c => c.name);
+    if (!fsaCols.includes('subject_code')) {
+      try { db.exec("ALTER TABLE faculty_subject_assignments ADD COLUMN subject_code TEXT DEFAULT NULL"); } catch (_) {}
+    }
+    if (!fsaCols.includes('semester')) {
+      try { db.exec("ALTER TABLE faculty_subject_assignments ADD COLUMN semester TEXT DEFAULT '5th Semester'"); } catch (_) {}
+    }
+    if (!fsaCols.includes('academic_year')) {
+      try { db.exec("ALTER TABLE faculty_subject_assignments ADD COLUMN academic_year TEXT DEFAULT '3rd Year'"); } catch (_) {}
+    }
+    if (!fsaCols.includes('section')) {
+      try { db.exec("ALTER TABLE faculty_subject_assignments ADD COLUMN section TEXT DEFAULT 'All'"); } catch (_) {}
+    }
+  } catch (fsaErr) {
+    console.warn('[DB] FSA migration note:', fsaErr.message);
+  }
 
   // Safe runtime column migrations for coding assessment tables
   try {
@@ -975,6 +1017,7 @@ function ensureFacultySubjectAssignments() {
   insertAssignment.run('fsa_1', 'fac_001', 'Dr. Rajesh Sharma', 'Machine Learning & AI', 'Computer Science & Engineering');
   insertAssignment.run('fsa_2', 'fac_001', 'Dr. Rajesh Sharma', 'Distributed Systems & Cloud Computing', 'Computer Science & Engineering');
   insertAssignment.run('fsa_3', 'fac_001', 'Dr. Rajesh Sharma', 'Data Structures & Algorithms', 'Computer Science & Engineering');
+  insertAssignment.run('fsa_cs', 'fac_001', 'Dr. Rajesh Sharma', 'Computer Science', 'Computer Science & Engineering');
 
   // fac_002 authorized subjects
   insertAssignment.run('fsa_4', 'fac_002', 'Prof. Anita Rao', 'Database Management Systems', 'Computer Science & Engineering');

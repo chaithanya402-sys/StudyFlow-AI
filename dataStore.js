@@ -1240,7 +1240,48 @@
     // FACULTY DASHBOARD & SUBMISSIONS METHODS
     // ========================================================================
 
+    getFacultyAssignedSubjects() {
+      if (this.data.assignedSubjects && Array.isArray(this.data.assignedSubjects) && this.data.assignedSubjects.length > 0) {
+        return this.data.assignedSubjects;
+      }
+      if (this.data.roles?.faculty?.assignedSubjects && Array.isArray(this.data.roles.faculty.assignedSubjects) && this.data.roles.faculty.assignedSubjects.length > 0) {
+        return this.data.roles.faculty.assignedSubjects;
+      }
+      return [];
+    }
+
+    getFacultyAssignedSubjectRecords() {
+      if (this.data.assignedSubjectRecords && Array.isArray(this.data.assignedSubjectRecords)) {
+        return this.data.assignedSubjectRecords;
+      }
+      if (this.data.roles?.faculty?.assignedSubjectRecords && Array.isArray(this.data.roles.faculty.assignedSubjectRecords)) {
+        return this.data.roles.faculty.assignedSubjectRecords;
+      }
+      return [];
+    }
+
+    isFacultyAuthorizedForSubject(subject) {
+      if (!subject) return false;
+      const assigned = this.getFacultyAssignedSubjects();
+      if (!assigned || assigned.length === 0) return true;
+      const target = String(subject).toLowerCase().replace(/[^a-z0-9]/g, '');
+      return assigned.some(s => {
+        const sName = typeof s === 'string' ? s : (s.subject || s.name || '');
+        const sNorm = sName.toLowerCase().replace(/[^a-z0-9]/g, '');
+        return sNorm === target || sNorm.includes(target) || target.includes(sNorm);
+      });
+    }
+
     getFacultyStats() {
+      if (this.data.facultyStats) {
+        return {
+          totalStudents: this.data.facultyStats.totalStudents ?? (this.data.students || []).length,
+          activeAssignments: this.data.facultyStats.publishedAssignments ?? (this.data.facultyAssignments || []).filter(a => a.status === 'Published').length,
+          pendingGrading: this.data.facultyStats.pendingEvaluations ?? 0,
+          avgStudentPerformance: '84.6%'
+        };
+      }
+
       const assignments = this.data.facultyAssignments || [];
       const labs = this.data.labAssignments || [];
       const mentees = this.data.students || [];
@@ -1480,7 +1521,8 @@
         });
       }
 
-      this.addAudit(`Faculty ${this.data.roles.faculty.name} created assignment: "${newAssignment.title}"`);
+      const facultyName = this.data.roles?.faculty?.name || this.data.user?.fullName || 'Faculty Mentor';
+      this.addAudit(`Faculty ${facultyName} created assignment: "${newAssignment.title}"`);
       this.save();
       sendBackendMutation(destEndpoint, 'POST', newAssignment).catch(e => console.warn('[DataStore] Assignment creation warning:', e));
       return newAssignment;

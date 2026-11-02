@@ -88,6 +88,9 @@ async function runTests() {
     assert(facultyLogin.status === 200 && facultyLogin.json.success, 'Faculty logged in successfully');
     const facultyCookie = parseCookies(facultyLogin.headers);
 
+    // Ensure fac_001 has standard authorized subjects in place
+    // fac_001: Machine Learning & AI, Distributed Systems & Cloud Computing, Data Structures & Algorithms, Computer Science
+
     // 2. Register & Authenticate CSE 3rd Year Student
     console.log('\n--- 2. Student Authentication ---');
     const stamp = Date.now().toString(36) + '_' + Math.floor(Math.random() * 1000);
@@ -139,57 +142,57 @@ async function runTests() {
         category: 'General Assignments',
         expectedDest: 'general',
         stateKey: 'generalAssignments',
-        testTitle: 'Database Theory & Normalization Forms',
-        subject: 'Database Systems'
+        testTitle: 'Distributed Systems Consensus Models',
+        subject: 'Distributed Systems & Cloud Computing'
       },
       {
         category: 'Lab Assignments',
         expectedDest: 'lab',
         stateKey: 'labAssignments',
         testTitle: 'Distributed Systems Raft Consensus Lab',
-        subject: 'Distributed Systems'
+        subject: 'Distributed Systems & Cloud Computing'
       },
       {
         category: 'Coding Practice',
         expectedDest: 'faculty',
         stateKey: 'facultyAssignments',
         testTitle: 'Binary Search Trees & Dynamic Programming',
-        subject: 'Algorithms'
+        subject: 'Data Structures & Algorithms'
       },
       {
         category: 'Aptitude Practice',
         expectedDest: 'faculty',
         stateKey: 'facultyAssignments',
         testTitle: 'Quantitative Probability & Combinatorics Drill',
-        subject: 'Aptitude Prep'
+        subject: 'Data Structures & Algorithms'
       },
       {
         category: 'Project Work',
         expectedDest: 'faculty',
         stateKey: 'facultyAssignments',
-        testTitle: 'Microservices Architecture Capstone Implementation',
-        subject: 'Software Engineering'
+        testTitle: 'Machine Learning Classification Capstone',
+        subject: 'Machine Learning & AI'
       },
       {
         category: 'Placement Preparation',
         expectedDest: 'faculty',
         stateKey: 'facultyAssignments',
-        testTitle: 'TCS Digital & Infosys SP Technical Coding Mock',
-        subject: 'Placement Training'
+        testTitle: 'Technical Coding & Data Structures Mock',
+        subject: 'Data Structures & Algorithms'
       },
       {
         category: 'Learning Records',
         expectedDest: 'learning',
         stateKey: 'learningRecords',
         testTitle: 'Cloud Computing Architecture Professional Certificate',
-        subject: 'Cloud Technologies'
+        subject: 'Distributed Systems & Cloud Computing'
       },
       {
         category: 'Practice Records',
         expectedDest: 'practice',
         stateKey: 'practiceRecords',
         testTitle: 'LeetCode Graph Traversal 14-Day Challenge',
-        subject: 'Competitive Programming'
+        subject: 'Data Structures & Algorithms'
       }
     ];
 

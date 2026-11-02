@@ -493,6 +493,58 @@ function filterAssignmentsForStudent(assignments, userId) {
   return assignments.filter(assignment => assignmentMatchesStudent(assignment, student, userId));
 }
 
+function normalizeSubject(val) {
+  const s = String(val || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (s.includes('dbms') || s.includes('database')) return 'dbms';
+  if (s.includes('java') && !s.includes('script')) return 'java';
+  if (s.includes('python')) return 'python';
+  if (s.includes('datastructure') || s.includes('dsa') || s.includes('algorithm')) return 'dsa';
+  if (s.includes('machinelearning') || s === 'ml') return 'ml';
+  if (s.includes('operatingsystem') || s === 'os') return 'os';
+  if (s.includes('cloud') || s.includes('distributed')) return 'cloud';
+  if (s.includes('compiler')) return 'compiler';
+  if (s.includes('network')) return 'network';
+  if (s.includes('security') || s.includes('cryptography')) return 'security';
+  if (s.includes('web') || s.includes('mobile')) return 'web';
+  return s;
+}
+
+function getFacultyAssignedSubjects(facultyId) {
+  if (!facultyId) return [];
+  try {
+    const rows = db.prepare('SELECT subject FROM faculty_subject_assignments WHERE faculty_id = ?').all(facultyId);
+    return rows.map(r => r.subject.trim());
+  } catch (_) {
+    return [];
+  }
+}
+
+function isFacultyAuthorizedForSubject(facultyId, subject, createdBy = null) {
+  if (!facultyId) return false;
+  const assigned = getFacultyAssignedSubjects(facultyId);
+  if (assigned.length === 0) {
+    if (createdBy && createdBy === facultyId) return true;
+    return true;
+  }
+  if (!subject) return false;
+  const targetNorm = normalizeSubject(subject);
+  const targetRaw = String(subject).toLowerCase().replace(/[^a-z0-9]/g, '');
+  return assigned.some(s => {
+    const sNorm = normalizeSubject(s);
+    const sRaw = String(s).toLowerCase().replace(/[^a-z0-9]/g, '');
+    return sNorm === targetNorm || sRaw === targetRaw || sRaw.includes(targetRaw) || targetRaw.includes(sRaw);
+  });
+}
+
+function filterAssignmentsForFaculty(assignments, facultyId) {
+  if (!facultyId) return assignments;
+  const assigned = getFacultyAssignedSubjects(facultyId);
+  if (assigned.length === 0) {
+    return assignments.filter(a => a.created_by === facultyId);
+  }
+  return assignments.filter(a => isFacultyAuthorizedForSubject(facultyId, a.subject));
+}
+
 // -----------------------------------------------------------------------------
 // 1. Health & Configuration
 // -----------------------------------------------------------------------------
@@ -1533,6 +1585,9 @@ app.get('/api/state', async (req, res) => {
     try {
       await supabaseBackend.pullAssignmentsFromSupabase(null, db);
       await supabaseBackend.pullSubmissionsFromSupabase(null, db);
+      if (typeof supabaseBackend.pullFacultySubjectAssignmentsFromSupabase === 'function') {
+        await supabaseBackend.pullFacultySubjectAssignmentsFromSupabase(db);
+      }
     } catch (_) {}
 
     // 1. Load users & student profiles
@@ -1590,6 +1645,9 @@ app.get('/api/state', async (req, res) => {
     // 2. Load assignments and submissions
     let allAssignments = db.prepare('SELECT * FROM assignments').all();
     allAssignments = filterAssignmentsForStudent(allAssignments, currentStudentId);
+    if (req.user && req.user.role === 'faculty') {
+      allAssignments = filterAssignmentsForFaculty(allAssignments, req.user.id);
+    }
     const allSubmissions = db.prepare('SELECT * FROM submissions').all();
 
     const subsByAssignment = {};
@@ -1616,6 +1674,14 @@ app.get('/api/state', async (req, res) => {
         published: Boolean(sub.published),
         gradedDate: sub.graded_date
       });
+    }
+
+    if (req.user && req.user.role === 'faculty') {
+      for (const asgId of Object.keys(subsByAssignment)) {
+        if (!allAssignments.some(a => a.id === asgId)) {
+          delete subsByAssignment[asgId];
+        }
+      }
     }
 
     const facultyCategories = ['Coding Practice', 'Aptitude Practice', 'Project Work', 'Placement Preparation'];
@@ -1940,7 +2006,9 @@ app.get('/api/state', async (req, res) => {
             role: 'faculty',
             designation: 'Faculty Mentor',
             menteeCount: formattedStudents.length,
-            avatar: req.user.avatar || 'FM'
+            avatar: req.user.avatar || 'FM',
+            assignedSubjects: getFacultyAssignedSubjects(req.user.id),
+            assignedSubjectRecords: db.prepare('SELECT * FROM faculty_subject_assignments WHERE faculty_id = ? ORDER BY subject ASC').all(req.user.id)
           } : {
             id: 'fac_001',
             name: 'Dr. Rajesh Sharma',
@@ -1949,7 +2017,9 @@ app.get('/api/state', async (req, res) => {
             role: 'faculty',
             designation: 'Associate Professor & Placement Mentor',
             menteeCount: formattedStudents.length,
-            avatar: 'RS'
+            avatar: 'RS',
+            assignedSubjects: getFacultyAssignedSubjects('fac_001'),
+            assignedSubjectRecords: db.prepare('SELECT * FROM faculty_subject_assignments WHERE faculty_id = ? ORDER BY subject ASC').all('fac_001')
           },
           officer: (req.user && req.user.role === 'officer') ? {
             id: req.user.id,
@@ -1984,7 +2054,17 @@ app.get('/api/state', async (req, res) => {
         facultyAssignments,
         groupProjects,
         mlPredictions,
-        assignmentPerformance
+        assignmentPerformance,
+        assignedSubjects: (req.user && req.user.role === 'faculty') ? getFacultyAssignedSubjects(req.user.id) : [],
+        assignedSubjectRecords: (req.user && req.user.role === 'faculty') ? db.prepare('SELECT * FROM faculty_subject_assignments WHERE faculty_id = ? ORDER BY subject ASC').all(req.user.id) : [],
+        facultyStats: (req.user && req.user.role === 'faculty') ? {
+          totalAssignments: allAssignments.length,
+          publishedAssignments: allAssignments.filter(a => a.status === 'Published').length,
+          evaluatedSubmissions: allSubmissions.filter(s => allAssignments.some(a => a.id === s.assignment_id) && (s.status === 'Graded' || s.published === 1)).length,
+          pendingEvaluations: allSubmissions.filter(s => allAssignments.some(a => a.id === s.assignment_id) && (s.status !== 'Graded' && s.published !== 1)).length,
+          pendingSubmissions: Math.max(0, (allAssignments.filter(a => a.status === 'Published').length * isolatedStudents.length) - allSubmissions.filter(s => allAssignments.some(a => a.id === s.assignment_id)).length),
+          totalStudents: isolatedStudents.length
+        } : null
       }
     });
   } catch (err) {
@@ -2130,11 +2210,17 @@ app.get('/api/files/:filename', async (req, res) => {
     if (req.user.role === 'student' && sub.student_id !== req.user.id) {
       return res.status(403).json({ success: false, error: 'Forbidden: You do not have access to another student\'s submission file.' });
     }
+    if (req.user.role === 'faculty') {
+      const parentAsg = db.prepare('SELECT subject FROM assignments WHERE id = ?').get(sub.assignment_id);
+      if (parentAsg && !isFacultyAuthorizedForSubject(req.user.id, parentAsg.subject)) {
+        return res.status(403).json({ success: false, error: 'Forbidden: You are not authorized to view submissions for this subject.' });
+      }
+    }
   }
 
   // Security: Check if file belongs to an assignment attachment
   const asg = db.prepare(`
-    SELECT id, storage_bucket, storage_path, target_year, target_class, department 
+    SELECT id, subject, storage_bucket, storage_path, target_year, target_class, department 
     FROM assignments 
     WHERE submission_url LIKE ? OR attachments_json LIKE ? OR storage_path LIKE ?
   `).get('%' + filename, '%' + filename + '%', '%' + filename);
@@ -2142,6 +2228,11 @@ app.get('/api/files/:filename', async (req, res) => {
   if (asg && req.user && req.user.role === 'student') {
     if (!assignmentMatchesStudent(asg, getStudentAssignmentTarget(req.user.id), req.user.id)) {
       return res.status(403).json({ success: false, error: 'Forbidden: You are not enrolled in the cohort for this assignment.' });
+    }
+  }
+  if (asg && req.user && req.user.role === 'faculty') {
+    if (!isFacultyAuthorizedForSubject(req.user.id, asg.subject)) {
+      return res.status(403).json({ success: false, error: 'Forbidden: You are not authorized to access files for this subject.' });
     }
   }
 
@@ -2226,9 +2317,15 @@ app.get(['/api/files/:filename/signed-url', '/api/storage/signed-url'], requireR
       if (sub && req.user.role === 'student' && sub.student_id !== req.user.id) {
         return res.status(403).json({ success: false, error: 'Forbidden: You cannot access another student\'s submission file.' });
       }
+      if (sub && req.user.role === 'faculty') {
+        const parentAsg = db.prepare('SELECT subject FROM assignments WHERE id = ?').get(sub.assignment_id);
+        if (parentAsg && !isFacultyAuthorizedForSubject(req.user.id, parentAsg.subject)) {
+          return res.status(403).json({ success: false, error: 'Forbidden: You are not authorized to view submissions for this subject.' });
+        }
+      }
 
       const asg = db.prepare(`
-        SELECT id, storage_path, storage_bucket, target_year, target_class, department 
+        SELECT id, subject, storage_path, storage_bucket, target_year, target_class, department 
         FROM assignments 
         WHERE submission_url LIKE ? OR attachments_json LIKE ? OR storage_path LIKE ?
       `).get('%' + filename, '%' + filename + '%', '%' + filename);
@@ -2236,6 +2333,11 @@ app.get(['/api/files/:filename/signed-url', '/api/storage/signed-url'], requireR
       if (asg && req.user.role === 'student') {
         if (!assignmentMatchesStudent(asg, getStudentAssignmentTarget(req.user.id), req.user.id)) {
           return res.status(403).json({ success: false, error: 'Forbidden: You are not enrolled in the cohort for this assignment.' });
+        }
+      }
+      if (asg && req.user.role === 'faculty') {
+        if (!isFacultyAuthorizedForSubject(req.user.id, asg.subject)) {
+          return res.status(403).json({ success: false, error: 'Forbidden: You are not authorized to access files for this subject.' });
         }
       }
     }
@@ -2322,6 +2424,9 @@ app.get(['/api/records/:type', '/api/assignments/:type'], requireRole(['student'
       if (currentUserId && !assignmentMatchesStudent(assignment, getStudentAssignmentTarget(currentUserId), currentUserId)) {
         return res.status(404).json({ success: false, error: `Record '${queryId}' not found.` });
       }
+      if (req.user && req.user.role === 'faculty' && !isFacultyAuthorizedForSubject(req.user.id, assignment.subject, assignment.created_by)) {
+        return res.status(403).json({ success: false, error: 'Forbidden: You are not authorized to view assignments for this subject.' });
+      }
       let submissions = db.prepare('SELECT * FROM submissions WHERE assignment_id = ?').all(queryId);
       const formatted = formatAssignment(assignment, submissions, currentUserId);
       return res.json({ success: true, type, id: queryId, data: formatted });
@@ -2363,6 +2468,9 @@ app.get(['/api/records/:type', '/api/assignments/:type'], requireRole(['student'
     }
 
     assignments = filterAssignmentsForStudent(assignments, currentUserId);
+    if (req.user && req.user.role === 'faculty') {
+      assignments = filterAssignmentsForFaculty(assignments, req.user.id);
+    }
     const asgIds = assignments.map(a => a.id);
     let allSubs = [];
     if (asgIds.length > 0) {
@@ -2395,6 +2503,9 @@ app.get(['/api/records/:type/:id', '/api/assignments/:type/:id'], requireRole(['
     if (studentId && !assignmentMatchesStudent(assignment, getStudentAssignmentTarget(studentId), studentId)) {
       return res.status(404).json({ success: false, error: `Assignment '${id}' not found.` });
     }
+    if (req.user && req.user.role === 'faculty' && !isFacultyAuthorizedForSubject(req.user.id, assignment.subject, assignment.created_by)) {
+      return res.status(403).json({ success: false, error: 'Forbidden: You are not authorized to view assignments for this subject.' });
+    }
     let submissions = db.prepare('SELECT * FROM submissions WHERE assignment_id = ?').all(id);
     const currentUserId = req.user && req.user.role === 'student' ? req.user.id : null;
     const formatted = formatAssignment(assignment, submissions, currentUserId);
@@ -2416,6 +2527,14 @@ app.post(['/api/records/:type', '/api/assignments/:type'], requireRole(['faculty
     if (!String(body.title || '').trim() || !String(body.subject || '').trim() || !targetYear || !targetClass || !dueDate || !Number.isFinite(maxMarks) || maxMarks <= 0) {
       return res.status(400).json({ success: false, error: 'Title, subject, year, class, due date, and positive maximum marks are required.' });
     }
+    if (req.user && req.user.role === 'faculty') {
+      if (!isFacultyAuthorizedForSubject(req.user.id, body.subject)) {
+        return res.status(403).json({
+          success: false,
+          error: `Forbidden: You are not authorized to create assignments for subject '${body.subject}'. You can only manage assignments for your assigned subjects.`
+        });
+      }
+    }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(dueDate) || Number.isNaN(Date.parse(`${dueDate}T${body.dueTime || '23:59'}:00`))) {
       return res.status(400).json({ success: false, error: 'A valid due date and time are required.' });
     }
@@ -2426,10 +2545,11 @@ app.post(['/api/records/:type', '/api/assignments/:type'], requireRole(['faculty
       if (typeof value !== 'string' && (!value || typeof value !== 'object' || typeof url !== 'string' || !url)) {
         return res.status(400).json({ success: false, error: 'Each attachment must be an http or https link.' });
       }
-      const isInternalPath = /^\/(api\/files|uploads)\/[A-Za-z0-9._-]+$/i.test(url);
+      const isInternalPath = url.startsWith('/api/files/') || url.startsWith('/uploads/');
       if (!isInternalPath) {
         try {
-          if (url && !['http:', 'https:'].includes(new URL(url).protocol)) throw new Error('protocol');
+          const parsed = new URL(url);
+          if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('protocol');
         } catch (_) {
           return res.status(400).json({ success: false, error: 'Attachment links must use http or https.' });
         }
@@ -2675,10 +2795,9 @@ app.post(['/api/records/:type/:id/grade', '/api/assignments/:type/:id/grade'], r
     if (!assignment) {
       return res.status(404).json({ success: false, error: `Assignment '${id}' not found.` });
     }
-    if (req.user.role === 'faculty' && assignment.created_by && assignment.created_by !== req.user.id) {
-      const profMatches = req.user.fullName && assignment.professor && assignment.professor.toLowerCase().includes(req.user.fullName.toLowerCase());
-      if (!profMatches) {
-        return res.status(403).json({ success: false, error: 'You can only grade assignments that you created.' });
+    if (req.user.role === 'faculty') {
+      if (!isFacultyAuthorizedForSubject(req.user.id, assignment.subject, assignment.created_by)) {
+        return res.status(403).json({ success: false, error: 'Forbidden: You are not authorized to grade submissions for this subject.' });
       }
     }
 
@@ -2689,6 +2808,13 @@ app.post(['/api/records/:type/:id/grade', '/api/assignments/:type/:id/grade'], r
     }
     if (!targetStudentId) {
       return res.status(400).json({ success: false, error: 'studentId is required to grade a submission.' });
+    }
+
+    if (req.user.role === 'faculty') {
+      const existingEval = db.prepare('SELECT faculty_id FROM assignment_evaluations WHERE assignment_id = ? AND student_id = ?').get(id, targetStudentId);
+      if (existingEval && existingEval.faculty_id && existingEval.faculty_id !== req.user.id) {
+        return res.status(403).json({ success: false, error: 'Forbidden: You cannot modify an evaluation submitted by another faculty member.' });
+      }
     }
 
     const maxMarks = assignment.max_marks || 50;
@@ -2977,8 +3103,16 @@ app.put(['/api/records/:type/:id', '/api/assignments/:type/:id'], requireRole(['
     const body = req.body;
     const existing = db.prepare('SELECT * FROM assignments WHERE id = ?').get(id);
     if (!existing) return res.status(404).json({ success: false, error: `Assignment '${id}' not found.` });
-    if (req.user.role === 'faculty' && existing.created_by && existing.created_by !== req.user.id) {
-      return res.status(403).json({ success: false, error: 'You can only update assignments that you created.' });
+    if (req.user.role === 'faculty') {
+      if (existing.created_by && existing.created_by !== req.user.id) {
+        return res.status(403).json({ success: false, error: 'You can only update assignments that you created.' });
+      }
+      if (!isFacultyAuthorizedForSubject(req.user.id, existing.subject, existing.created_by)) {
+        return res.status(403).json({ success: false, error: 'Forbidden: You are not authorized to update assignments for this subject.' });
+      }
+      if (body.subject && !isFacultyAuthorizedForSubject(req.user.id, body.subject)) {
+        return res.status(403).json({ success: false, error: `Forbidden: You cannot change assignment subject to '${body.subject}' as it is not assigned to you.` });
+      }
     }
 
     const title = body.title !== undefined ? String(body.title).trim() : existing.title;
@@ -3065,10 +3199,15 @@ app.put(['/api/records/:type/:id', '/api/assignments/:type/:id'], requireRole(['
 app.delete(['/api/records/:type/:id', '/api/assignments/:type/:id'], requireRole(['faculty', 'officer']), async (req, res) => {
   try {
     const { id } = req.params;
-    const assignment = db.prepare('SELECT created_by FROM assignments WHERE id = ?').get(id);
+    const assignment = db.prepare('SELECT created_by, subject FROM assignments WHERE id = ?').get(id);
     if (!assignment) return res.status(404).json({ success: false, error: `Assignment '${id}' not found.` });
-    if (req.user.role === 'faculty' && assignment.created_by !== req.user.id) {
-      return res.status(403).json({ success: false, error: 'You can only delete assignments that you created.' });
+    if (req.user.role === 'faculty') {
+      if (assignment.created_by && assignment.created_by !== req.user.id) {
+        return res.status(403).json({ success: false, error: 'You can only delete assignments that you created.' });
+      }
+      if (!isFacultyAuthorizedForSubject(req.user.id, assignment.subject, assignment.created_by)) {
+        return res.status(403).json({ success: false, error: 'Forbidden: You are not authorized to delete assignments for this subject.' });
+      }
     }
     const deleteTx = db.transaction(() => {
       db.prepare('DELETE FROM submissions WHERE assignment_id = ?').run(id);
@@ -3082,6 +3221,98 @@ app.delete(['/api/records/:type/:id', '/api/assignments/:type/:id'], requireRole
     } catch (_) {}
 
     res.json({ success: true, message: `Assignment '${id}' deleted successfully.` });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// -----------------------------------------------------------------------------
+// Faculty Subject Allocations (Admin / T&P Cell Access Control)
+// -----------------------------------------------------------------------------
+app.get('/api/admin/faculty-subjects', requireRole(['officer']), (req, res) => {
+  try {
+    const rows = db.prepare(`
+      SELECT fsa.*, u.full_name as faculty_name, u.email as faculty_email, u.department as faculty_department
+      FROM faculty_subject_assignments fsa
+      JOIN users u ON fsa.faculty_id = u.id
+      ORDER BY fsa.subject ASC
+    `).all();
+    res.json({ success: true, count: rows.length, data: rows });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/admin/faculty-subjects', requireRole(['officer']), async (req, res) => {
+  try {
+    const { facultyId, subject, subjectCode, department, semester, academicYear, section } = req.body;
+    if (!facultyId || !subject) {
+      return res.status(400).json({ success: false, error: 'facultyId and subject are required.' });
+    }
+    const facultyUser = db.prepare("SELECT * FROM users WHERE id = ? AND role = 'faculty'").get(facultyId);
+    if (!facultyUser) {
+      return res.status(404).json({ success: false, error: 'Faculty member not found.' });
+    }
+    const id = `fsa_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
+    const dept = department || facultyUser.department || 'Computer Science & Engineering';
+    const sem = semester || '5th Semester';
+    const year = academicYear || '3rd Year';
+    const sec = section || 'All';
+    const subCode = subjectCode || null;
+
+    db.prepare(`
+      INSERT INTO faculty_subject_assignments (id, faculty_id, faculty_name, subject, subject_code, department, semester, academic_year, section)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(faculty_id, subject) DO UPDATE SET
+        subject_code = excluded.subject_code,
+        department = excluded.department,
+        semester = excluded.semester,
+        academic_year = excluded.academic_year,
+        section = excluded.section
+    `).run(id, facultyId, facultyUser.full_name, subject.trim(), subCode, dept, sem, year, sec);
+
+    // Cross-Laptop Supabase Synchronization
+    try {
+      if (typeof supabaseBackend.pushFacultySubjectToSupabase === 'function') {
+        await supabaseBackend.pushFacultySubjectToSupabase({
+          id,
+          faculty_id: facultyId,
+          faculty_name: facultyUser.full_name,
+          subject: subject.trim(),
+          subject_code: subCode,
+          department: dept,
+          semester: sem,
+          academic_year: year,
+          section: sec
+        });
+      }
+    } catch (sErr) {
+      console.warn('[Admin FSA Supabase Sync Warning]:', sErr.message);
+    }
+
+    res.json({ success: true, message: `Subject '${subject}' assigned to ${facultyUser.full_name} successfully.` });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.delete('/api/admin/faculty-subjects/:id', requireRole(['officer']), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const existing = db.prepare('SELECT * FROM faculty_subject_assignments WHERE id = ? OR (faculty_id = ? AND subject = ?)').get(id, req.query.facultyId || '', req.query.subject || '');
+    if (!existing) {
+      return res.status(404).json({ success: false, error: 'Subject assignment record not found.' });
+    }
+    db.prepare('DELETE FROM faculty_subject_assignments WHERE id = ?').run(existing.id);
+
+    try {
+      const client = supabaseBackend.getSupabaseClient();
+      if (client) {
+        await client.from('faculty_subject_assignments').delete().eq('id', existing.id);
+      }
+    } catch (_) {}
+
+    res.json({ success: true, message: 'Subject assignment removed successfully.' });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

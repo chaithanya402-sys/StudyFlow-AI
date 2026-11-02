@@ -380,6 +380,85 @@ async function deleteAssignmentFromSupabase(id) {
   }
 }
 
+/**
+ * Pull Faculty Subject Assignments from Supabase
+ */
+async function pullFacultySubjectAssignmentsFromSupabase(db = null) {
+  const client = getSupabaseClient();
+  if (!client || !db) return [];
+
+  try {
+    const { data, error } = await client.from('faculty_subject_assignments').select('*');
+    if (error || !Array.isArray(data)) {
+      return [];
+    }
+
+    const upsertStmt = db.prepare(`
+      INSERT INTO faculty_subject_assignments (
+        id, faculty_id, faculty_name, subject, subject_code, department, semester, academic_year, section
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(faculty_id, subject) DO UPDATE SET
+        subject_code = excluded.subject_code,
+        department = excluded.department,
+        semester = excluded.semester,
+        academic_year = excluded.academic_year,
+        section = excluded.section
+    `);
+
+    db.transaction(() => {
+      for (const row of data) {
+        try {
+          upsertStmt.run(
+            row.id,
+            row.faculty_id,
+            row.faculty_name,
+            row.subject,
+            row.subject_code || null,
+            row.department || 'Computer Science & Engineering',
+            row.semester || '5th Semester',
+            row.academic_year || '3rd Year',
+            row.section || 'All'
+          );
+        } catch (_) {}
+      }
+    })();
+
+    return data;
+  } catch (err) {
+    return [];
+  }
+}
+
+/**
+ * Push Faculty Subject Assignment to Supabase
+ */
+async function pushFacultySubjectToSupabase(mapping) {
+  const client = getSupabaseClient();
+  if (!client || !mapping) return { success: false };
+
+  try {
+    const { error } = await client.from('faculty_subject_assignments').upsert({
+      id: mapping.id,
+      faculty_id: mapping.faculty_id,
+      faculty_name: mapping.faculty_name,
+      subject: mapping.subject,
+      subject_code: mapping.subject_code || null,
+      department: mapping.department || 'Computer Science & Engineering',
+      semester: mapping.semester || '5th Semester',
+      academic_year: mapping.academic_year || '3rd Year',
+      section: mapping.section || 'All'
+    }, { onConflict: 'faculty_id,subject' });
+
+    if (error) {
+      console.warn('[Supabase Sync] FSA push notice:', error.message);
+      return { success: false, error: error.message };
+    }
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
+
 module.exports = {
   getSupabaseClient,
   checkSupabaseHealth,
@@ -389,6 +468,8 @@ module.exports = {
   pushSubmissionToSupabase,
   pullSubmissionsFromSupabase,
   pushNotificationToSupabase,
+  pullFacultySubjectAssignmentsFromSupabase,
+  pushFacultySubjectToSupabase,
   SUPABASE_URL,
   SUPABASE_ANON_KEY
 };

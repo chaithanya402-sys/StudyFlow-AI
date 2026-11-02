@@ -6349,6 +6349,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     const deadlines = store.getFacultyDeadlines ? store.getFacultyDeadlines() : [];
     const atRiskStudents = store.getAtRiskStudents ? store.getAtRiskStudents() : [];
 
+    // Assigned Subjects Badge Strip
+    const assignedSubjectsBar = document.getElementById('faculty-overview-assigned-subjects-bar');
+    if (assignedSubjectsBar) {
+      const assigned = store.getFacultyAssignedSubjects ? store.getFacultyAssignedSubjects() : [];
+      if (assigned.length === 0) {
+        assignedSubjectsBar.innerHTML = `<span style="font-size: 12px; color: #64748B;">No assigned subjects configured.</span>`;
+      } else {
+        assignedSubjectsBar.innerHTML = assigned.map(s => {
+          const sName = typeof s === 'string' ? s : (s.subject || s.name);
+          const sCode = s.subject_code ? ` (${s.subject_code})` : '';
+          const sSem = s.semester ? ` • ${s.semester}` : '';
+          return `<span style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; background: #EEF2FF; color: #4338CA; border: 1px solid #C7D2FE; border-radius: 999px; font-size: 11.5px; font-weight: 600;">📚 ${sName}${sCode}${sSem}</span>`;
+        }).join(' ');
+      }
+    }
+
     // 6 Uniform KPI Cards
     const elTotalStudents = document.getElementById('fac-kpi-total-students');
     const elAvgPerformance = document.getElementById('fac-kpi-avg-performance');
@@ -6553,6 +6569,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
 
+  window.handleFacultySubjectFilterChange = function(e) {
+    window.facultySubjectFilter = e && e.target ? e.target.value : '';
+    renderFacultyAssignments();
+  };
+
   function renderFacultyAssignments() {
     const assignments = store.getFacultyAssignments();
     const container = document.getElementById('faculty-assignments-list');
@@ -6560,17 +6581,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     const countPub = document.getElementById('fac-assign-count-published');
     const countDraft = document.getElementById('fac-assign-count-draft');
 
-    if (countAll) countAll.textContent = assignments.length;
-    if (countPub) countPub.textContent = assignments.filter(a => a.status === 'Published').length;
-    if (countDraft) countDraft.textContent = assignments.filter(a => a.status === 'Draft').length;
+    // Populate Subject Filter Dropdown
+    const subDropdown = document.getElementById('fac-filter-subject');
+    if (subDropdown) {
+      const assigned = store.getFacultyAssignedSubjects ? store.getFacultyAssignedSubjects() : [];
+      const currentVal = window.facultySubjectFilter || subDropdown.value || '';
+      const opts = [`<option value="">All Assigned Subjects</option>`];
+      assigned.forEach(s => {
+        const sName = typeof s === 'string' ? s : (s.subject || s.name);
+        opts.push(`<option value="${sName}" ${currentVal === sName ? 'selected' : ''}>${sName}</option>`);
+      });
+      subDropdown.innerHTML = opts.join('');
+    }
+
+    let filtered = assignments;
+    if (window.facultySubjectFilter) {
+      const targetNorm = window.facultySubjectFilter.toLowerCase().replace(/[^a-z0-9]/g, '');
+      filtered = filtered.filter(a => {
+        const asgNorm = String(a.subject || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        return asgNorm === targetNorm || asgNorm.includes(targetNorm) || targetNorm.includes(asgNorm);
+      });
+    }
+
+    if (countAll) countAll.textContent = filtered.length;
+    if (countPub) countPub.textContent = filtered.filter(a => a.status === 'Published').length;
+    if (countDraft) countDraft.textContent = filtered.filter(a => a.status === 'Draft').length;
 
     if (!container) return;
 
-    let filtered = assignments;
     if (window.facultyAssignmentFilter === 'published') {
-      filtered = assignments.filter(a => a.status === 'Published');
+      filtered = filtered.filter(a => a.status === 'Published');
     } else if (window.facultyAssignmentFilter === 'draft') {
-      filtered = assignments.filter(a => a.status === 'Draft');
+      filtered = filtered.filter(a => a.status === 'Draft');
     }
 
     if (filtered.length === 0) {
@@ -7285,7 +7327,107 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>
       `).join('');
     }
+
+    if (typeof window.loadAdminFacultySubjects === 'function') {
+      window.loadAdminFacultySubjects();
+    }
   }
+
+  window.loadAdminFacultySubjects = async function() {
+    const tbody = document.getElementById('admin-fsa-table-body');
+    const facSelect = document.getElementById('admin-fsa-faculty');
+    if (!tbody && !facSelect) return;
+
+    try {
+      const token = localStorage.getItem('spp_auth_token') || '';
+      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const res = await fetch('/api/admin/faculty-subjects', { headers, credentials: 'same-origin' });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data.success) return;
+
+      const items = data.data || [];
+      if (tbody) {
+        if (items.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #94A3B8; padding: 16px;">No faculty subject allocations found.</td></tr>`;
+        } else {
+          tbody.innerHTML = items.map(item => `
+            <tr>
+              <td><strong>${item.faculty_name}</strong> <span style="font-size: 11px; color: #64748B;">(${item.faculty_id})</span></td>
+              <td>${item.department || 'CSE'}</td>
+              <td><span style="font-weight: 600; color: #1E40AF;">📚 ${item.subject}</span></td>
+              <td>${item.subject_code || '-'}</td>
+              <td><span class="badge-status blue" style="font-size: 11px;">${item.academic_year || '3rd Year'} • ${item.semester || '5th Sem'}</span></td>
+              <td>
+                <button type="button" class="btn-outline btn-sm" onclick="handleAdminRemoveFacultySubject('${item.id}')" style="color: #DC2626; border-color: #FCA5A5; padding: 3px 8px; font-size: 11px; cursor: pointer;">Remove</button>
+              </td>
+            </tr>
+          `).join('');
+        }
+      }
+    } catch (e) {
+      console.warn('[Admin FSA Load Notice]:', e.message);
+    }
+  };
+
+  window.handleAdminAssignSubject = async function(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const facultyId = document.getElementById('admin-fsa-faculty')?.value;
+    const subject = document.getElementById('admin-fsa-subject')?.value;
+    const subjectCode = document.getElementById('admin-fsa-code')?.value;
+    const academicYear = document.getElementById('admin-fsa-year')?.value;
+
+    if (!facultyId || !subject) {
+      window.showToast?.('Please choose a faculty and enter subject title.', 'error');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('spp_auth_token') || '';
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch('/api/admin/faculty-subjects', {
+        method: 'POST',
+        headers,
+        credentials: 'same-origin',
+        body: JSON.stringify({ facultyId, subject, subjectCode, academicYear })
+      });
+      const data = await res.json();
+      if (data.success) {
+        window.showToast?.(`✓ Subject "${subject}" successfully assigned.`, 'success');
+        if (document.getElementById('admin-fsa-subject')) document.getElementById('admin-fsa-subject').value = '';
+        if (document.getElementById('admin-fsa-code')) document.getElementById('admin-fsa-code').value = '';
+        window.loadAdminFacultySubjects();
+      } else {
+        window.showToast?.('Error: ' + data.error, 'error');
+      }
+    } catch (err) {
+      window.showToast?.('Failed to assign subject: ' + err.message, 'error');
+    }
+  };
+
+  window.handleAdminRemoveFacultySubject = async function(id) {
+    if (!confirm('Are you sure you want to remove this subject assignment?')) return;
+    try {
+      const token = localStorage.getItem('spp_auth_token') || '';
+      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const res = await fetch(`/api/admin/faculty-subjects/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers,
+        credentials: 'same-origin'
+      });
+      const data = await res.json();
+      if (data.success) {
+        window.showToast?.('Subject allocation removed.', 'success');
+        window.loadAdminFacultySubjects();
+      } else {
+        window.showToast?.('Error: ' + data.error, 'error');
+      }
+    } catch (err) {
+      window.showToast?.('Failed to remove: ' + err.message, 'error');
+    }
+  };
 
   function renderAllViews() {
     try {
@@ -7471,6 +7613,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     const pdfFileInput = document.getElementById('faculty-asg-pdf-file');
     if (pdfFileInput) pdfFileInput.value = '';
 
+    // Dynamically populate Subject / Course dropdown with only faculty's assigned subjects
+    const assignedSubjects = (store.getFacultyAssignedSubjects ? store.getFacultyAssignedSubjects() : (store.data?.assignedSubjects || []));
+    if (subjectSelect && Array.isArray(assignedSubjects) && assignedSubjects.length > 0) {
+      subjectSelect.innerHTML = assignedSubjects.map(sub => {
+        const subName = typeof sub === 'string' ? sub : (sub.subject || sub.name);
+        return `<option value="${subName}">${subName}</option>`;
+      }).join('');
+    }
+
     if (assignmentId) {
       const assignment = (store.data.facultyAssignments || []).find(a => a.id === assignmentId);
       if (assignment) {
@@ -7646,7 +7797,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (modal) modal.style.display = 'none';
   };
 
-  window.handleSaveFacultyAssignment = function(e) {
+  window.handleSaveFacultyAssignment = async function(e) {
     if (e && e.preventDefault) e.preventDefault();
     const saveBtn = document.getElementById('btn-save-assignment-submit');
     const origBtnText = saveBtn ? saveBtn.textContent : 'Save Assignment';
@@ -7668,7 +7819,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (!title) {
         if (typeof window.showToast === 'function') window.showToast('Please enter an Assignment Title.', 'error');
-        document.getElementById('faculty-asg-title')?.focus();
+        const titleEl = document.getElementById('faculty-asg-title');
+        if (titleEl) {
+          titleEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          titleEl.focus();
+        }
+        return;
+      }
+
+      if (store.isFacultyAuthorizedForSubject && !store.isFacultyAuthorizedForSubject(subject)) {
+        if (typeof window.showToast === 'function') {
+          window.showToast(`You are not assigned to manage coursework for "${subject}". Please choose one of your assigned subjects.`, 'error');
+        }
+        document.getElementById('faculty-asg-subject')?.focus();
         return;
       }
 
@@ -7709,6 +7872,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         storagePath: null
       } : '');
 
+      const fallbackInstructions = effectiveAttachmentUrl 
+        ? 'Please refer to the attached document for full assignment details and instructions.'
+        : 'Complete the assignment according to provided specifications.';
+
       const assignmentData = {
         title,
         subject,
@@ -7720,8 +7887,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         dueDate,
         dueTime,
         priority,
-        instructions: instructions || 'Complete the assignment according to provided specifications.',
-        description: instructions || 'Complete the assignment according to provided specifications.',
+        instructions: instructions || fallbackInstructions,
+        description: instructions || fallbackInstructions,
         attachment: effectiveAttachmentUrl,
         attachmentUrl: effectiveAttachmentUrl,
         attachmentName: effectiveAttachmentName,
@@ -7732,10 +7899,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       };
 
       if (id) {
-        store.updateFacultyAssignment(id, assignmentData);
+        await store.updateFacultyAssignment(id, assignmentData);
         window.showToast?.('✓ Assignment updated successfully.', 'success');
       } else {
-        store.createFacultyAssignment(assignmentData);
+        await store.createFacultyAssignment(assignmentData);
         window.showToast?.(`✓ Assignment "${title}" created and ${status.toLowerCase()}!`, 'success');
       }
 

@@ -3467,6 +3467,11 @@
             <div class="breadcrumb-label">FACULTY / PORTAL</div>
             <h2 class="welcome-heading" style="font-size: 22px; margin-bottom: 4px;">Faculty Dashboard</h2>
             <p class="welcome-subtext">Monitor assignments, student progress and academic performance.</p>
+            <!-- Assigned Subjects Badge Strip -->
+            <div id="faculty-overview-assigned-subjects-wrap" style="margin-top: 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <span style="font-size: 11.5px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Assigned Subjects:</span>
+              <div id="faculty-overview-assigned-subjects-bar" style="display: flex; gap: 6px; flex-wrap: wrap;"></div>
+            </div>
           </div>
           <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
             <button class="btn-faculty-action btn-faculty-secondary" onclick="navigateToRoute('/faculty/submissions/lab')">
@@ -3775,19 +3780,27 @@
         </div>
 
         <!-- Filter Tabs -->
-        <div class="filter-tab-bar">
-          <button class="btn-filter-tab active" data-filter="all" onclick="filterFacultyAssignments('all')">
-            <span>All Assignments</span>
-            <span class="filter-badge-count" id="fac-assign-count-all">4</span>
-          </button>
-          <button class="btn-filter-tab" data-filter="published" onclick="filterFacultyAssignments('published')">
-            <span>Published</span>
-            <span class="filter-badge-count" id="fac-assign-count-published">3</span>
-          </button>
-          <button class="btn-filter-tab" data-filter="draft" onclick="filterFacultyAssignments('draft')">
-            <span>Drafts</span>
-            <span class="filter-badge-count" id="fac-assign-count-draft">1</span>
-          </button>
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 14px;">
+          <div class="filter-tab-bar" style="margin-bottom: 0;">
+            <button class="btn-filter-tab active" data-filter="all" onclick="filterFacultyAssignments('all')">
+              <span>All Assignments</span>
+              <span class="filter-badge-count" id="fac-assign-count-all">0</span>
+            </button>
+            <button class="btn-filter-tab" data-filter="published" onclick="filterFacultyAssignments('published')">
+              <span>Published</span>
+              <span class="filter-badge-count" id="fac-assign-count-published">0</span>
+            </button>
+            <button class="btn-filter-tab" data-filter="draft" onclick="filterFacultyAssignments('draft')">
+              <span>Drafts</span>
+              <span class="filter-badge-count" id="fac-assign-count-draft">0</span>
+            </button>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <label for="fac-filter-subject" style="font-size: 12px; font-weight: 600; color: #475569;">Filter Subject:</label>
+            <select id="fac-filter-subject" class="form-select" onchange="handleFacultySubjectFilterChange(event)" style="font-size: 12px; padding: 6px 12px; width: auto; min-width: 200px;">
+              <option value="">All Assigned Subjects</option>
+            </select>
+          </div>
         </div>
 
         <!-- Assignments Grid -->
@@ -4692,6 +4705,66 @@
           </div>
         </div>
 
+        <!-- Faculty Subject Allocations Management -->
+        <div class="content-panel" style="margin-bottom: 18px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <div>
+              <h3 class="panel-title" style="margin-bottom: 2px;">Faculty Subject Allocations (Coursework Access Control)</h3>
+              <p style="font-size: 12px; color: #64748B; margin: 0;">Assign subjects to faculty members. Faculty can only view, create, and manage assignments for their assigned subjects.</p>
+            </div>
+          </div>
+          
+          <!-- Allocation Form -->
+          <form id="form-admin-assign-subject" onsubmit="handleAdminAssignSubject(event)" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) auto; gap: 10px; background: #F8FAFC; padding: 12px; border-radius: 8px; margin-bottom: 16px; align-items: end;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 11px;">Select Faculty *</label>
+              <select class="form-select" id="admin-fsa-faculty" required style="font-size: 12px; padding: 6px 10px;">
+                <option value="fac_001">Dr. Rajesh Sharma (fac_001)</option>
+                <option value="fac_002">Prof. Anita Rao (fac_002)</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 11px;">Subject / Course Title *</label>
+              <input type="text" class="form-input" id="admin-fsa-subject" placeholder="e.g. Java Programming" required style="font-size: 12px; padding: 6px 10px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 11px;">Subject Code</label>
+              <input type="text" class="form-input" id="admin-fsa-code" placeholder="e.g. CS501" style="font-size: 12px; padding: 6px 10px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 11px;">Target Cohort / Year</label>
+              <select class="form-select" id="admin-fsa-year" style="font-size: 12px; padding: 6px 10px;">
+                <option value="3rd Year">3rd Year</option>
+                <option value="1st Year">1st Year</option>
+                <option value="2nd Year">2nd Year</option>
+                <option value="4th Year">4th Year</option>
+              </select>
+            </div>
+            <div>
+              <button type="submit" class="btn-primary" style="font-size: 12px; padding: 7px 16px; white-space: nowrap;">+ Assign Subject</button>
+            </div>
+          </form>
+
+          <!-- Current Allocations Table -->
+          <div class="table-container">
+            <table class="saas-table" id="admin-fsa-table">
+              <thead>
+                <tr>
+                  <th>Faculty Member</th>
+                  <th>Department</th>
+                  <th>Assigned Subject</th>
+                  <th>Course Code</th>
+                  <th>Cohort / Semester</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="admin-fsa-table-body">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <div class="panel-grid-2">
           <div class="content-panel">
             <h3 class="panel-title" style="margin-bottom: 12px;">Role Authorization Matrix</h3>
@@ -5513,7 +5586,7 @@
         <div class="modal-title" id="faculty-assignment-modal-title">Create New Academic Assignment</div>
         <button class="modal-close-btn" onclick="closeCreateAssignmentModal()">✕</button>
       </div>
-      <form id="form-faculty-assignment" class="modal-form" onsubmit="handleSaveFacultyAssignment(event)">
+      <form id="form-faculty-assignment" class="modal-form" onsubmit="handleSaveFacultyAssignment(event)" novalidate>
         <input type="hidden" id="faculty-asg-id">
         <div class="modal-body">
           <div class="form-group">
@@ -5646,7 +5719,7 @@
 
         <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 10px;">
           <button type="button" class="btn-outline" onclick="closeCreateAssignmentModal()">Cancel</button>
-          <button type="submit" class="btn-primary" id="btn-save-assignment-submit">Save Assignment</button>
+          <button type="button" class="btn-primary" id="btn-save-assignment-submit" onclick="handleSaveFacultyAssignment(event)">Save Assignment</button>
         </div>
       </form>
     </div>
