@@ -427,13 +427,13 @@ function getDestinationTypeFromCategory(category, defaultType = 'faculty') {
 }
 
 function normalizedYear(value) {
-  const text = String(value || '').toLowerCase();
-  const match = text.match(/(1st|first|2nd|second|3rd|third|4th|fourth|final)\s*year/);
-  if (!match) return '';
-  const key = match[1];
-  return key.startsWith('1') || key === 'first' ? '1st year'
-    : key.startsWith('2') || key === 'second' ? '2nd year'
-      : key.startsWith('3') || key === 'third' ? '3rd year' : '4th year';
+  const text = String(value || '').toLowerCase().trim();
+  if (!text) return '';
+  if (/\b(3rd|third|iii|year\s*3)\b/.test(text) || (text.includes('3') && text.includes('year'))) return '3rd year';
+  if (/\b(4th|fourth|final|iv|year\s*4)\b/.test(text) || (text.includes('4') && text.includes('year'))) return '4th year';
+  if (/\b(2nd|second|ii|year\s*2)\b/.test(text) || (text.includes('2') && text.includes('year'))) return '2nd year';
+  if (/\b(1st|first|i|year\s*1)\b/.test(text) || (text.includes('1') && text.includes('year'))) return '1st year';
+  return '';
 }
 
 function getStudentAssignmentTarget(userId) {
@@ -463,11 +463,11 @@ function assignmentMatchesStudent(assignment, student, userId = null) {
   if (targetYear && studentYear && studentYear !== targetYear) return false;
   const norm = value => {
     const text = String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-    if (text.includes('computer') || text === 'cse') return 'cse';
-    if (text.includes('informationtechnology') || text === 'it') return 'it';
-    if (text.includes('electronics') || text === 'ece') return 'ece';
-    if (text.includes('electrical') || text === 'eee') return 'eee';
-    if (text.includes('mechanical')) return 'mechanical';
+    if (text.includes('computer') || text.includes('cse')) return 'cse';
+    if (text.includes('informationtechnology') || text.includes('it')) return 'it';
+    if (text.includes('electronics') || text.includes('ece')) return 'ece';
+    if (text.includes('electrical') || text.includes('eee')) return 'eee';
+    if (text.includes('mechanical') || text.includes('mech')) return 'mechanical';
     if (text.includes('civil')) return 'civil';
     return text;
   };
@@ -475,9 +475,15 @@ function assignmentMatchesStudent(assignment, student, userId = null) {
   const studentDepartment = norm(student.department);
   const targetClass = norm(assignment.target_class);
   const targetDepartment = norm(assignment.department);
-  const isAllClasses = /\ball\b/i.test(String(assignment.target_class || ''));
-  if (!isAllClasses && targetClass && studentClass && !(studentClass === targetClass || studentClass.startsWith(targetClass) || targetClass.startsWith(studentClass))) return false;
-  if (!isAllClasses && targetDepartment && studentDepartment && !(studentDepartment === targetDepartment || studentDepartment.startsWith(targetDepartment) || targetDepartment.startsWith(studentDepartment))) return false;
+  const isAllClasses = /\ball\b/i.test(String(assignment.target_class || '')) && !/(cse|ece|it|eee|mech|civil)/i.test(String(assignment.target_class || ''));
+  if (!isAllClasses && targetClass && studentClass) {
+    const matchesClass = (studentClass === targetClass || studentClass.includes(targetClass) || targetClass.includes(studentClass));
+    if (!matchesClass) return false;
+  }
+  if (!isAllClasses && targetDepartment && studentDepartment) {
+    const matchesDept = (studentDepartment === targetDepartment || studentDepartment.includes(targetDepartment) || targetDepartment.includes(studentDepartment));
+    if (!matchesDept) return false;
+  }
   return true;
 }
 
@@ -1518,11 +1524,17 @@ app.post('/api/auth/logout', (req, res) => {
 // -----------------------------------------------------------------------------
 // 3. Complete Application State Endpoint (/api/state)
 // -----------------------------------------------------------------------------
-app.get('/api/state', (req, res) => {
+app.get('/api/state', async (req, res) => {
   if (!req.user) {
     return res.status(401).json({ success: false, error: 'Authentication required. Please log in.' });
   }
   try {
+    // Cross-Laptop Supabase Synchronization: Eagerly pull assignments and submissions
+    try {
+      await supabaseBackend.pullAssignmentsFromSupabase(null, db);
+      await supabaseBackend.pullSubmissionsFromSupabase(null, db);
+    } catch (_) {}
+
     // 1. Load users & student profiles
     const users = db.prepare('SELECT id, email, role, full_name, roll_no, department, phone, avatar FROM users').all();
     const studentRows = db.prepare(`
@@ -2291,11 +2303,16 @@ app.get('/api/storage/status', async (req, res) => {
 // -----------------------------------------------------------------------------
 // 5. Assignments & Submissions CRUD Endpoints (/api/records & /api/assignments)
 // -----------------------------------------------------------------------------
-app.get(['/api/records/:type', '/api/assignments/:type'], requireRole(['student', 'faculty', 'officer']), (req, res) => {
+app.get(['/api/records/:type', '/api/assignments/:type'], requireRole(['student', 'faculty', 'officer']), async (req, res) => {
   try {
     const type = req.params.type.toLowerCase();
     const queryId = req.query.id;
     const currentUserId = req.user && req.user.role === 'student' ? req.user.id : null;
+
+    // Cross-laptop sync: eagerly pull assignments from Supabase
+    try {
+      await supabaseBackend.pullAssignmentsFromSupabase(null, db);
+    } catch (_) {}
 
     if (queryId) {
       const assignment = db.prepare('SELECT * FROM assignments WHERE type = ? AND id = ?').get(type, queryId) || db.prepare('SELECT * FROM assignments WHERE id = ?').get(queryId);
@@ -2309,11 +2326,6 @@ app.get(['/api/records/:type', '/api/assignments/:type'], requireRole(['student'
       const formatted = formatAssignment(assignment, submissions, currentUserId);
       return res.json({ success: true, type, id: queryId, data: formatted });
     }
-
-    // Cross-laptop sync: opportunistically pull assignments from Supabase
-    try {
-      supabaseBackend.pullAssignmentsFromSupabase(null, db).catch(() => {});
-    } catch (_) {}
 
     let assignments = [];
     if (type === 'general' || type === 'assignments') {
@@ -2393,7 +2405,7 @@ app.get(['/api/records/:type/:id', '/api/assignments/:type/:id'], requireRole(['
 });
 
 // Create new assignment
-app.post(['/api/records/:type', '/api/assignments/:type'], requireRole(['faculty', 'officer']), (req, res) => {
+app.post(['/api/records/:type', '/api/assignments/:type'], requireRole(['faculty', 'officer']), async (req, res) => {
   try {
     const type = req.params.type.toLowerCase();
     const body = req.body;
@@ -2506,11 +2518,11 @@ app.post(['/api/records/:type', '/api/assignments/:type'], requireRole(['faculty
     try {
       const createdAssignment = db.prepare('SELECT * FROM assignments WHERE id = ?').get(newId);
       if (createdAssignment) {
-        supabaseBackend.pushAssignmentToSupabase(createdAssignment).catch(err => {
-          console.warn('[Supabase Sync Notice]:', err.message);
-        });
+        await supabaseBackend.pushAssignmentToSupabase(createdAssignment);
       }
-    } catch (_) {}
+    } catch (err) {
+      console.warn('[Supabase Sync Notice]:', err.message);
+    }
 
     res.status(201).json({ success: true, id: newId, message: 'Assignment created successfully' });
   } catch (err) {
@@ -2520,7 +2532,7 @@ app.post(['/api/records/:type', '/api/assignments/:type'], requireRole(['faculty
 });
 
 // Student Submit Endpoint
-app.post(['/api/records/:type/:id/submit', '/api/assignments/:type/:id/submit'], requireRole(['student']), (req, res) => {
+app.post(['/api/records/:type/:id/submit', '/api/assignments/:type/:id/submit'], requireRole(['student']), async (req, res) => {
   try {
     const { type, id } = req.params;
     const body = req.body;
@@ -2592,9 +2604,10 @@ app.post(['/api/records/:type/:id/submit', '/api/assignments/:type/:id/submit'],
     let subStorageBucket = (body.file && body.file.storageBucket) || (body.files && body.files[0] && body.files[0].storageBucket) || (body.storageBucket) || (existingSub ? existingSub.storage_bucket : null) || supabaseStorage.DEFAULT_BUCKET || 'studyflow-uploads';
     let subStoragePath = (body.file && body.file.storagePath) || (body.files && body.files[0] && body.files[0].storagePath) || (body.storagePath) || (hasNewFile ? `student/submissions/${fileUrl.split('/').pop()}` : (existingSub ? existingSub.storage_path : null));
 
+    const subId = existingSub ? existingSub.id : (body.submissionId || ('sub_' + Date.now().toString(36)));
+
     const submitTx = db.transaction(() => {
       // Upsert into submissions table with accurate assignment category, timestamps, and Supabase Storage metadata
-      const subId = existingSub ? existingSub.id : (body.submissionId || ('sub_' + Date.now().toString(36)));
       db.prepare(`
         INSERT INTO submissions (
           id, assignment_id, assignment_type, student_id, student_name, roll_no,
@@ -2637,11 +2650,11 @@ app.post(['/api/records/:type/:id/submit', '/api/assignments/:type/:id/submit'],
     try {
       const savedSub = db.prepare('SELECT * FROM submissions WHERE id = ?').get(subId);
       if (savedSub) {
-        supabaseBackend.pushSubmissionToSupabase(savedSub).catch(err => {
-          console.warn('[Supabase Sync Notice]:', err.message);
-        });
+        await supabaseBackend.pushSubmissionToSupabase(savedSub);
       }
-    } catch (_) {}
+    } catch (err) {
+      console.warn('[Supabase Sync Notice]:', err.message);
+    }
 
     const updated = db.prepare('SELECT * FROM assignments WHERE id = ?').get(id);
     const submissions = db.prepare('SELECT * FROM submissions WHERE assignment_id = ?').all(id);
@@ -2653,7 +2666,7 @@ app.post(['/api/records/:type/:id/submit', '/api/assignments/:type/:id/submit'],
 });
 
 // Faculty Grade Endpoint
-app.post(['/api/records/:type/:id/grade', '/api/assignments/:type/:id/grade'], requireRole(['faculty', 'officer']), (req, res) => {
+app.post(['/api/records/:type/:id/grade', '/api/assignments/:type/:id/grade'], requireRole(['faculty', 'officer']), async (req, res) => {
   try {
     const { type, id } = req.params;
     const body = req.body;
@@ -2852,11 +2865,11 @@ app.post(['/api/records/:type/:id/grade', '/api/assignments/:type/:id/grade'], r
     try {
       const gradedSub = db.prepare('SELECT * FROM submissions WHERE assignment_id = ? AND student_id = ?').get(id, targetStudentId);
       if (gradedSub) {
-        supabaseBackend.pushSubmissionToSupabase(gradedSub).catch(err => {
-          console.warn('[Supabase Sync Notice]:', err.message);
-        });
+        await supabaseBackend.pushSubmissionToSupabase(gradedSub);
       }
-    } catch (_) {}
+    } catch (err) {
+      console.warn('[Supabase Sync Notice]:', err.message);
+    }
 
     const updated = db.prepare('SELECT * FROM assignments WHERE id = ?').get(id);
     const submissions = db.prepare('SELECT * FROM submissions WHERE assignment_id = ?').all(id);
@@ -3049,7 +3062,7 @@ app.put(['/api/records/:type/:id', '/api/assignments/:type/:id'], requireRole(['
 });
 
 // Delete assignment
-app.delete(['/api/records/:type/:id', '/api/assignments/:type/:id'], requireRole(['faculty', 'officer']), (req, res) => {
+app.delete(['/api/records/:type/:id', '/api/assignments/:type/:id'], requireRole(['faculty', 'officer']), async (req, res) => {
   try {
     const { id } = req.params;
     const assignment = db.prepare('SELECT created_by FROM assignments WHERE id = ?').get(id);
@@ -3062,6 +3075,12 @@ app.delete(['/api/records/:type/:id', '/api/assignments/:type/:id'], requireRole
       db.prepare('DELETE FROM assignments WHERE id = ?').run(id);
     });
     deleteTx();
+
+    // Cross-Laptop Supabase Synchronization: Delete from PostgreSQL
+    try {
+      await supabaseBackend.deleteAssignmentFromSupabase(id);
+    } catch (_) {}
+
     res.json({ success: true, message: `Assignment '${id}' deleted successfully.` });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });

@@ -117,6 +117,8 @@ async function pushAssignmentToSupabase(assignment) {
       priority: assignment.priority || 'Medium',
       status: assignment.status || 'Published',
       max_marks: Number(assignment.max_marks || 100),
+      storage_bucket: assignment.storage_bucket || 'studyflow-uploads',
+      storage_path: assignment.storage_path || null,
       meta_json: typeof assignment.meta_json === 'string' ? JSON.parse(assignment.meta_json || '{}') : (assignment.meta_json || {})
     };
 
@@ -154,15 +156,25 @@ async function pullAssignmentsFromSupabase(type = null, db = null) {
       INSERT INTO assignments (
         id, type, title, subject, category, professor, department, target_year, target_class,
         created_by, attachments_json, description, instructions, due_date, due_time,
-        priority, status, max_marks, meta_json
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        priority, status, max_marks, storage_bucket, storage_path, meta_json
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         title = excluded.title,
         subject = excluded.subject,
+        category = excluded.category,
+        professor = excluded.professor,
+        department = excluded.department,
+        target_year = excluded.target_year,
+        target_class = excluded.target_class,
         due_date = excluded.due_date,
+        due_time = excluded.due_time,
+        priority = excluded.priority,
         status = excluded.status,
         max_marks = excluded.max_marks,
-        attachments_json = excluded.attachments_json
+        attachments_json = excluded.attachments_json,
+        storage_bucket = excluded.storage_bucket,
+        storage_path = excluded.storage_path,
+        meta_json = excluded.meta_json
     `);
 
     db.transaction(() => {
@@ -186,6 +198,8 @@ async function pullAssignmentsFromSupabase(type = null, db = null) {
           a.priority || 'Medium',
           a.status || 'Published',
           Number(a.max_marks || 100),
+          a.storage_bucket || 'studyflow-uploads',
+          a.storage_path || null,
           typeof a.meta_json === 'object' ? JSON.stringify(a.meta_json) : (a.meta_json || '{}')
         );
       }
@@ -218,6 +232,8 @@ async function pushSubmissionToSupabase(sub) {
       file_url: sub.file_url || '',
       file_name: sub.file_name || '',
       file_size: Number(sub.file_size || 0),
+      storage_bucket: sub.storage_bucket || 'studyflow-uploads',
+      storage_path: sub.storage_path || null,
       remarks: sub.remarks || '',
       marks: sub.marks !== null && sub.marks !== undefined ? Number(sub.marks) : null,
       feedback: sub.feedback || null,
@@ -263,8 +279,8 @@ async function pullSubmissionsFromSupabase(assignmentId = null, db = null) {
         id, assignment_id, assignment_type, student_id, student_name, roll_no,
         submitted_date, status, is_late, file_url, file_name, file_size, remarks,
         marks, feedback, strengths, improvements, next_steps, is_revision_requested,
-        published, graded_date
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        published, graded_date, storage_bucket, storage_path
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         status = excluded.status,
         marks = excluded.marks,
@@ -272,7 +288,13 @@ async function pullSubmissionsFromSupabase(assignmentId = null, db = null) {
         strengths = excluded.strengths,
         improvements = excluded.improvements,
         next_steps = excluded.next_steps,
-        graded_date = excluded.graded_date
+        graded_date = excluded.graded_date,
+        file_url = excluded.file_url,
+        file_name = excluded.file_name,
+        file_size = excluded.file_size,
+        remarks = excluded.remarks,
+        storage_bucket = excluded.storage_bucket,
+        storage_path = excluded.storage_path
     `);
 
     db.transaction(() => {
@@ -298,7 +320,9 @@ async function pullSubmissionsFromSupabase(assignmentId = null, db = null) {
           s.next_steps || null,
           s.is_revision_requested ? 1 : 0,
           s.published ? 1 : 0,
-          s.graded_date || null
+          s.graded_date || null,
+          s.storage_bucket || 'studyflow-uploads',
+          s.storage_path || null
         );
       }
     })();
@@ -336,11 +360,32 @@ async function pushNotificationToSupabase(notif) {
   }
 }
 
+/**
+ * Delete Assignment from Supabase
+ */
+async function deleteAssignmentFromSupabase(id) {
+  const client = getSupabaseClient();
+  if (!client || !id) return { success: false };
+
+  try {
+    await client.from('submissions').delete().eq('assignment_id', id);
+    const { error } = await client.from('assignments').delete().eq('id', id);
+    if (error) {
+      console.warn('[Supabase Sync] Assignment delete notice:', error.message);
+      return { success: false, error: error.message };
+    }
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
+
 module.exports = {
   getSupabaseClient,
   checkSupabaseHealth,
   pushAssignmentToSupabase,
   pullAssignmentsFromSupabase,
+  deleteAssignmentFromSupabase,
   pushSubmissionToSupabase,
   pullSubmissionsFromSupabase,
   pushNotificationToSupabase,
