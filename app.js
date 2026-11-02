@@ -3360,7 +3360,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const evaluatedBox = document.getElementById('sub-detail-evaluated-box');
+    const scoreEl = document.getElementById('sub-detail-awarded-score');
+    const feedbackQuote = document.getElementById('sub-detail-feedback-quote');
+    const feedbackExtra = document.getElementById('sub-detail-feedback-extra');
     if (evaluatedBox) evaluatedBox.style.display = 'none';
+    if (scoreEl) scoreEl.textContent = '—';
+    if (feedbackQuote) feedbackQuote.textContent = '';
+    if (feedbackExtra) {
+      feedbackExtra.innerHTML = '';
+      feedbackExtra.style.display = 'none';
+    }
 
     const fileLink = document.getElementById('sub-detail-file-link');
     const fileNameEl = document.getElementById('sub-detail-file-name');

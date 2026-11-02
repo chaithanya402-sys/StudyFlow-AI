@@ -1168,6 +1168,7 @@
       // Record-specific REST API call with timeout & abort signal support
       try {
         const controller = new AbortController();
+        const signal = options.signal || controller.signal;
         const timeoutId = setTimeout(() => controller.abort(), options.timeoutMs || 4000);
         const headers = { ...this.getAuthHeaders() };
         const res = await fetch(`/api/records/${type}/${id}`, { signal, headers, credentials: 'same-origin' });
